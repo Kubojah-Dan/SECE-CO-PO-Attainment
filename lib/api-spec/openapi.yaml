@@ -1,22 +1,34 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: CO-PO/PSO Attainment Management System API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: auth
+  - name: users
+  - name: departments
+  - name: regulations
+  - name: subjects
+  - name: students
+  - name: courses
+  - name: outcomes
+  - name: mappings
+  - name: marks
+  - name: attainment
+  - name: uploads
+  - name: reports
+  - name: dashboard
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +36,2113 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ── AUTH ────────────────────────────────────────────────────────────────────
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthTokens"
+        "401":
+          description: Invalid credentials
+
+  /auth/refresh:
+    post:
+      operationId: refreshToken
+      tags: [auth]
+      summary: Refresh access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshInput"
+      responses:
+        "200":
+          description: New access token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthTokens"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Invalidate refresh token
+      responses:
+        "204":
+          description: Logged out
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user profile
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
+  # ── USERS ───────────────────────────────────────────────────────────────────
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List all users
+      parameters:
+        - name: role
+          in: query
+          schema:
+            type: string
+        - name: departmentId
+          in: query
+          schema:
+            type: integer
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserListResponse"
+    post:
+      operationId: createUser
+      tags: [users]
+      summary: Create a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserInput"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{id}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get user by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    patch:
+      operationId: updateUser
+      tags: [users]
+      summary: Update user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+      responses:
+        "200":
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    delete:
+      operationId: deleteUser
+      tags: [users]
+      summary: Delete user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── DEPARTMENTS ─────────────────────────────────────────────────────────────
+  /departments:
+    get:
+      operationId: listDepartments
+      tags: [departments]
+      summary: List departments
+      responses:
+        "200":
+          description: List of departments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Department"
+    post:
+      operationId: createDepartment
+      tags: [departments]
+      summary: Create department
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DepartmentInput"
+      responses:
+        "201":
+          description: Department created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Department"
+
+  /departments/{id}:
+    get:
+      operationId: getDepartment
+      tags: [departments]
+      summary: Get department
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Department
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Department"
+    patch:
+      operationId: updateDepartment
+      tags: [departments]
+      summary: Update department
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DepartmentUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Department"
+
+  /departments/{id}/stats:
+    get:
+      operationId: getDepartmentStats
+      tags: [departments]
+      summary: Department attainment statistics
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Department stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DepartmentStats"
+
+  # ── REGULATIONS ─────────────────────────────────────────────────────────────
+  /regulations:
+    get:
+      operationId: listRegulations
+      tags: [regulations]
+      summary: List regulations
+      parameters:
+        - name: departmentId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Regulation"
+    post:
+      operationId: createRegulation
+      tags: [regulations]
+      summary: Create regulation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegulationInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Regulation"
+
+  # ── SUBJECTS ────────────────────────────────────────────────────────────────
+  /subjects:
+    get:
+      operationId: listSubjects
+      tags: [subjects]
+      summary: List subjects
+      parameters:
+        - name: departmentId
+          in: query
+          schema:
+            type: integer
+        - name: regulationId
+          in: query
+          schema:
+            type: integer
+        - name: semester
+          in: query
+          schema:
+            type: integer
+        - name: academicYear
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of subjects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Subject"
+    post:
+      operationId: createSubject
+      tags: [subjects]
+      summary: Create subject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubjectInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subject"
+
+  /subjects/{id}:
+    get:
+      operationId: getSubject
+      tags: [subjects]
+      summary: Get subject
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Subject
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subject"
+    patch:
+      operationId: updateSubject
+      tags: [subjects]
+      summary: Update subject
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubjectUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subject"
+
+  # ── COURSE OUTCOMES ─────────────────────────────────────────────────────────
+  /subjects/{subjectId}/cos:
+    get:
+      operationId: listCOs
+      tags: [outcomes]
+      summary: List course outcomes for a subject
+      parameters:
+        - name: subjectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of COs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CourseOutcome"
+    post:
+      operationId: createCO
+      tags: [outcomes]
+      summary: Create course outcome
+      parameters:
+        - name: subjectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CourseOutcomeInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CourseOutcome"
+
+  /cos/{id}:
+    patch:
+      operationId: updateCO
+      tags: [outcomes]
+      summary: Update course outcome
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CourseOutcomeUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CourseOutcome"
+    delete:
+      operationId: deleteCO
+      tags: [outcomes]
+      summary: Delete course outcome
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── PROGRAM OUTCOMES ────────────────────────────────────────────────────────
+  /departments/{departmentId}/pos:
+    get:
+      operationId: listPOs
+      tags: [outcomes]
+      summary: List program outcomes for a department
+      parameters:
+        - name: departmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Program outcomes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProgramOutcome"
+    post:
+      operationId: createPO
+      tags: [outcomes]
+      summary: Create program outcome
+      parameters:
+        - name: departmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProgramOutcomeInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgramOutcome"
+
+  /departments/{departmentId}/psos:
+    get:
+      operationId: listPSOs
+      tags: [outcomes]
+      summary: List program specific outcomes
+      parameters:
+        - name: departmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: PSOs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProgramSpecificOutcome"
+    post:
+      operationId: createPSO
+      tags: [outcomes]
+      summary: Create PSO
+      parameters:
+        - name: departmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProgramSpecificOutcomeInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgramSpecificOutcome"
+
+  # ── CO-PO/PSO MAPPINGS ──────────────────────────────────────────────────────
+  /subjects/{subjectId}/mappings:
+    get:
+      operationId: listMappings
+      tags: [mappings]
+      summary: List CO-PO/PSO mappings for a subject
+      parameters:
+        - name: subjectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Mappings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Mapping"
+    post:
+      operationId: createMapping
+      tags: [mappings]
+      summary: Create CO-PO/PSO mapping
+      parameters:
+        - name: subjectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MappingInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mapping"
+
+  /mappings/{id}:
+    patch:
+      operationId: updateMapping
+      tags: [mappings]
+      summary: Update mapping correlation level
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MappingUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mapping"
+    delete:
+      operationId: deleteMapping
+      tags: [mappings]
+      summary: Delete mapping
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /mappings/{id}/approve:
+    patch:
+      operationId: approveMapping
+      tags: [mappings]
+      summary: HOD approves a mapping
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mapping"
+
+  # ── STUDENTS ────────────────────────────────────────────────────────────────
+  /students:
+    get:
+      operationId: listStudents
+      tags: [students]
+      summary: List students
+      parameters:
+        - name: departmentId
+          in: query
+          schema:
+            type: integer
+        - name: regulationId
+          in: query
+          schema:
+            type: integer
+        - name: semester
+          in: query
+          schema:
+            type: integer
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Students
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentListResponse"
+    post:
+      operationId: createStudent
+      tags: [students]
+      summary: Create student
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudentInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Student"
+
+  # ── MARKS ───────────────────────────────────────────────────────────────────
+  /subjects/{subjectId}/marks:
+    get:
+      operationId: listMarks
+      tags: [marks]
+      summary: Get marks for a subject
+      parameters:
+        - name: subjectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Marks data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StudentMark"
+    post:
+      operationId: createMark
+      tags: [marks]
+      summary: Insert or update a mark entry
+      parameters:
+        - name: subjectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudentMarkInput"
+      responses:
+        "201":
+          description: Saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentMark"
+
+  # ── UPLOADS ─────────────────────────────────────────────────────────────────
+  /uploads/marks:
+    post:
+      operationId: uploadMarksExcel
+      tags: [uploads]
+      summary: Upload Excel file for bulk mark import
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/MarksUploadInput"
+      responses:
+        "202":
+          description: Upload queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadJob"
+
+  /uploads/{jobId}/status:
+    get:
+      operationId: getUploadStatus
+      tags: [uploads]
+      summary: Get upload job status
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Job status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadJob"
+
+  /uploads/history:
+    get:
+      operationId: listUploadHistory
+      tags: [uploads]
+      summary: List recent upload jobs
+      parameters:
+        - name: subjectId
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Upload history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UploadJob"
+
+  # ── ATTAINMENT ──────────────────────────────────────────────────────────────
+  /attainment/subjects/{subjectId}/co:
+    get:
+      operationId: getCOAttainment
+      tags: [attainment]
+      summary: Get CO attainment for a subject
+      parameters:
+        - name: subjectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: CO attainment results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/COAttainment"
+
+  /attainment/subjects/{subjectId}/calculate:
+    post:
+      operationId: calculateAttainment
+      tags: [attainment]
+      summary: Trigger attainment calculation for a subject
+      parameters:
+        - name: subjectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AttainmentCalcInput"
+      responses:
+        "200":
+          description: Calculation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AttainmentResult"
+
+  /attainment/departments/{departmentId}/po:
+    get:
+      operationId: getPOAttainment
+      tags: [attainment]
+      summary: Get PO attainment for a department
+      parameters:
+        - name: departmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: PO attainment
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/POAttainment"
+
+  /attainment/departments/{departmentId}/pso:
+    get:
+      operationId: getPSOAttainment
+      tags: [attainment]
+      summary: Get PSO attainment for a department
+      parameters:
+        - name: departmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: PSO attainment
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PSOAttainment"
+
+  /attainment/subjects/{subjectId}/indirect:
+    get:
+      operationId: getIndirectAttainment
+      tags: [attainment]
+      summary: Get indirect attainment data (surveys)
+      parameters:
+        - name: subjectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Indirect attainment
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/IndirectAttainment"
+    post:
+      operationId: saveIndirectAttainment
+      tags: [attainment]
+      summary: Save indirect attainment data
+      parameters:
+        - name: subjectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IndirectAttainmentInput"
+      responses:
+        "201":
+          description: Saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IndirectAttainment"
+
+  # ── DASHBOARD / ANALYTICS ───────────────────────────────────────────────────
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Institution-wide dashboard summary
+      parameters:
+        - name: academicYear
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/co-trends:
+    get:
+      operationId: getCOTrends
+      tags: [dashboard]
+      summary: CO attainment trends over time
+      parameters:
+        - name: departmentId
+          in: query
+          schema:
+            type: integer
+        - name: subjectId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Trend data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/COTrend"
+
+  /dashboard/weak-cos:
+    get:
+      operationId: getWeakCOs
+      tags: [dashboard]
+      summary: Detect COs below attainment threshold
+      parameters:
+        - name: departmentId
+          in: query
+          schema:
+            type: integer
+        - name: threshold
+          in: query
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Weak COs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WeakCO"
+
+  /dashboard/department-comparison:
+    get:
+      operationId: getDepartmentComparison
+      tags: [dashboard]
+      summary: Compare attainment across departments
+      parameters:
+        - name: academicYear
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Comparison
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DepartmentComparison"
+
+  /dashboard/faculty-progress:
+    get:
+      operationId: getFacultyProgress
+      tags: [dashboard]
+      summary: Faculty-wise progress tracking
+      parameters:
+        - name: departmentId
+          in: query
+          schema:
+            type: integer
+        - name: academicYear
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Faculty progress
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FacultyProgress"
+
+  # ── REPORTS ─────────────────────────────────────────────────────────────────
+  /reports:
+    get:
+      operationId: listReports
+      tags: [reports]
+      summary: List generated reports
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+        - name: departmentId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Reports list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Report"
+
+  /reports/generate:
+    post:
+      operationId: generateReport
+      tags: [reports]
+      summary: Generate a new report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportInput"
+      responses:
+        "202":
+          description: Report generation queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
+
+  /reports/{id}:
+    get:
+      operationId: getReport
+      tags: [reports]
+      summary: Get report details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
+
+  /reports/{id}/download:
+    get:
+      operationId: downloadReport
+      tags: [reports]
+      summary: Download report as PDF or Excel
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Report file
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+  # ── AUDIT LOGS ──────────────────────────────────────────────────────────────
+  /audit-logs:
+    get:
+      operationId: listAuditLogs
+      tags: [users]
+      summary: List audit logs
+      parameters:
+        - name: userId
+          in: query
+          schema:
+            type: integer
+        - name: action
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Audit logs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditLogListResponse"
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    # ── AUTH ──────────────────────────────────────────────────────────────────
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    RefreshInput:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+
+    AuthTokens:
+      type: object
+      required: [accessToken, refreshToken, user]
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        user:
+          $ref: "#/components/schemas/UserProfile"
+
+    UserProfile:
+      type: object
+      required: [id, name, email, role]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [SUPER_ADMIN, HOD, FACULTY, IQAC]
+        departmentId:
+          type: ["integer", "null"]
+        departmentName:
+          type: ["string", "null"]
+
+    # ── USERS ─────────────────────────────────────────────────────────────────
+    User:
+      type: object
+      required: [id, name, email, role, isActive, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [SUPER_ADMIN, HOD, FACULTY, IQAC]
+        isActive:
+          type: boolean
+        departmentId:
+          type: ["integer", "null"]
+        departmentName:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    UserInput:
+      type: object
+      required: [name, email, password, role]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+        role:
+          type: string
+          enum: [SUPER_ADMIN, HOD, FACULTY, IQAC]
+        departmentId:
+          type: ["integer", "null"]
+
+    UserUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [SUPER_ADMIN, HOD, FACULTY, IQAC]
+        isActive:
+          type: boolean
+        departmentId:
+          type: ["integer", "null"]
+
+    UserListResponse:
+      type: object
+      required: [data, total, page, limit]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/User"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    # ── DEPARTMENTS ───────────────────────────────────────────────────────────
+    Department:
+      type: object
+      required: [id, name, code, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        code:
+          type: string
+        hodName:
+          type: ["string", "null"]
+        facultyCount:
+          type: ["integer", "null"]
+        studentCount:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    DepartmentInput:
+      type: object
+      required: [name, code]
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+        hodUserId:
+          type: ["integer", "null"]
+
+    DepartmentUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+        hodUserId:
+          type: ["integer", "null"]
+
+    DepartmentStats:
+      type: object
+      required: [departmentId, avgCOAttainment, avgPOAttainment, subjectCount, facultyCount, weakCOCount]
+      properties:
+        departmentId:
+          type: integer
+        avgCOAttainment:
+          type: number
+        avgPOAttainment:
+          type: number
+        subjectCount:
+          type: integer
+        facultyCount:
+          type: integer
+        weakCOCount:
+          type: integer
+        poBreakdown:
+          type: array
+          items:
+            $ref: "#/components/schemas/POAttainment"
+
+    # ── REGULATIONS ───────────────────────────────────────────────────────────
+    Regulation:
+      type: object
+      required: [id, name, year, departmentId, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        year:
+          type: integer
+        departmentId:
+          type: integer
+        departmentName:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    RegulationInput:
+      type: object
+      required: [name, year, departmentId]
+      properties:
+        name:
+          type: string
+        year:
+          type: integer
+        departmentId:
+          type: integer
+
+    # ── SUBJECTS ──────────────────────────────────────────────────────────────
+    Subject:
+      type: object
+      required: [id, name, code, semester, academicYear, departmentId, regulationId, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        code:
+          type: string
+        semester:
+          type: integer
+        academicYear:
+          type: string
+        credits:
+          type: ["integer", "null"]
+        departmentId:
+          type: integer
+        departmentName:
+          type: ["string", "null"]
+        regulationId:
+          type: integer
+        facultyId:
+          type: ["integer", "null"]
+        facultyName:
+          type: ["string", "null"]
+        coCount:
+          type: ["integer", "null"]
+        attainmentStatus:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    SubjectInput:
+      type: object
+      required: [name, code, semester, academicYear, departmentId, regulationId]
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+        semester:
+          type: integer
+        academicYear:
+          type: string
+        credits:
+          type: ["integer", "null"]
+        departmentId:
+          type: integer
+        regulationId:
+          type: integer
+        facultyId:
+          type: ["integer", "null"]
+
+    SubjectUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+        semester:
+          type: integer
+        academicYear:
+          type: string
+        credits:
+          type: ["integer", "null"]
+        facultyId:
+          type: ["integer", "null"]
+
+    # ── COURSE OUTCOMES ───────────────────────────────────────────────────────
+    CourseOutcome:
+      type: object
+      required: [id, code, description, subjectId, bloomsLevel, createdAt]
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        description:
+          type: string
+        subjectId:
+          type: integer
+        bloomsLevel:
+          type: string
+          enum: [Remember, Understand, Apply, Analyze, Evaluate, Create]
+        attainmentValue:
+          type: ["number", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    CourseOutcomeInput:
+      type: object
+      required: [code, description, bloomsLevel]
+      properties:
+        code:
+          type: string
+        description:
+          type: string
+        bloomsLevel:
+          type: string
+          enum: [Remember, Understand, Apply, Analyze, Evaluate, Create]
+
+    CourseOutcomeUpdate:
+      type: object
+      properties:
+        code:
+          type: string
+        description:
+          type: string
+        bloomsLevel:
+          type: string
+          enum: [Remember, Understand, Apply, Analyze, Evaluate, Create]
+
+    # ── PROGRAM OUTCOMES ──────────────────────────────────────────────────────
+    ProgramOutcome:
+      type: object
+      required: [id, code, description, departmentId]
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        description:
+          type: string
+        departmentId:
+          type: integer
+        attainmentValue:
+          type: ["number", "null"]
+
+    ProgramOutcomeInput:
+      type: object
+      required: [code, description]
+      properties:
+        code:
+          type: string
+        description:
+          type: string
+
+    ProgramSpecificOutcome:
+      type: object
+      required: [id, code, description, departmentId]
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        description:
+          type: string
+        departmentId:
+          type: integer
+        attainmentValue:
+          type: ["number", "null"]
+
+    ProgramSpecificOutcomeInput:
+      type: object
+      required: [code, description]
+      properties:
+        code:
+          type: string
+        description:
+          type: string
+
+    # ── MAPPINGS ──────────────────────────────────────────────────────────────
+    Mapping:
+      type: object
+      required: [id, coId, targetType, targetId, correlationLevel, isApproved, createdAt]
+      properties:
+        id:
+          type: integer
+        coId:
+          type: integer
+        coCode:
+          type: ["string", "null"]
+        targetType:
+          type: string
+          enum: [PO, PSO]
+        targetId:
+          type: integer
+        targetCode:
+          type: ["string", "null"]
+        correlationLevel:
+          type: integer
+          minimum: 0
+          maximum: 3
+        isApproved:
+          type: boolean
+        approvedBy:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    MappingInput:
+      type: object
+      required: [coId, targetType, targetId, correlationLevel]
+      properties:
+        coId:
+          type: integer
+        targetType:
+          type: string
+          enum: [PO, PSO]
+        targetId:
+          type: integer
+        correlationLevel:
+          type: integer
+          minimum: 0
+          maximum: 3
+
+    MappingUpdate:
+      type: object
+      properties:
+        correlationLevel:
+          type: integer
+          minimum: 0
+          maximum: 3
+
+    # ── STUDENTS ──────────────────────────────────────────────────────────────
+    Student:
+      type: object
+      required: [id, rollNumber, name, departmentId, regulationId, semester, createdAt]
+      properties:
+        id:
+          type: integer
+        rollNumber:
+          type: string
+        name:
+          type: string
+        email:
+          type: ["string", "null"]
+        departmentId:
+          type: integer
+        departmentName:
+          type: ["string", "null"]
+        regulationId:
+          type: integer
+        semester:
+          type: integer
+        academicYear:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    StudentInput:
+      type: object
+      required: [rollNumber, name, departmentId, regulationId, semester]
+      properties:
+        rollNumber:
+          type: string
+        name:
+          type: string
+        email:
+          type: ["string", "null"]
+        departmentId:
+          type: integer
+        regulationId:
+          type: integer
+        semester:
+          type: integer
+        academicYear:
+          type: ["string", "null"]
+
+    StudentListResponse:
+      type: object
+      required: [data, total, page, limit]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Student"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    # ── MARKS ─────────────────────────────────────────────────────────────────
+    StudentMark:
+      type: object
+      required: [id, studentId, subjectId, coId, examType, marksObtained, maxMarks, createdAt]
+      properties:
+        id:
+          type: integer
+        studentId:
+          type: integer
+        studentName:
+          type: ["string", "null"]
+        rollNumber:
+          type: ["string", "null"]
+        subjectId:
+          type: integer
+        coId:
+          type: integer
+        coCode:
+          type: ["string", "null"]
+        examType:
+          type: string
+          enum: [CIA1, CIA2, CIA3, ESE, ASSIGNMENT, LAB]
+        marksObtained:
+          type: number
+        maxMarks:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+
+    StudentMarkInput:
+      type: object
+      required: [studentId, coId, examType, marksObtained, maxMarks]
+      properties:
+        studentId:
+          type: integer
+        coId:
+          type: integer
+        examType:
+          type: string
+          enum: [CIA1, CIA2, CIA3, ESE, ASSIGNMENT, LAB]
+        marksObtained:
+          type: number
+        maxMarks:
+          type: number
+
+    # ── UPLOADS ───────────────────────────────────────────────────────────────
+    MarksUploadInput:
+      type: object
+      required: [subjectId, examType]
+      properties:
+        subjectId:
+          type: integer
+        examType:
+          type: string
+          enum: [CIA1, CIA2, CIA3, ESE, ASSIGNMENT, LAB]
+
+    UploadJob:
+      type: object
+      required: [jobId, status, subjectId, examType, createdAt]
+      properties:
+        jobId:
+          type: string
+        status:
+          type: string
+          enum: [queued, processing, completed, failed]
+        subjectId:
+          type: integer
+        examType:
+          type: string
+        totalRows:
+          type: ["integer", "null"]
+        processedRows:
+          type: ["integer", "null"]
+        failedRows:
+          type: ["integer", "null"]
+        errors:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: ["string", "null"]
+          format: date-time
+
+    # ── ATTAINMENT ────────────────────────────────────────────────────────────
+    COAttainment:
+      type: object
+      required: [coId, coCode, description, directAttainment, indirectAttainment, finalAttainment, threshold, isAttained]
+      properties:
+        coId:
+          type: integer
+        coCode:
+          type: string
+        description:
+          type: string
+        directAttainment:
+          type: number
+        indirectAttainment:
+          type: number
+        directWeightage:
+          type: number
+        indirectWeightage:
+          type: number
+        finalAttainment:
+          type: number
+        threshold:
+          type: number
+        isAttained:
+          type: boolean
+        studentCount:
+          type: ["integer", "null"]
+        attainedCount:
+          type: ["integer", "null"]
+
+    AttainmentCalcInput:
+      type: object
+      required: [directWeightage, indirectWeightage, threshold]
+      properties:
+        directWeightage:
+          type: number
+        indirectWeightage:
+          type: number
+        threshold:
+          type: number
+        academicYear:
+          type: ["string", "null"]
+
+    AttainmentResult:
+      type: object
+      required: [subjectId, calculatedAt, cos]
+      properties:
+        subjectId:
+          type: integer
+        calculatedAt:
+          type: string
+          format: date-time
+        cos:
+          type: array
+          items:
+            $ref: "#/components/schemas/COAttainment"
+        overallAttainment:
+          type: number
+
+    POAttainment:
+      type: object
+      required: [poId, poCode, description, attainmentValue]
+      properties:
+        poId:
+          type: integer
+        poCode:
+          type: string
+        description:
+          type: string
+        attainmentValue:
+          type: number
+        isAttained:
+          type: boolean
+        threshold:
+          type: ["number", "null"]
+
+    PSOAttainment:
+      type: object
+      required: [psoId, psoCode, description, attainmentValue]
+      properties:
+        psoId:
+          type: integer
+        psoCode:
+          type: string
+        description:
+          type: string
+        attainmentValue:
+          type: number
+        isAttained:
+          type: boolean
+        threshold:
+          type: ["number", "null"]
+
+    IndirectAttainment:
+      type: object
+      required: [id, subjectId, coId, surveyType, attainmentValue, createdAt]
+      properties:
+        id:
+          type: integer
+        subjectId:
+          type: integer
+        coId:
+          type: integer
+        coCode:
+          type: ["string", "null"]
+        surveyType:
+          type: string
+          enum: [EXIT_SURVEY, COURSE_FEEDBACK, ALUMNI_SURVEY]
+        attainmentValue:
+          type: number
+        responseCount:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    IndirectAttainmentInput:
+      type: object
+      required: [coId, surveyType, attainmentValue]
+      properties:
+        coId:
+          type: integer
+        surveyType:
+          type: string
+          enum: [EXIT_SURVEY, COURSE_FEEDBACK, ALUMNI_SURVEY]
+        attainmentValue:
+          type: number
+        responseCount:
+          type: ["integer", "null"]
+
+    # ── DASHBOARD ─────────────────────────────────────────────────────────────
+    DashboardSummary:
+      type: object
+      required: [totalDepartments, totalFaculty, totalStudents, totalSubjects, avgCOAttainment, avgPOAttainment, pendingMappings, uploadJobs]
+      properties:
+        totalDepartments:
+          type: integer
+        totalFaculty:
+          type: integer
+        totalStudents:
+          type: integer
+        totalSubjects:
+          type: integer
+        avgCOAttainment:
+          type: number
+        avgPOAttainment:
+          type: number
+        pendingMappings:
+          type: integer
+        uploadJobs:
+          type: integer
+        recentActivity:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActivityItem"
+        topPerformingDepts:
+          type: array
+          items:
+            $ref: "#/components/schemas/DepartmentComparison"
+
+    ActivityItem:
+      type: object
+      required: [id, action, user, timestamp]
+      properties:
+        id:
+          type: integer
+        action:
+          type: string
+        user:
+          type: string
+        entity:
+          type: ["string", "null"]
+        timestamp:
+          type: string
+          format: date-time
+
+    COTrend:
+      type: object
+      required: [coCode, period, attainmentValue]
+      properties:
+        coCode:
+          type: string
+        subjectName:
+          type: ["string", "null"]
+        period:
+          type: string
+        attainmentValue:
+          type: number
+
+    WeakCO:
+      type: object
+      required: [coId, coCode, description, subjectName, subjectCode, departmentName, attainmentValue, threshold]
+      properties:
+        coId:
+          type: integer
+        coCode:
+          type: string
+        description:
+          type: string
+        subjectName:
+          type: string
+        subjectCode:
+          type: string
+        departmentName:
+          type: string
+        facultyName:
+          type: ["string", "null"]
+        attainmentValue:
+          type: number
+        threshold:
+          type: number
+        gap:
+          type: number
+
+    DepartmentComparison:
+      type: object
+      required: [departmentId, departmentName, avgCOAttainment, avgPOAttainment, subjectCount]
+      properties:
+        departmentId:
+          type: integer
+        departmentName:
+          type: string
+        avgCOAttainment:
+          type: number
+        avgPOAttainment:
+          type: number
+        subjectCount:
+          type: integer
+        trend:
+          type: ["string", "null"]
+          enum: [up, down, stable, null]
+
+    FacultyProgress:
+      type: object
+      required: [userId, name, departmentName, subjectCount, completedSubjects, pendingSubjects, avgAttainment]
+      properties:
+        userId:
+          type: integer
+        name:
+          type: string
+        departmentName:
+          type: string
+        subjectCount:
+          type: integer
+        completedSubjects:
+          type: integer
+        pendingSubjects:
+          type: integer
+        avgAttainment:
+          type: number
+        lastActivity:
+          type: ["string", "null"]
+          format: date-time
+
+    # ── REPORTS ───────────────────────────────────────────────────────────────
+    Report:
+      type: object
+      required: [id, type, title, status, createdBy, createdAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [CO_ATTAINMENT, PO_ATTAINMENT, PSO_ATTAINMENT, NBA, NAAC, STUDENT_PERFORMANCE]
+        title:
+          type: string
+        status:
+          type: string
+          enum: [pending, generating, completed, failed]
+        departmentId:
+          type: ["integer", "null"]
+        subjectId:
+          type: ["integer", "null"]
+        academicYear:
+          type: ["string", "null"]
+        fileUrl:
+          type: ["string", "null"]
+        createdBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    ReportInput:
+      type: object
+      required: [type, title]
+      properties:
+        type:
+          type: string
+          enum: [CO_ATTAINMENT, PO_ATTAINMENT, PSO_ATTAINMENT, NBA, NAAC, STUDENT_PERFORMANCE]
+        title:
+          type: string
+        departmentId:
+          type: ["integer", "null"]
+        subjectId:
+          type: ["integer", "null"]
+        academicYear:
+          type: ["string", "null"]
+        format:
+          type: string
+          enum: [pdf, xlsx]
+
+    # ── AUDIT LOGS ────────────────────────────────────────────────────────────
+    AuditLog:
+      type: object
+      required: [id, userId, userName, action, entity, entityId, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        userName:
+          type: string
+        action:
+          type: string
+        entity:
+          type: string
+        entityId:
+          type: ["integer", "null"]
+        details:
+          type: ["string", "null"]
+        ipAddress:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    AuditLogListResponse:
+      type: object
+      required: [data, total, page, limit]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditLog"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer

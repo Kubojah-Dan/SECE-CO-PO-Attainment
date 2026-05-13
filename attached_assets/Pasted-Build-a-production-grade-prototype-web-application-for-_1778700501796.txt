@@ -1,0 +1,223 @@
+Build a production-grade prototype web application for a CO-PO/PSO Attainment Management System used in Outcome Based Education (OBE) for engineering institutions.
+
+TECH STACK:
+- Frontend: React + TypeScript + TailwindCSS + ShadCN UI
+- Backend: Node.js + Express + TypeScript
+- Database: PostgreSQL
+- ORM: Prisma
+- Authentication: JWT + Refresh Tokens
+- State Management: Zustand
+- Data Fetching: TanStack Query
+- Excel Processing: SheetJS / xlsx
+- PDF Generation: Puppeteer
+- Charts: Recharts
+- Queue System: BullMQ + Redis
+- Validation: Zod
+
+ARCHITECTURE REQUIREMENTS:
+Use scalable modular architecture.
+
+Frontend structure:
+src/
+  modules/
+    auth/
+    admin/
+    faculty/
+    hod/
+    iqac/
+    reports/
+    attainment/
+  shared/
+  components/
+  services/
+  routes/
+
+Backend structure:
+src/
+  modules/
+    auth/
+    users/
+    departments/
+    subjects/
+    attainment/
+    reports/
+    uploads/
+  services/
+  workers/
+  middleware/
+  utils/
+  prisma/
+
+SYSTEM REQUIREMENTS:
+The system must support:
+- Multi-department architecture
+- Multiple regulations
+- Multiple semesters
+- Multiple academic years
+- Multi-user support
+- Role-based access control
+
+ROLES:
+1. SUPER_ADMIN
+2. HOD
+3. FACULTY
+4. IQAC
+
+AUTHENTICATION:
+- Secure login
+- JWT authentication
+- Role middleware
+- Protected routes
+- Refresh token handling
+
+DATABASE DESIGN:
+Design normalized PostgreSQL schema with Prisma models for:
+- Users
+- Roles
+- Departments
+- Regulations
+- Subjects
+- Students
+- Faculty
+- COs
+- POs
+- PSOs
+- CO_PO_Mappings
+- Student_Marks
+- Direct_Attainment
+- Indirect_Attainment
+- Final_Attainment
+- Audit_Logs
+
+FEATURES TO IMPLEMENT:
+
+MODULE 1 — ADMIN PANEL
+- Create departments
+- Create faculty
+- Assign roles
+- Manage regulations
+- Manage subjects
+- Dashboard analytics
+
+MODULE 2 — FACULTY PANEL
+- Define COs
+- Map CO to PO/PSO
+- Upload Excel marks
+- View attainment
+- Generate reports
+
+MODULE 3 — HOD PANEL
+- Approve mappings
+- Monitor department progress
+- Faculty tracking dashboard
+
+MODULE 4 — IQAC PANEL
+- Institution-wide analytics
+- Accreditation reports
+- Department comparison
+
+EXCEL PROCESSING:
+Build complete Excel upload pipeline:
+- Upload .xlsx file
+- Validate structure
+- Parse rows
+- Store marks
+- Handle invalid rows
+- Bulk insert into PostgreSQL
+- Queue processing using BullMQ
+
+ATTAINMENT ENGINE:
+Build modular attainment calculation services:
+- coCalculator.ts
+- poCalculator.ts
+- psoCalculator.ts
+- indirectCalculator.ts
+- thresholdEngine.ts
+- formulaEngine.ts
+
+FORMULA REQUIREMENTS:
+Final CO Attainment =
+(Direct Attainment × Weightage) +
+(Indirect Attainment × Weightage)
+
+REPORTS:
+Generate:
+- CO Attainment Report
+- PO Attainment Report
+- PSO Attainment Report
+- NBA Reports
+- NAAC Reports
+- Student Performance Reports
+
+REPORT EXPORTS:
+- PDF export
+- Excel export
+
+DASHBOARDS:
+Use charts and analytics:
+- CO attainment trends
+- Weak CO detection
+- Department comparison
+- Faculty progress tracking
+
+SCALABILITY REQUIREMENTS:
+- Use service layer architecture
+- Keep business logic outside controllers
+- Use Redis queues for heavy processing
+- Add pagination
+- Add indexing strategy
+- Add audit logs
+- Add reusable API response structure
+
+API DESIGN:
+Create modular REST APIs:
+- /api/auth
+- /api/users
+- /api/departments
+- /api/subjects
+- /api/attainment
+- /api/reports
+
+UI REQUIREMENTS:
+- Responsive modern UI
+- Professional institutional dashboard
+- Sidebar navigation
+- Data tables
+- Analytics charts
+- Loading skeletons
+- Toast notifications
+
+IMPORTANT:
+- Do NOT create monolithic code
+- Do NOT hardcode formulas in controllers
+- Use reusable services
+- Use TypeScript types properly
+- Use scalable folder structure
+- Use environment variables
+- Add proper error handling
+- Add clean architecture comments
+
+DELIVERABLES:
+1. Full frontend prototype
+2. Backend API prototype
+3. Prisma schema
+4. PostgreSQL schema
+5. Sample seed data
+6. Dashboard pages
+7. Authentication flow
+8. Excel upload prototype
+9. Attainment engine prototype
+10. Report generation prototype
+
+Generate:
+- Folder structure
+- Initial backend setup
+- Initial frontend setup
+- Database schema
+- API routes
+- Sample dashboard UI
+- Sample attainment calculation logic
+- Example Excel upload workflow
+- Example report generation flow
+
+The UI should look like a modern enterprise analytics platform, not a student CRUD project.
