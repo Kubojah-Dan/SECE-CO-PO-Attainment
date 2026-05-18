@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   ArrowLeft, BookMarked, Users, 
   Settings, Calculator, FileText, 
@@ -8,11 +8,24 @@ import {
   Plus, Edit2, Upload, Database, Loader2
 } from 'lucide-react';
 import Card from '../../components/ui/Card';
-import { subjectService } from '../../services/api';
+import { subjectService, attainmentService } from '../../services/api';
+import { toast } from 'react-toastify';
 
 export default function SubjectDetail() {
   const { allocId } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const calculateMutation = useMutation({
+    mutationFn: () => attainmentService.calculate(allocId),
+    onSuccess: () => {
+      toast.success('Attainment calculation triggered successfully!');
+      queryClient.invalidateQueries(['subject-allocation', allocId]);
+    },
+    onError: () => {
+      toast.error('Failed to trigger attainment calculation');
+    }
+  });
 
   const { data: response, isLoading, error } = useQuery({
     queryKey: ['subject-allocation', allocId],
@@ -188,28 +201,32 @@ export default function SubjectDetail() {
         ))}
       </div>
 
-      {/* Dynamic Alerts */}
-      {!subject.has_attainment && (
-        <div className="p-6 bg-slate-900 rounded-3xl flex items-center justify-between gap-4 shadow-2xl shadow-slate-200">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-blue-500/10 rounded-2xl text-blue-400">
-              <AlertCircle size={24} />
-            </div>
-            <div>
-              <h4 className="font-bold text-white">Attainment Calculation Locked</h4>
-              <p className="text-xs text-slate-400 mt-1">
-                Please complete Marks Entry for all assessments and ensure CO-PO Mappings are finalized to calculate results.
-              </p>
-            </div>
+      {/* Dynamic Attainment Actions */}
+      <div className="p-6 bg-slate-900 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xl shadow-slate-200">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-blue-500/10 rounded-2xl text-blue-400">
+            <Calculator size={24} />
           </div>
-          <button 
-            disabled 
-            className="px-6 py-3 bg-slate-800 text-slate-500 rounded-xl text-xs font-bold cursor-not-allowed"
-          >
-            Calculate Now
-          </button>
+          <div>
+            <h4 className="font-bold text-white">
+              {subject.has_attainment ? 'Attainment Results Available' : 'Calculate Attainment Now'}
+            </h4>
+            <p className="text-xs text-slate-400 mt-1">
+              {subject.has_attainment 
+                ? 'Your NBA Method 1 attainment report is compiled and ready.' 
+                : 'Auto-generate course attainment using standard OBE marks integration.'}
+            </p>
+          </div>
         </div>
-      )}
+        <button 
+          onClick={() => calculateMutation.mutate()}
+          disabled={calculateMutation.isPending}
+          className="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-blue-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
+        >
+          {calculateMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <Calculator size={14} />}
+          {subject.has_attainment ? 'Recalculate Attainment' : 'Calculate Now'}
+        </button>
+      </div>
     </div>
   );
 }

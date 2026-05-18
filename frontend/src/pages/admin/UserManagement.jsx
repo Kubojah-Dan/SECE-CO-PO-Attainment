@@ -222,10 +222,15 @@ export default function UserManagement() {
                         </span>
                       </td>
                       <td className="py-6 px-8">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-2 h-2 rounded-full ${user.is_active ? 'bg-emerald-500' : 'bg-red-500'}`} />
-                          <span className={`text-[10px] font-bold uppercase tracking-widest ${user.is_active ? 'text-emerald-700' : 'text-red-700'}`}>
-                            {user.is_active ? 'Active' : 'Locked'}
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${user.is_online ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} />
+                            <span className={`text-[10px] font-bold uppercase tracking-widest ${user.is_online ? 'text-emerald-700 font-extrabold' : 'text-slate-500'}`}>
+                              {user.is_online ? 'Online' : 'Offline'}
+                            </span>
+                          </div>
+                          <span className={`text-[9px] font-bold uppercase tracking-wider ${user.is_active ? 'text-blue-500' : 'text-red-500'}`}>
+                            {user.is_active ? 'Account OK' : 'Locked'}
                           </span>
                         </div>
                       </td>

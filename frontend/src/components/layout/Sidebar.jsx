@@ -10,7 +10,7 @@ import {
   BarChart3, FileText, GraduationCap, LogOut, ChevronRight,
   ClipboardList, Calculator, Upload, Database, Bell, Menu, X,
   Award, Layers, BookMarked, School, PanelLeftClose, PanelLeftOpen,
-  ChevronLeft, FileSpreadsheet, User, Calendar
+  ChevronLeft, FileSpreadsheet, User, Calendar, Layout
 } from 'lucide-react';
 import logo from '../../assets/logo_web.webp';
 
@@ -21,6 +21,7 @@ const NAV_CONFIG = {
     { to: '/admin/departments', icon: Building2, label: 'Depts' },
     { to: '/admin/academic-years', icon: Calendar, label: 'Academic Years' },
     { to: '/admin/regulations', icon: Layers, label: 'Regulations' },
+    { to: '/admin/sections', icon: Layout, label: 'Sections' },
     { to: '/admin/users', icon: Users, label: 'Users' },
     { to: '/admin/subjects', icon: BookMarked, label: 'Subjects' },
     { to: '/admin/excel-tools', icon: FileSpreadsheet, label: 'Excel Tools' },
@@ -64,7 +65,7 @@ const ROLE_COLORS = {
   iqac: 'linear-gradient(135deg, #f59e0b, #d97706)',
 };
 
-export default function Sidebar({ isCollapsed, onToggleCollapse }) {
+export default function Sidebar({ isCollapsed, onToggleCollapse, isMobileOpen, onCloseMobile }) {
   const { user, logout, role } = useAuth();
   const navigate = useNavigate();
   const links = NAV_CONFIG[role] || NAV_CONFIG.faculty;
@@ -179,27 +180,62 @@ export default function Sidebar({ isCollapsed, onToggleCollapse }) {
 
   return (
     <>
+      {/* ── Mobile Sidebar Drawer ── */}
+      <AnimatePresence>
+        {isMobileOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={onCloseMobile}
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] md:hidden"
+            />
+            
+            {/* Drawer Content */}
+            <motion.div
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-y-0 left-0 w-[280px] bg-slate-900 z-[101] shadow-2xl md:hidden"
+            >
+              <div className="absolute top-4 right-4 z-10">
+                <button 
+                  onClick={onCloseMobile}
+                  className="p-2 rounded-xl bg-white/10 text-white/70 hover:text-white transition-all"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <SidebarContent mini={false} />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       {/* ── Mobile Bottom Navigation Bar ── */}
-      <nav className="mobile-bottom-nav md:hidden">
-        {links.slice(0, 4).map((item) => (
+      <nav className="mobile-bottom-nav md:hidden overflow-x-auto justify-start px-4 gap-2 scrollbar-hide">
+        {links.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
             className={({ isActive }) =>
-              `mobile-bottom-nav-item ${isActive ? 'mobile-bottom-nav-item--active' : ''}`
+              `mobile-bottom-nav-item min-w-[72px] ${isActive ? 'mobile-bottom-nav-item--active' : ''}`
             }
           >
             <div className="mobile-bottom-nav-icon-wrap">
-              <item.icon size={22} />
+              <item.icon size={20} />
             </div>
-            <span className="mobile-bottom-nav-label">{item.label}</span>
+            <span className="mobile-bottom-nav-label whitespace-nowrap">{item.label}</span>
           </NavLink>
         ))}
         
         {/* Logout on Mobile */}
-        <button onClick={handleLogout} className="mobile-bottom-nav-item">
+        <button onClick={handleLogout} className="mobile-bottom-nav-item min-w-[72px]">
           <div className="mobile-bottom-nav-icon-wrap text-red-500">
-            <LogOut size={22} />
+            <LogOut size={20} />
           </div>
           <span className="mobile-bottom-nav-label text-red-500">Logout</span>
         </button>

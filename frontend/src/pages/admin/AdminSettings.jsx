@@ -32,8 +32,34 @@ export default function AdminSettings() {
   };
 
   const handleChange = (field, value) => {
+    if (!config) return;
     setConfig(prev => ({ ...prev, [field]: value }));
     setHasChanges(true);
+  };
+
+  const handleInitialize = async () => {
+    setIsSaving(true);
+    try {
+      // Create default global config (department = null)
+      const defaultConfig = {
+        threshold_marks_pct: 60,
+        level1_student_pct: 50,
+        level2_student_pct: 60,
+        level3_student_pct: 70,
+        direct_weightage: 80,
+        indirect_weightage: 20,
+        target_co_level: 2,
+        target_po_attainment: 60,
+        cia_best_of: 2
+      };
+      const response = await attainmentService.createConfig(defaultConfig);
+      setConfig(response.data);
+      toast.success('System configurations initialized');
+    } catch (error) {
+      toast.error('Failed to initialize settings');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleSave = async () => {
@@ -55,6 +81,30 @@ export default function AdminSettings() {
       <div className="flex flex-col items-center justify-center py-40 gap-4">
         <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
         <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Syncing Core Engine Settings...</p>
+      </div>
+    );
+  }
+
+  if (!config) {
+    return (
+      <div className="p-8 max-w-4xl mx-auto flex flex-col items-center justify-center py-32 text-center space-y-6">
+        <div className="w-20 h-20 bg-amber-100 text-amber-600 rounded-3xl flex items-center justify-center">
+          <Settings size={40} />
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">Settings Not Initialized</h2>
+          <p className="text-slate-500 mt-2 max-w-md mx-auto">
+            The global attainment engine configuration is missing. Click below to initialize the system with institutional defaults.
+          </p>
+        </div>
+        <button 
+          onClick={handleInitialize}
+          disabled={isSaving}
+          className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all flex items-center gap-2"
+        >
+          {isSaving ? <Loader2 className="animate-spin" /> : <RefreshCw size={20} />}
+          Initialize System Config
+        </button>
       </div>
     );
   }

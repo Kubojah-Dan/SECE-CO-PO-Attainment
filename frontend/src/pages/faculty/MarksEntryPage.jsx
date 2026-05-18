@@ -35,17 +35,57 @@ export default function MarksEntryPage() {
   const { data: students, isLoading: isStudentsLoading } = useQuery({
     queryKey: ['allocation-students', allocId],
     queryFn: () => subjectService.getAllocationStudents(allocId),
-    onSuccess: (res) => {
-      // Initialize marks
-      setStudentMarks(res.data.map(s => ({
+  });
+
+  const { data: existingMarks, isLoading: isMarksLoading } = useQuery({
+    queryKey: ['existing-marks', allocId, assessmentType],
+    queryFn: () => marksService.get(allocId, assessmentType),
+    enabled: !!assessmentType,
+    select: (res) => res.data.results || res.data
+  });
+
+  const { data: existingQuestionMarks } = useQuery({
+    queryKey: ['existing-question-marks', allocId, assessmentType],
+    queryFn: () => marksService.getQuestionMarks({ 
+      question_mapping__subject_allocation: allocId, 
+      question_mapping__assessment_type__code: assessmentType?.toUpperCase() 
+    }),
+    enabled: !!assessmentType,
+    select: (res) => res.data.results || res.data
+  });
+
+  React.useEffect(() => {
+    if (students?.data) {
+      const marksMap = {};
+      const absMap = {};
+      
+      const marksList = Array.isArray(existingMarks) ? existingMarks : [];
+      marksList.forEach(m => {
+        marksMap[m.student] = m.marks_obtained;
+        absMap[m.student] = m.is_absent;
+      });
+
+      setStudentMarks(students.data.map(s => ({
         student_id: s.id,
         roll_number: s.roll_number,
         name: s.name,
-        marks_obtained: '',
-        is_absent: false
+        marks_obtained: marksMap[s.id] !== undefined && marksMap[s.id] !== null ? marksMap[s.id] : '',
+        is_absent: absMap[s.id] || false
       })));
+
+      if (existingQuestionMarks?.length > 0) {
+        const qmState = {};
+        existingQuestionMarks.forEach(qm => {
+          if (!qmState[qm.student]) {
+            qmState[qm.student] = {};
+          }
+          qmState[qm.student][qm.question_mapping] = qm.marks_obtained;
+        });
+        setQuestionMarks(qmState);
+        setUseQuestionWise(true);
+      }
     }
-  });
+  }, [students, existingMarks, existingQuestionMarks]);
 
   const saveMutation = useMutation({
     mutationFn: (data) => {
@@ -83,17 +123,43 @@ export default function MarksEntryPage() {
         const ws = wb.Sheets[wsname];
         const data = XLSX.utils.sheet_to_json(ws);
 
-        // Map Excel data to student marks
+        // Improved robust mapping
         const newMarks = [...studentMarks];
         data.forEach(row => {
-          const studentIndex = newMarks.findIndex(m => m.roll_number === String(row.RollNumber || row['Roll Number']));
+          // Find roll number column (try common variants)
+          const rollKey = Object.keys(row).find(k => 
+            k.toLowerCase().replace(/[\s\._]/g, '') === 'rollno' || 
+            k.toLowerCase().replace(/[\s\._]/g, '') === 'rollnumber'
+          );
+          
+          if (!rollKey) return;
+          
+          const rollValue = String(row[rollKey]).trim();
+          const studentIndex = newMarks.findIndex(m => m.roll_number === rollValue);
+          
           if (studentIndex !== -1) {
-            newMarks[studentIndex].marks_obtained = row.Marks || row.marks || '';
-            newMarks[studentIndex].is_absent = String(row.Status).toUpperCase() === 'A';
+            // Find marks column matching the current assessment type
+            const targetAssess = assessmentType?.toUpperCase().replace(/[\s\-_]/g, '');
+            const marksKey = Object.keys(row).find(k => {
+              const normalizedK = k.toUpperCase().replace(/[\s\-_]/g, '');
+              // Match exactly or start with assessment name
+              return normalizedK === targetAssess || normalizedK.startsWith(targetAssess);
+            });
+
+            if (marksKey) {
+              const val = row[marksKey];
+              newMarks[studentIndex].marks_obtained = val !== undefined ? val : '';
+            }
+
+            // Check for status/absent
+            const statusKey = Object.keys(row).find(k => k.toLowerCase() === 'status');
+            if (statusKey) {
+              newMarks[studentIndex].is_absent = String(row[statusKey]).toUpperCase().startsWith('A');
+            }
           }
         });
         setStudentMarks(newMarks);
-        toast.success(`Processed ${data.length} student records from Excel`);
+        toast.success(`Synced ${data.length} records from Excel`);
       } catch (err) {
         toast.error('Error processing Excel file');
       } finally {
@@ -109,7 +175,7 @@ export default function MarksEntryPage() {
     setStudentMarks(newMarks);
   };
 
-  if (isSubLoading || isStudentsLoading) {
+  if (isSubLoading || isStudentsLoading || isMarksLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="animate-spin text-blue-500" size={48} />

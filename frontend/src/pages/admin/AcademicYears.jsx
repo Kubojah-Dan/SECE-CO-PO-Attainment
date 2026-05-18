@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   Calendar, Plus, Edit2, Trash2, 
@@ -14,18 +14,34 @@ export default function AcademicYears() {
   const [editingYear, setEditingYear] = useState(null);
   const [formData, setFormData] = useState({ label: '', start_date: '', end_date: '', is_current: false });
 
-  const { data: years, isLoading } = useQuery({
-    queryKey: ['academic-years'],
-    queryFn: () => subjectService.listYears().then(res => res.data)
-  });
+  const [years, setYears] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchYears();
+  }, []);
+
+  const fetchYears = async () => {
+    setIsLoading(true);
+    try {
+      const res = await subjectService.listYears();
+      const data = res.data.results || (Array.isArray(res.data) ? res.data : []);
+      setYears(data);
+    } catch (error) {
+      toast.error('Failed to load academic cycles');
+      setYears([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const saveMutation = useMutation({
     mutationFn: (data) => editingYear 
       ? subjectService.updateYear(editingYear.id, data)
       : subjectService.createYear(data),
     onSuccess: () => {
-      toast.success(`Academic Year ${editingYear ? 'updated' : 'created'} successfully`);
-      queryClient.invalidateQueries(['academic-years']);
+      toast.success(`Academic year ${editingYear ? 'updated' : 'created'} successfully`);
+      fetchYears();
       setIsModalOpen(false);
       resetForm();
     },
@@ -35,17 +51,17 @@ export default function AcademicYears() {
   const deleteMutation = useMutation({
     mutationFn: (id) => subjectService.deleteYear(id),
     onSuccess: () => {
-      toast.success('Academic Year deleted');
-      queryClient.invalidateQueries(['academic-years']);
-    }
+      toast.success('Academic year deleted');
+      fetchYears();
+    },
   });
 
   const setCurrentMutation = useMutation({
     mutationFn: (id) => subjectService.setCurrentYear(id),
-    onSuccess: () => {
-      toast.success('Current academic year updated');
-      queryClient.invalidateQueries(['academic-years']);
-    }
+    onSuccess: (res) => {
+      toast.success(res.message || 'Current academic year updated');
+      fetchYears();
+    },
   });
 
   const resetForm = () => {

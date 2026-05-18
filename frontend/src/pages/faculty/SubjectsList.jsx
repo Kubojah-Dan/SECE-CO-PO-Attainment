@@ -8,8 +8,8 @@ import {
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import Card from '../../components/ui/Card';
-import { useQuery } from '@tanstack/react-query';
-import { allocationService } from '../../services/api';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { allocationService, attainmentService } from '../../services/api';
 import AcademicYearSelector from '../../components/ui/AcademicYearSelector';
 
 export default function SubjectsList() {
@@ -17,6 +17,22 @@ export default function SubjectsList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAY, setSelectedAY] = useState(1);
   const [selectedSemester, setSelectedSemester] = useState('All');
+  const [calculatingId, setCalculatingId] = useState(null);
+
+  const calculateMutation = useMutation({
+    mutationFn: (allocId) => {
+      setCalculatingId(allocId);
+      return attainmentService.calculate(allocId);
+    },
+    onSuccess: () => {
+      toast.success('Attainment calculation queued successfully!');
+      setCalculatingId(null);
+    },
+    onError: () => {
+      toast.error('Failed to queue attainment calculation.');
+      setCalculatingId(null);
+    }
+  });
 
   const { data: subjectsData, isLoading } = useQuery({
     queryKey: ['faculty', 'my-subjects', selectedAY],
@@ -133,12 +149,24 @@ export default function SubjectsList() {
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-gray-50 flex items-center justify-between text-blue-600 font-bold text-sm">
-                   <div className="flex items-center gap-1">
-                    <Calculator size={14} /> Calculate Attainment
-                   </div>
-                   <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                </div>
+                 <div className="pt-4 border-t border-gray-50 flex items-center justify-between">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        calculateMutation.mutate(alloc.id);
+                      }}
+                      disabled={calculatingId === alloc.id}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl transition-all disabled:opacity-50 font-bold text-xs shadow-sm hover:shadow"
+                    >
+                      {calculatingId === alloc.id ? (
+                        <Loader2 size={12} className="animate-spin" />
+                      ) : (
+                        <Calculator size={12} />
+                      )}
+                      Calculate Attainment
+                    </button>
+                    <ChevronRight size={18} className="text-blue-600 group-hover:translate-x-1 transition-transform cursor-pointer" />
+                 </div>
               </div>
             </div>
           </Card>

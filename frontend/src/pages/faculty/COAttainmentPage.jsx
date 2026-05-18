@@ -43,7 +43,9 @@ export default function COAttainmentPage() {
     );
   }
 
-  const results = attainmentData || [];
+  const results = Array.isArray(attainmentData) 
+    ? attainmentData 
+    : (attainmentData?.results || []);
   const avgAttainment = results.length 
     ? results.reduce((sum, r) => sum + parseFloat(r.final_attainment || 0), 0) / results.length 
     : 0;

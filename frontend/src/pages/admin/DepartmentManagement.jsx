@@ -3,12 +3,13 @@ import {
   Building2, Plus, Search, 
   Users, GraduationCap,
   Loader2, Trash2, Edit2, X, Activity,
-  ArrowRight, Save
+  ArrowRight, Save, Layout
 } from 'lucide-react';
 import Card from '../../components/ui/Card';
 import { departmentService } from '../../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
+import { Link } from 'react-router-dom';
 
 export default function DepartmentManagement() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -136,9 +137,18 @@ export default function DepartmentManagement() {
                     <button 
                       onClick={() => handleEdit(dept)}
                       className="p-2 hover:bg-slate-50 text-slate-400 hover:text-blue-600 rounded-xl transition-all"
+                      title="Edit Department"
                     >
                       <Edit2 size={16} />
                     </button>
+                    <Link 
+                      to="/admin/sections"
+                      state={{ departmentId: dept.id }}
+                      className="p-2 hover:bg-slate-50 text-slate-400 hover:text-indigo-600 rounded-xl transition-all"
+                      title="Manage Sections"
+                    >
+                      <Layout size={16} />
+                    </Link>
                     <button 
                       onClick={() => handleDelete(dept.id)}
                       disabled={isDeleting === dept.id}

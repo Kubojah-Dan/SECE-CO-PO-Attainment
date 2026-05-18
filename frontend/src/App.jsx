@@ -45,6 +45,7 @@ import AdminSubjects from './pages/admin/AdminSubjects';
 import ExcelTools from './pages/admin/ExcelTools';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 import RegulationManagement from './pages/admin/RegulationManagement';
+import SectionManagement from './pages/admin/SectionManagement';
 
 // Faculty ATR
 // Faculty ATR & Mapping
@@ -122,6 +123,7 @@ export default function App() {
                   <Route path="/admin/academic-years" element={<AcademicYears />} />
                   <Route path="/admin/subjects" element={<AdminSubjects />} />
                   <Route path="/admin/regulations" element={<RegulationManagement />} />
+                  <Route path="/admin/sections" element={<SectionManagement />} />
                   <Route path="/admin/excel-tools" element={<ExcelTools />} />
                   <Route path="/admin/analytics" element={<AdminAnalytics />} />
                   <Route path="/admin/settings" element={<AdminSettings />} />

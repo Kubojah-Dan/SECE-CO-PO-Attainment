@@ -2,15 +2,16 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShieldCheck, BarChart3, TrendingUp, Building2, Users, 
-  ChevronRight, Download, Filter, Activity, AlertTriangle, CheckCircle2
+  ChevronRight, Download, Filter, Activity, AlertTriangle, CheckCircle2 
 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, 
   Tooltip, ResponsiveContainer, Cell, ReferenceLine
 } from 'recharts';
 import Card from '../../components/ui/Card';
 import { useQuery } from '@tanstack/react-query';
-import { analyticsService } from '../../services/api';
+import { analyticsService, reportService } from '../../services/api';
 import { Loader2 } from 'lucide-react';
 import AcademicYearSelector from '../../components/ui/AcademicYearSelector';
 
@@ -57,7 +58,23 @@ export default function IQACDashboard() {
           </motion.h1>
           <div className="mt-8 flex items-center gap-4">
              <AcademicYearSelector selectedId={selectedAY} onChange={setSelectedAY} />
-             <button className="flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-2xl text-xs font-bold transition-all border border-white/10">
+             <button 
+               onClick={async () => {
+                 try {
+                   toast.info('Preparing Institutional Report...');
+                   const res = await reportService.exportIQAC('excel', selectedAY);
+                   const url = window.URL.createObjectURL(new Blob([res.data]));
+                   const link = document.createElement('a');
+                   link.href = url;
+                   link.setAttribute('download', `SAR_Report_${selectedAY}.xlsx`);
+                   document.body.appendChild(link);
+                   link.click();
+                 } catch (err) {
+                   toast.error('Failed to generate report');
+                 }
+               }}
+               className="flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-2xl text-xs font-bold transition-all border border-white/10"
+             >
                <Download size={16} />
                Export SAR Data
              </button>

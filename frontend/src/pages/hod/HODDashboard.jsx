@@ -202,7 +202,16 @@ export default function HODDashboard() {
                           >
                             <CheckCircle size={18} />
                           </button>
-                          <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                          <button 
+                            onClick={async () => {
+                              const remarks = prompt('Enter rejection remarks:');
+                              if (remarks) {
+                                await allocationService.approve(row.id, { status: 'REJECTED', remarks });
+                                toast.error('Allocation Rejected');
+                              }
+                            }}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                          >
                             <XCircle size={18} />
                           </button>
                         </>

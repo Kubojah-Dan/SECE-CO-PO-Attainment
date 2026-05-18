@@ -1,0 +1,55 @@
+# ============================================================
+# SECE CO-PO Platform — Backend Requirements
+# Python 3.12 | Django 5.x | DRF 3.15
+# ============================================================
+
+# ─── Core Framework ───────────────────────────────────────
+Django
+djangorestframework
+django-cors-headers
+
+# ─── Authentication ───────────────────────────────────────
+djangorestframework-simplejwt
+argon2-cffi
+# ─── Database ─────────────────────────────────────────────
+psycopg2-binary
+
+# ─── Cache & Task Queue ───────────────────────────────────
+redis
+django-redis
+celery
+django-celery-beat
+django-celery-results
+
+# ─── API Utilities ────────────────────────────────────────
+django-filter
+drf-spectacular
+
+# ─── Excel Processing ─────────────────────────────────────
+pandas
+openpyxl
+xlrd
+
+# ─── PDF Generation ───────────────────────────────────────
+reportlab
+Pillow
+
+# ─── Static Files ─────────────────────────────────────────
+whitenoise
+
+# ─── Production Server ────────────────────────────────────
+gunicorn
+
+# ─── Security ─────────────────────────────────────────────
+django-ratelimit
+python-decouple
+dj-database-url
+
+# ─── Utilities ────────────────────────────────────────────
+python-dateutil
+pytz
+django-extensions
+
+# ─── Dev Only ─────────────────────────────────────────────
+django-debug-toolbar
+factory-boy

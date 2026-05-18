@@ -4,7 +4,7 @@ import {
   ChevronRight, Download, Calendar, Filter,
   Building2, Users, BookOpen, BookMarked, 
   FileSpreadsheet, Settings, ShieldCheck,
-  Trophy, Target, Zap, Loader2
+  Trophy, Target, Zap, Loader2, Layout
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { 
@@ -251,6 +251,7 @@ export default function AdminDashboard() {
           { label: 'Departments', icon: Building2, path: '/admin/departments', color: 'blue' },
           { label: 'Users', icon: Users, path: '/admin/users', color: 'indigo' },
           { label: 'Regulations', icon: BookOpen, path: '/admin/regulations', color: 'purple' },
+          { label: 'Sections', icon: Layout, path: '/admin/sections', color: 'blue' },
           { label: 'Subjects', icon: BookMarked, path: '/admin/subjects', color: 'pink' },
           { label: 'Acad. Years', icon: Calendar, path: '/admin/academic-years', color: 'amber' },
           { label: 'Excel Tools', icon: FileSpreadsheet, path: '/admin/excel-tools', color: 'emerald' },

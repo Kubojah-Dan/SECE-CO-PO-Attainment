@@ -119,6 +119,20 @@ export const departmentService = {
   update: (id, data) => api.patch(`/admin/departments/${id}/`, data),
   delete: (id) => api.delete(`/admin/departments/${id}/`),
   programmes: (deptId) => api.get(`/admin/departments/${deptId}/programmes/`),
+  listProgrammes: (params) => api.get('/admin/programmes/', { params }),
+  createProgramme: (data) => api.post('/admin/programmes/', data),
+  updateProgramme: (id, data) => api.patch(`/admin/programmes/${id}/`, data),
+  deleteProgramme: (id) => api.delete(`/admin/programmes/${id}/`),
+  
+  listBatches: (params) => api.get('/admin/batches/', { params }),
+  createBatch: (data) => api.post('/admin/batches/', data),
+  updateBatch: (id, data) => api.patch(`/admin/batches/${id}/`, data),
+  deleteBatch: (id) => api.delete(`/admin/batches/${id}/`),
+
+  listSections: (params) => api.get('/admin/sections/', { params }),
+  createSection: (data) => api.post('/admin/sections/', data),
+  updateSection: (id, data) => api.patch(`/admin/sections/${id}/`, data),
+  deleteSection: (id) => api.delete(`/admin/sections/${id}/`),
 };
 
 export const regulationService = {
@@ -190,6 +204,9 @@ export const allocationService = {
     api.patch(`/faculty/subjects/${allocId}/assessments/${typeId}/`, data),
   getStudents: (allocId) => api.get(`/faculty/subjects/${allocId}/students/`),
   approve: (allocId, data) => api.post(`/allocations/allocations/${allocId}/approve/`, data),
+  list: (params) => api.get('/allocations/allocations/', { params }),
+  create: (data) => api.post('/allocations/allocations/', data),
+  getAllocations: (params) => api.get('/allocations/allocations/', { params }),
 };
 
 export const marksService = {
@@ -237,6 +254,7 @@ export const attainmentService = {
   // Configuration
   getConfigs: () => api.get('/attainment/configs/'),
   updateConfig: (id, data) => api.patch(`/attainment/configs/${id}/`, data),
+  createConfig: (data) => api.post('/attainment/configs/', data),
   getGlobalConfig: () => api.get('/attainment/configs/').then(res => {
     const data = res.data.results || res.data;
     const configs = Array.isArray(data) ? data : [];
@@ -269,4 +287,10 @@ export const analyticsService = {
   hodAttainmentSummary: (params) => api.get('/hod/attainment-summary/', { params }),
   iqacDashboard: (params) => api.get('/iqac/dashboard/', { params }),
   iqacCollegeSummary: (params) => api.get('/iqac/dashboard/', { params }), // For now same as dashboard
+};
+
+export const notificationService = {
+  list: () => api.get('/notifications/'),
+  markRead: (id) => api.post(`/notifications/${id}/mark-read/`),
+  markAllRead: () => api.post('/notifications/mark-all-read/'),
 };

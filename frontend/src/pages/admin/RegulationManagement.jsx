@@ -27,13 +27,19 @@ export default function RegulationManagement() {
 
   const { data: regulations, isLoading } = useQuery({
     queryKey: ['regulations'],
-    queryFn: () => regulationService.list().then(res => res.data)
+    queryFn: () => regulationService.list().then(res => res.data.results || (Array.isArray(res.data) ? res.data : []))
   });
 
   const saveMutation = useMutation({
-    mutationFn: (data) => editingReg 
-      ? regulationService.update(editingReg.id, data)
-      : regulationService.create(data),
+    mutationFn: (data) => {
+      const payload = { 
+        ...data, 
+        effective_from: data.effective_from || null 
+      };
+      return editingReg 
+        ? regulationService.update(editingReg.id, payload)
+        : regulationService.create(payload);
+    },
     onSuccess: () => {
       toast.success(`Regulation ${editingReg ? 'updated' : 'created'} successfully`);
       queryClient.invalidateQueries(['regulations']);
@@ -134,15 +140,15 @@ export default function RegulationManagement() {
             <div className="space-y-4 pt-4 border-t border-slate-100">
               <div className="flex justify-between text-xs font-bold">
                 <span className="text-slate-400 flex items-center gap-2 uppercase tracking-widest"><Settings2 size={14} /> CIA</span>
-                <span className="text-slate-900">{reg.academic_rules?.cia_weightage}%</span>
+                <span className="text-slate-900">{reg.academic_rules?.cia_weightage ?? 0}%</span>
               </div>
               <div className="flex justify-between text-xs font-bold">
                 <span className="text-slate-400 flex items-center gap-2 uppercase tracking-widest"><Settings2 size={14} /> ESE</span>
-                <span className="text-slate-900">{reg.academic_rules?.ese_weightage}%</span>
+                <span className="text-slate-900">{reg.academic_rules?.ese_weightage ?? 0}%</span>
               </div>
               <div className="flex justify-between text-xs font-bold">
                 <span className="text-slate-400 flex items-center gap-2 uppercase tracking-widest"><CheckCircle2 size={14} /> Passing</span>
-                <span className="text-slate-900">{reg.academic_rules?.passing_marks}%</span>
+                <span className="text-slate-900">{reg.academic_rules?.passing_marks ?? 0}%</span>
               </div>
               <div className="flex justify-between text-xs font-bold">
                 <span className="text-slate-400 flex items-center gap-2 uppercase tracking-widest"><Calendar size={14} /> Effective</span>
@@ -229,11 +235,11 @@ export default function RegulationManagement() {
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">CIA %</label>
                     <input 
                       type="number" 
-                      className="form-input rounded-2xl border-slate-100 h-14 font-bold text-slate-700 text-center"
-                      value={formData.academic_rules.cia_weightage}
+                      className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-bold text-lg" 
+                      value={formData.academic_rules?.cia_weightage ?? 50} 
                       onChange={e => setFormData({
                         ...formData, 
-                        academic_rules: { ...formData.academic_rules, cia_weightage: parseInt(e.target.value) }
+                        academic_rules: { ...formData.academic_rules, cia_weightage: parseInt(e.target.value) || 0 }
                       })}
                     />
                   </div>
@@ -241,11 +247,11 @@ export default function RegulationManagement() {
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">ESE %</label>
                     <input 
                       type="number" 
-                      className="form-input rounded-2xl border-slate-100 h-14 font-bold text-slate-700 text-center"
-                      value={formData.academic_rules.ese_weightage}
+                      className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-bold text-lg" 
+                      value={formData.academic_rules?.ese_weightage ?? 50} 
                       onChange={e => setFormData({
                         ...formData, 
-                        academic_rules: { ...formData.academic_rules, ese_weightage: parseInt(e.target.value) }
+                        academic_rules: { ...formData.academic_rules, ese_weightage: parseInt(e.target.value) || 0 }
                       })}
                     />
                   </div>
@@ -253,11 +259,11 @@ export default function RegulationManagement() {
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Pass %</label>
                     <input 
                       type="number" 
-                      className="form-input rounded-2xl border-slate-100 h-14 font-bold text-slate-700 text-center"
-                      value={formData.academic_rules.passing_marks}
+                      className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-bold text-lg" 
+                      value={formData.academic_rules?.passing_marks ?? 50} 
                       onChange={e => setFormData({
                         ...formData, 
-                        academic_rules: { ...formData.academic_rules, passing_marks: parseInt(e.target.value) }
+                        academic_rules: { ...formData.academic_rules, passing_marks: parseInt(e.target.value) || 0 }
                       })}
                     />
                   </div>

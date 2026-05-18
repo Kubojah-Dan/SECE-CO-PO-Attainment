@@ -46,22 +46,22 @@ export default function HODFacultyList() {
             <Card key={f.id} className="hover:shadow-md transition-shadow">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-lg">
-                  {f.user?.first_name?.[0] || '?'}{f.user?.last_name?.[0] || '?'}
+                  {f.first_name?.[0] || '?'}{f.last_name?.[0] || '?'}
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-gray-900 truncate">
-                    {f.user?.first_name} {f.user?.last_name}
+                    {f.first_name} {f.last_name}
                   </h3>
-                  <p className="text-xs text-gray-500 font-medium">{f.designation || 'Faculty Member'}</p>
+                  <p className="text-xs text-gray-500 font-medium">{f.faculty_profile?.designation || 'Faculty Member'}</p>
                   
                   <div className="mt-4 space-y-2">
                     <div className="flex items-center gap-2 text-xs text-gray-600">
                       <Mail size={14} className="text-gray-400" />
-                      <span className="truncate">{f.user?.email}</span>
+                      <span className="truncate">{f.email}</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-blue-600 font-bold bg-blue-50 px-2 py-1 rounded-lg w-fit mt-2">
                       <BookOpen size={14} />
-                      <span>{f.allocations_count || 0} Assigned Subjects</span>
+                      <span>{f.faculty_profile?.allocations_count || 0} Assigned Subjects</span>
                     </div>
                   </div>
                 </div>
