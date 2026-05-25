@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
 import { RefreshCw, Send } from 'lucide-react'
 import { apiGet, apiPost } from '@/lib/api'
 import { EP } from '@/lib/endpoints'
@@ -103,7 +104,7 @@ export function AttainmentView() {
   const [error, setError]       = useState<string | null>(null)
   const [recalcing, setRecalcing] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const subjectId = 'current'
+  const { id: subjectId = 'current' } = useParams<{ id: string }>()
 
   const fetchData = useCallback(async () => {
     setLoading(true)

@@ -39,7 +39,7 @@ export function ApprovalsPage() {
     setLoading(true)
     setError(null)
     try {
-      const data = await apiGet<PendingApproval[]>(EP.SUBJECTS)
+      const data = await apiGet<PendingApproval[]>(EP.HOD_PENDING)
       setApprovals(data)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to load approvals.')

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Download, Upload, Save } from 'lucide-react'
-import { apiGet, apiPost, apiPut } from '@/lib/api'
+import { apiGet, apiPost, apiPut, apiUpload } from '@/lib/api'
 import { EP } from '@/lib/endpoints'
 import type { MarksData, MarkComponentDef, StudentMark } from '@/types/api'
 import { Button } from '@/components/ui/Button'
@@ -92,7 +92,7 @@ export function MarkEntryTab({ subjectId, isLab }: Props) {
     const formData = new FormData()
     formData.append('file', file)
     try {
-      await apiPost(EP.MARKS_UPLOAD(subjectId), formData)
+      await apiUpload(EP.MARKS_UPLOAD(subjectId), formData)
       toast('Marks imported from Excel.', 'success')
       void fetchMarks()
     } catch (err: unknown) {

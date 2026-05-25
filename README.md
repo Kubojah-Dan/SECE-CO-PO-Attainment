@@ -1,6 +1,84 @@
-# OBE Attain — CO-PO/PSO Attainment System (Frontend)
+# OBE Attain — CO-PO/PSO Attainment System
 
-This is the comprehensive frontend application for the OBE Attain platform, designed to manage Outcome-Based Education (OBE) metrics, including CO-PO/PSO attainment for NBA and NAAC accreditation. Built with React 18, Vite, TypeScript, Tailwind CSS v3, and Zustand.
+This is the comprehensive Monorepo for the **OBE Attain** platform, designed to manage Outcome-Based Education (OBE) metrics, including CO-PO/PSO attainment for NBA and NAAC accreditation.
+
+The repository is structured into two main parts:
+- **Frontend**: A React application located at the root of the repository.
+- **Backend**: A Node.js API located in the `obe-attain-api` directory.
+
+## System Architecture & Tech Stack
+
+### Frontend (Root Directory)
+- **Framework**: React 18, Vite, TypeScript
+- **Styling**: Tailwind CSS v3 (custom flat design system)
+- **State Management**: Zustand (Auth and report job queuing)
+- **Routing**: React Router v6
+- **Visualization**: Recharts for analytics
+- **Icons**: Lucide React
+
+### Backend (`obe-attain-api/`)
+- **Framework**: Node.js, Express, TypeScript
+- **Database**: PostgreSQL (managed via Prisma ORM)
+- **Caching & Queues**: Redis & BullMQ
+- **Security**: JWT Authentication, bcryptjs, Helmet, Express Rate Limit
+- **Reporting**: PDFKit (PDFs) and ExcelJS (Excel sheets)
+
+---
+
+## Setup & Running Locally
+
+To run the full application, you need to start both the backend API and the frontend client simultaneously. Ensure you have **PostgreSQL** and **Redis** running locally or remotely.
+
+### 1. Backend Setup (`obe-attain-api/`)
+
+1. **Navigate to the Backend Directory:**
+   ```bash
+   cd obe-attain-api
+   ```
+2. **Install Dependencies:**
+   ```bash
+   npm install
+   ```
+3. **Environment Variables:**
+   Create a `.env` file inside `obe-attain-api/` with the required configuration:
+   ```env
+   DATABASE_URL="postgresql://user:password@localhost:5432/obe_attain?schema=public"
+   REDIS_URL="redis://localhost:6379"
+   JWT_ACCESS_SECRET="your_access_secret_here"
+   JWT_REFRESH_SECRET="your_refresh_secret_here"
+   PORT=4000
+   ```
+4. **Database Migration & Seeding:**
+   Run migrations and optionally seed initial data:
+   ```bash
+   npm run migrate
+   npm run seed
+   ```
+5. **Start the Backend Server:**
+   ```bash
+   npm run dev
+   ```
+   *The API will run on `http://localhost:4000` with hot-reloading.*
+
+### 2. Frontend Setup (Root Directory)
+
+1. **Open a new terminal** in the root folder.
+2. **Install Dependencies:**
+   ```bash
+   npm install
+   ```
+3. **Environment Variables:**
+   Create a `.env` file in the root directory:
+   ```env
+   VITE_API_URL=http://localhost:4000
+   ```
+4. **Start Development Server:**
+   ```bash
+   npm run dev
+   ```
+   *The frontend will run on `http://localhost:5173`.*
+
+---
 
 ## Features by Module
 
@@ -15,7 +93,7 @@ This is the comprehensive frontend application for the OBE Attain platform, desi
 - **Subject Details**: Define Course Outcomes (COs) and CO-PO mapping weights (0-3).
 - **Marks Entry**: Direct (Internal/Model/ESE) and indirect (surveys) mark upload via templates.
 - **Attainment View**: Real-time calculation and visualization of CO attainment percentages.
-- **Reports**: Direct download of subject-level reports (CO Attainment, Student Performance, Marks, Mapping) in PDF/Excel.
+- **Reports**: Direct download of subject-level reports in PDF/Excel.
 
 ### 3. HOD Portal
 - **Dashboard**: Department overview, faculty progress, and pending subject approvals.
@@ -26,97 +104,21 @@ This is the comprehensive frontend application for the OBE Attain platform, desi
 ### 4. IQAC / Accreditation Portal
 - **Dashboard**: Institution-wide quick stats and readiness status.
 - **Analytics**: Institution-wide PO/PSO averages, department comparisons, and YoY attainment trends.
-- **Accreditation**: NBA/NAAC readiness checklist, blocking items identification, and drill-down into department readiness.
+- **Accreditation**: NBA/NAAC readiness checklist, blocking items identification.
 - **Reports**: Generate full NBA and NAAC compliance reports.
 
 ### 5. Super Admin Control Panel
-- **Departments**: CRUD operations for academic departments and assigning HODs.
-- **Users**: Manage faculty/staff accounts, roles, temp passwords, and active status.
-- **Subjects**: Create subjects and assign faculty.
-- **Students**: Import student lists via Excel or manual entry.
-- **Regulations**: Define academic regulations and set active academic years.
-- **PO/PSO Definitions**: Update standard PO/PSO descriptions.
-- **Settings**: Configure direct/indirect weightages (e.g., 80/20) and target thresholds. Backup and restore system data.
-- **Audit Logs**: Filterable and paginated tracking of all user actions in the system.
+- **Departments & Users**: CRUD operations for academic departments, HOD assignments, and faculty/staff accounts.
+- **Subjects & Students**: Create subjects, assign faculty, and import student lists via Excel or manual entry.
+- **Regulations & Settings**: Define academic regulations, configure direct/indirect weightages (e.g., 80/20) and target thresholds. 
+- **System Maintenance**: Backup and restore system data, and track actions via paginated Audit Logs.
 
-## Available Endpoints (Configured in `src/lib/endpoints.ts`)
+## Available Backend Endpoints (Partial List)
 
-The frontend expects the backend API at the URL defined by `VITE_API_URL` (default: `http://localhost:4000`).
-
-### Authentication
-- `POST /api/auth/login`
-- `POST /api/auth/logout`
-- `GET /api/auth/me`
-- `POST /api/auth/refresh`
-
-### Analytics (Dashboards)
-- `GET /api/analytics/admin/overview`
-- `GET /api/analytics/hod/department`
-- `GET /api/analytics/faculty/subjects`
-- `GET /api/analytics/iqac/institution`
-
-### Admin / Core Entities
-- **Departments**: `GET/POST /api/departments`, `PUT/DELETE /api/departments/:id`
-- **Subjects**: `GET/POST /api/subjects`, `PUT/DELETE /api/subjects/:id`, `PUT /api/subjects/:id/assign`
-- **Students**: `GET/POST /api/students`, `PUT/DELETE /api/students/:id`, `POST /api/students/import`
-- **Users**: `GET/POST /api/users`, `PUT/DELETE /api/users/:id`
-- **Regulations**: `GET/POST /api/regulations`, `PUT /api/regulations/:id`, `GET /api/academic-years`
-
-### Faculty / Subject Operations
-- **Course Outcomes**: `GET/POST /api/subjects/:id/cos`, `PUT/DELETE /api/subjects/:id/cos/:coId`
-- **CO-PO Mapping**: `GET /api/subjects/:id/co-po-mapping`
-- **Marks**: `POST /api/subjects/:id/marks/upload`, `GET /api/subjects/:id/marks/template`
-- **Subject Lifecycle**: `POST /api/subjects/:id/submit`, `POST /api/subjects/:id/approve`, `POST /api/subjects/:id/reject`
-
-### Attainment
-- `POST /api/subjects/:id/attainment/calculate`
-- `GET /api/subjects/:id/attainment/co`
-- `GET /api/subjects/:id/attainment/po`
-- `GET /api/departments/:deptId/po-attainment`
-- `GET /api/departments/:deptId/pso-attainment`
-- `GET /api/departments/:deptId/po-attainment/trends`
-- `GET /api/attainment/institution`
-
-### Reports & Jobs
-- `POST /api/reports/jobs` (Queue report)
-- `GET /api/reports/jobs/:jobId` (Poll status)
-- `GET /api/reports/jobs/:jobId/download`
-- Direct subject reports via `/api/reports/subjects/:subjectId/*`
-
-### Configuration & Logs
-- `GET/PUT /api/attainment/settings`
-- `GET /api/audit-logs`, `GET /api/audit-logs/export`
-- `POST /api/config/backup`
-
-## Setup & Running Locally
-
-1. **Install Dependencies**
-   ```bash
-   npm install
-   ```
-
-2. **Environment Variables**
-   Create a `.env` file in the root directory:
-   ```env
-   VITE_API_URL=http://localhost:4000
-   ```
-
-3. **Start Development Server**
-   ```bash
-   npm run dev
-   ```
-   The application will be available at `http://localhost:5173`.
-
-4. **Production Build**
-   ```bash
-   npm run build
-   ```
-   This generates the optimized static files in the `dist/` directory.
-
-## Technology Stack
-- React 18, Vite, TypeScript
-- Tailwind CSS v3 for styling (custom flat design system)
-- Zustand for state management (auth and report job queuing)
-- React Router v6 for navigation
-- Recharts for analytics and data visualization
-- Lucide React for iconography
+- **Auth**: `/api/auth/login`, `/api/auth/logout`, `/api/auth/me`, `/api/auth/refresh`
+- **Analytics**: `/api/analytics/admin/overview`, `/api/analytics/hod/department`, `/api/analytics/faculty/subjects`, `/api/analytics/iqac/institution`
+- **Admin**: CRUD for `/api/departments`, `/api/subjects`, `/api/students`, `/api/users`, `/api/regulations`
+- **Faculty**: `/api/subjects/:id/cos`, `/api/subjects/:id/marks/upload`, `/api/subjects/:id/submit`
+- **Attainment**: `/api/subjects/:id/attainment/calculate`, `/api/departments/:deptId/po-attainment`
+- **Reports**: `/api/reports/jobs`, `/api/reports/subjects/:subjectId/*`
+- **Config & Logs**: `/api/attainment/settings`, `/api/audit-logs`, `/api/config/backup`

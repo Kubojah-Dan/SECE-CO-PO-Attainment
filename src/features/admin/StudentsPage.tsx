@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Download, Plus, Upload } from 'lucide-react'
-import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api'
+import { apiGet, apiPost, apiPut, apiDelete, apiUpload } from '@/lib/api'
 import { EP } from '@/lib/endpoints'
 import type { Student } from '@/types/phase4'
 import type { Department } from '@/types/api'
@@ -84,7 +84,7 @@ export function StudentsPage() {
     setUploading(true)
     const fd = new FormData(); fd.append('file', file)
     try {
-      const res = await apiPost<{ count: number; errors?: string[] }>(EP.STUDENTS_IMPORT, fd)
+      const res = await apiUpload<{ count: number; errors?: string[] }>(EP.STUDENTS_IMPORT, fd)
       toast(`${res.count} students imported.`, 'success')
       if (res.errors && res.errors.length > 0) { setUploadErrors(res.errors); setErrModal(true) }
       void fetchAll()

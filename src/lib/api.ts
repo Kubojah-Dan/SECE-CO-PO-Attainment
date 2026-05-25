@@ -87,3 +87,40 @@ export async function apiPatch<T>(path: string, body: unknown): Promise<T> {
 export async function apiDelete<T>(path: string): Promise<T> {
   return request<T>('DELETE', path)
 }
+
+/* ─────────────────────────────────────────────
+   apiUpload — multipart/form-data uploads
+   Does NOT set Content-Type; browser sets it with boundary automatically
+   ───────────────────────────────────────────── */
+export async function apiUpload<T>(path: string, formData: FormData): Promise<T> {
+  const { token, logout } = useAuthStore.getState()
+
+  const headers: Record<string, string> = {}
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
+  const response = await fetch(`${BASE_URL}${path}`, {
+    method: 'POST',
+    headers,
+    body: formData,
+  })
+
+  if (response.status === 401) {
+    logout()
+    window.location.href = '/login'
+    throw new ApiError(401, 'Session expired. Please sign in again.')
+  }
+
+  if (!response.ok) {
+    let message = `Request failed with status ${response.status}`
+    try {
+      const errBody = (await response.json()) as { message?: string }
+      if (errBody.message) message = errBody.message
+    } catch { /* ignore */ }
+    throw new ApiError(response.status, message)
+  }
+
+  if (response.status === 204) return undefined as unknown as T
+  return response.json() as Promise<T>
+}

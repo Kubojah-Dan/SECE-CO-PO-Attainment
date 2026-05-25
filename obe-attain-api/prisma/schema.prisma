@@ -1,0 +1,358 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── ENUMS ───────────────────────────────────────────────────────────────────
+
+enum Role {
+  SUPER_ADMIN
+  HOD
+  FACULTY
+  IQAC
+}
+
+enum SubjectType {
+  THEORY
+  LAB
+  BOTH
+}
+
+enum SubjectStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+enum BloomsLevel {
+  L1_REMEMBER
+  L2_UNDERSTAND
+  L3_APPLY
+  L4_ANALYZE
+  L5_EVALUATE
+  L6_CREATE
+}
+
+enum AttainmentStatus {
+  PENDING
+  CALCULATED
+}
+
+enum AuditAction {
+  LOGIN
+  LOGOUT
+  CREATE
+  UPDATE
+  DELETE
+  CALCULATE
+  APPROVE
+  REJECT
+  EXPORT
+  IMPORT
+}
+
+// ─── MODELS ──────────────────────────────────────────────────────────────────
+
+model User {
+  id           String    @id @default(cuid())
+  employeeId   String    @unique
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         Role
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  departmentId   String?
+  department     Department?     @relation("DeptUsers", fields: [departmentId], references: [id])
+  managedDept    Department?     @relation("DeptHOD")
+  refreshTokens  RefreshToken[]
+  auditLogs      AuditLog[]
+  subjectFaculty SubjectFaculty[]
+  coDefinitions  CourseOutcome[]
+  markEntries    StudentMark[]
+
+  @@index([role])
+  @@index([departmentId])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Department {
+  id          String    @id @default(cuid())
+  name        String
+  code        String    @unique
+  description String?
+  hodId       String?   @unique
+  hod         User?     @relation("DeptHOD", fields: [hodId], references: [id])
+  users       User[]    @relation("DeptUsers")
+  subjects    Subject[]
+  students    Student[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([code])
+}
+
+model Regulation {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  createdAt DateTime  @default(now())
+  subjects  Subject[]
+}
+
+model AcademicYear {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  isCurrent Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  subjects  Subject[]
+}
+
+model Subject {
+  id              String        @id @default(cuid())
+  code            String
+  name            String
+  semester        Int
+  type            SubjectType   @default(THEORY)
+  status          SubjectStatus @default(DRAFT)
+  rejectionRemark String?
+  departmentId    String
+  department      Department    @relation(fields: [departmentId], references: [id])
+  regulationId    String
+  regulation      Regulation    @relation(fields: [regulationId], references: [id])
+  academicYearId  String
+  academicYear    AcademicYear  @relation(fields: [academicYearId], references: [id])
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  faculty        SubjectFaculty[]
+  courseOutcomes CourseOutcome[]
+  coPoMappings   CoPoMapping[]
+  studentMarks   StudentMark[]
+  directAtt      DirectAttainment[]
+  indirectAtt    IndirectAttainment[]
+  finalAtt       FinalAttainment[]
+
+  @@unique([code, regulationId, academicYearId])
+  @@index([departmentId])
+  @@index([academicYearId])
+  @@index([status])
+}
+
+model SubjectFaculty {
+  id         String   @id @default(cuid())
+  subjectId  String
+  subject    Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  facultyId  String
+  faculty    User     @relation(fields: [facultyId], references: [id])
+  assignedAt DateTime @default(now())
+
+  @@unique([subjectId, facultyId])
+}
+
+model Student {
+  id           String     @id @default(cuid())
+  rollNumber   String
+  name         String
+  email        String?
+  batch        String
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id])
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  marks        StudentMark[]
+
+  @@unique([rollNumber, departmentId])
+  @@index([departmentId])
+  @@index([batch])
+}
+
+model ProgramOutcome {
+  id          String        @id @default(cuid())
+  code        String        @unique
+  number      Int           @unique
+  description String
+  updatedAt   DateTime      @updatedAt
+  coMappings  CoPoMapping[]
+}
+
+model ProgramSpecificOutcome {
+  id          String        @id @default(cuid())
+  code        String        @unique
+  number      Int           @unique
+  description String
+  updatedAt   DateTime      @updatedAt
+  coMappings  CoPoMapping[]
+}
+
+model CourseOutcome {
+  id            String      @id @default(cuid())
+  number        Int
+  description   String
+  bloomsLevel   BloomsLevel
+  targetPercent Float       @default(60)
+  subjectId     String
+  subject       Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  createdById   String
+  createdBy     User        @relation(fields: [createdById], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  coPoMappings CoPoMapping[]
+  directAtt    DirectAttainment[]
+
+  @@unique([subjectId, number])
+  @@index([subjectId])
+}
+
+model CoPoMapping {
+  id        String                  @id @default(cuid())
+  subjectId String
+  subject   Subject                 @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  coId      String
+  co        CourseOutcome           @relation(fields: [coId], references: [id], onDelete: Cascade)
+  poId      String?
+  po        ProgramOutcome?         @relation(fields: [poId], references: [id])
+  psoId     String?
+  pso       ProgramSpecificOutcome? @relation(fields: [psoId], references: [id])
+  level     Int                     @default(0)
+  updatedAt DateTime                @updatedAt
+
+  @@unique([coId, poId])
+  @@unique([coId, psoId])
+  @@index([subjectId])
+}
+
+model StudentMark {
+  id          String   @id @default(cuid())
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id])
+  subjectId   String
+  subject     Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  enteredById String
+  enteredBy   User     @relation(fields: [enteredById], references: [id])
+  ia1         Float?
+  ia2         Float?
+  ia3         Float?
+  modelExam   Float?
+  ese         Float?
+  assignment  Float?
+  lab         Float?
+  updatedAt   DateTime @updatedAt
+
+  @@unique([studentId, subjectId])
+  @@index([subjectId])
+}
+
+model DirectAttainment {
+  id            String           @id @default(cuid())
+  subjectId     String
+  subject       Subject          @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  coId          String
+  co            CourseOutcome    @relation(fields: [coId], references: [id], onDelete: Cascade)
+  iaAttainment  Float?
+  eseAttainment Float?
+  directValue   Float?
+  status        AttainmentStatus @default(PENDING)
+  calculatedAt  DateTime?
+  updatedAt     DateTime         @updatedAt
+
+  @@unique([subjectId, coId])
+  @@index([subjectId])
+}
+
+model IndirectAttainment {
+  id          String    @id @default(cuid())
+  subjectId   String
+  subject     Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  coNumber    Int
+  q1          Float?
+  q2          Float?
+  q3          Float?
+  q4          Float?
+  q5          Float?
+  avgScore    Float?
+  attainment  Float?
+  submittedAt DateTime?
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([subjectId, coNumber])
+  @@index([subjectId])
+}
+
+model FinalAttainment {
+  id             String    @id @default(cuid())
+  subjectId      String
+  subject        Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  coNumber       Int
+  directValue    Float?
+  indirectValue  Float?
+  directWeight   Float     @default(0.8)
+  indirectWeight Float     @default(0.2)
+  finalValue     Float?
+  targetPercent  Float     @default(60)
+  targetMet      Boolean   @default(false)
+  calculatedAt   DateTime?
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([subjectId, coNumber])
+  @@index([subjectId])
+}
+
+model AttainmentConfig {
+  id             String   @id @default(cuid())
+  directWeight   Float    @default(0.8)
+  indirectWeight Float    @default(0.2)
+  targetMet      Float    @default(60)
+  nearTarget     Float    @default(50)
+  updatedAt      DateTime @updatedAt
+}
+
+model ReportJob {
+  id          String   @id @default(cuid())
+  type        String
+  params      Json
+  status      String   @default("pending")
+  filename    String?
+  filePath    String?
+  errorMsg    String?
+  requestedBy String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([requestedBy])
+  @@index([status])
+}
+
+model AuditLog {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id])
+  action    AuditAction
+  entity    String
+  entityId  String?
+  detail    String?
+  ipAddress String?
+  createdAt DateTime    @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}

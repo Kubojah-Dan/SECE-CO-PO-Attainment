@@ -7,13 +7,27 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
+# Node
 node_modules/
+
+# Frontend Build
 dist
 dist-ssr
 *.local
+
+# Backend
+obe-attain-api/dist/
+obe-attain-api/uploads/
+obe-attain-api/reports/
+obe-attain-api/backups/
+obe-attain-api/logs/
+
+# Env Files
 .env
-frontend/node_modules/
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # Editor directories and files
 .vscode/*
