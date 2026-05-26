@@ -19,20 +19,20 @@ A comprehensive, automated platform for managing, calculating, and analyzing Cou
 ### Block Diagram
 
 ```mermaid
-graph TD
-    Client[React Frontend <br/> Vite, TailwindCSS, TanStack Query]
-    API[Django REST API <br/> JWT Auth, DRF]
-    DB[(Database <br/> PostgreSQL / SQLite)]
+flowchart TD
+    Client["React Frontend <br/> Vite, TailwindCSS, TanStack Query"]
+    API["Django REST API <br/> JWT Auth, DRF"]
+    DB[("Database <br/> PostgreSQL / SQLite")]
     
     Client <-->|REST / JSON| API
     API <-->|ORM| DB
 
     subgraph "Frontend Modules"
-        Auth[Authentication]
-        FacDash[Faculty Dashboard]
-        HODDash[HOD Dashboard]
-        AdminDash[Admin Setup]
-        IQACDash[IQAC Reports]
+        Auth["Authentication"]
+        FacDash["Faculty Dashboard"]
+        HODDash["HOD Dashboard"]
+        AdminDash["Admin Setup"]
+        IQACDash["IQAC Reports"]
     end
 
     Client --> Auth
