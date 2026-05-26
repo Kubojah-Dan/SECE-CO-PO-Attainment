@@ -5,6 +5,7 @@
  */
 import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import { DESIGN_TOKENS } from '../../constants';
 
 const CELL_STYLES = {
   0: 'matrix-cell-0',

@@ -4,10 +4,10 @@
  */
 
 const LEVEL_CONFIG = {
-  3: { label: 'Level 3', sublabel: 'High', className: 'level-3', dot: '#059669' },
-  2: { label: 'Level 2', sublabel: 'Medium', className: 'level-2', dot: '#2563EB' },
-  1: { label: 'Level 1', sublabel: 'Low', className: 'level-1', dot: '#F59E0B' },
-  0: { label: 'Not Attained', sublabel: 'L0', className: 'level-0', dot: '#DC2626' },
+  3: { label: 'Level 3', sublabel: 'High',         className: 'level-3', dot: 'var(--level-3)' },
+  2: { label: 'Level 2', sublabel: 'Medium',       className: 'level-2', dot: 'var(--level-2)' },
+  1: { label: 'Level 1', sublabel: 'Low',          className: 'level-1', dot: 'var(--level-1)' },
+  0: { label: 'Not Attained', sublabel: 'L0',      className: 'level-0', dot: 'var(--level-0)' },
 };
 
 /**

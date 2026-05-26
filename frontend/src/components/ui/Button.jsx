@@ -1,36 +1,52 @@
 import React from 'react';
+import { Loader2 } from 'lucide-react';
 
-const Button = ({ 
-  children, 
-  variant = 'primary', 
-  icon: Icon, 
-  onClick, 
-  className = '', 
+const Button = ({
+  children,
+  variant = 'primary',
+  size = 'md',
+  icon: Icon,
+  onClick,
+  className = '',
   disabled = false,
-  type = 'button'
+  isLoading = false,
+  type = 'button',
 }) => {
-  const baseStyles = "inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all duration-300 active:scale-95 disabled:opacity-50 disabled:pointer-events-none";
-  
+  const base = "inline-flex items-center justify-center gap-2 font-medium rounded-xl transition-all duration-150 active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none focus-visible:ring-2 focus-visible:ring-[var(--primary-400)] focus-visible:outline-none";
+
+  const sizes = {
+    sm:  'px-3 py-1.5 text-xs',
+    md:  'px-4 py-2.5 text-sm',
+    lg:  'px-6 py-3 text-sm',
+    xl:  'px-8 py-4 text-base',
+  };
+
   const variants = {
-    primary: "bg-slate-900 text-white hover:bg-slate-800 shadow-lg shadow-slate-200/50 hover:shadow-slate-200/80",
-    secondary: "bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-200/50 hover:shadow-blue-200/80",
-    outline: "bg-white border-2 border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50",
-    ghost: "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
-    danger: "bg-red-500 text-white hover:bg-red-600 shadow-lg shadow-red-200/50 hover:shadow-red-200/80",
-    success: "bg-emerald-500 text-white hover:bg-emerald-600 shadow-lg shadow-emerald-200/50 hover:shadow-emerald-200/80",
+    primary:   'bg-[var(--primary-500)] hover:bg-[var(--primary-600)] text-white shadow-sm shadow-[var(--primary-500)]/20',
+    secondary: 'bg-white hover:bg-[var(--surface-secondary)] text-[var(--primary-500)] border border-[var(--border-strong)] shadow-sm',
+    outline:   'bg-transparent hover:bg-[var(--primary-50)] text-[var(--primary-500)] border border-[var(--primary-300)]',
+    ghost:     'bg-transparent hover:bg-[var(--surface-tertiary)] text-[var(--text-secondary)]',
+    danger:    'bg-[var(--danger)] hover:bg-red-700 text-white shadow-sm',
+    success:   'bg-[var(--success)] hover:bg-emerald-700 text-white shadow-sm',
+    accent:    'bg-[var(--accent-500)] hover:bg-[var(--accent-600)] text-white font-semibold shadow-sm shadow-amber-400/20',
   };
 
   return (
     <button
       type={type}
       onClick={onClick}
-      disabled={disabled}
-      className={`${baseStyles} ${variants[variant]} ${className}`}
+      disabled={disabled || isLoading}
+      className={`${base} ${sizes[size] || sizes.md} ${variants[variant] || variants.primary} ${className}`}
     >
-      {Icon && <Icon size={20} className={children ? "shrink-0" : ""} />}
+      {isLoading ? (
+        <Loader2 size={16} className="animate-spin shrink-0" />
+      ) : (
+        Icon && <Icon size={16} className={children ? "shrink-0" : ""} />
+      )}
       {children}
     </button>
   );
 };
 
 export default Button;
+
