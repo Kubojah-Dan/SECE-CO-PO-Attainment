@@ -122,70 +122,72 @@ export default function QuestionMappingPage() {
         </div>
       </div>
 
-      <Card className="p-0 overflow-hidden border-none shadow-xl rounded-[2rem]">
-        <table className="w-full">
-          <thead className="bg-slate-900 text-white">
-            <tr>
-              <th className="p-4 text-xs font-bold uppercase tracking-widest">Q. No</th>
-              <th className="p-4 text-xs font-bold uppercase tracking-widest text-center">Mapped CO</th>
-              <th className="p-4 text-xs font-bold uppercase tracking-widest text-center">Max Marks</th>
-              <th className="p-4 text-xs font-bold uppercase tracking-widest text-right">Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {questions.map((q, index) => (
-              <tr key={index} className="hover:bg-slate-50 transition-colors">
-                <td className="p-4">
-                  <input 
-                    type="text" 
-                    value={q.question_number}
-                    onChange={(e) => updateQuestion(index, 'question_number', e.target.value)}
-                    className="form-input w-24 font-bold text-slate-900 text-center"
-                    placeholder="Q1a"
-                  />
-                </td>
-                <td className="p-4">
-                  <select 
-                    value={q.co_id}
-                    onChange={(e) => updateQuestion(index, 'co_id', e.target.value)}
-                    className="form-input w-full font-bold text-blue-600"
-                  >
-                    <option value="">Select CO</option>
-                    {cos.map(co => (
-                      <option key={co.id} value={co.id}>{co.co_code}: {co.description.substring(0, 30)}...</option>
-                    ))}
-                  </select>
-                </td>
-                <td className="p-4">
-                  <input 
-                    type="number" 
-                    value={q.max_marks}
-                    onChange={(e) => updateQuestion(index, 'max_marks', e.target.value)}
-                    className="form-input w-24 font-bold text-center"
-                  />
-                </td>
-                <td className="p-4 text-right">
+      <Card className="p-0 overflow-hidden border-none shadow-xl rounded-[2rem] bg-white">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full text-left min-w-[600px]">
+            <thead className="bg-slate-900 text-white">
+              <tr>
+                <th className="p-4 text-xs font-bold uppercase tracking-widest">Q. No</th>
+                <th className="p-4 text-xs font-bold uppercase tracking-widest text-center">Mapped CO</th>
+                <th className="p-4 text-xs font-bold uppercase tracking-widest text-center">Max Marks</th>
+                <th className="p-4 text-xs font-bold uppercase tracking-widest text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {questions.map((q, index) => (
+                <tr key={index} className="hover:bg-slate-50 transition-colors">
+                  <td className="p-4">
+                    <input 
+                      type="text" 
+                      value={q.question_number}
+                      onChange={(e) => updateQuestion(index, 'question_number', e.target.value)}
+                      className="form-input w-24 font-bold text-slate-900 text-center"
+                      placeholder="Q1a"
+                    />
+                  </td>
+                  <td className="p-4">
+                    <select 
+                      value={q.co_id}
+                      onChange={(e) => updateQuestion(index, 'co_id', e.target.value)}
+                      className="form-input w-full font-bold text-blue-600"
+                    >
+                      <option value="">Select CO</option>
+                      {cos.map(co => (
+                        <option key={co.id} value={co.id}>{co.co_code}: {co.description.substring(0, 30)}...</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="p-4">
+                    <input 
+                      type="number" 
+                      value={q.max_marks}
+                      onChange={(e) => updateQuestion(index, 'max_marks', e.target.value)}
+                      className="form-input w-24 font-bold text-center"
+                    />
+                  </td>
+                  <td className="p-4 text-right">
+                    <button 
+                      onClick={() => removeQuestion(index)}
+                      className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              <tr>
+                <td colSpan={4} className="p-4">
                   <button 
-                    onClick={() => removeQuestion(index)}
-                    className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                    onClick={addQuestion}
+                    className="w-full py-4 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 font-bold hover:border-slate-400 hover:text-slate-600 transition-all flex items-center justify-center gap-2"
                   >
-                    <Trash2 size={18} />
+                    <Plus size={18} /> Add Question
                   </button>
                 </td>
               </tr>
-            ))}
-            <tr>
-              <td colSpan={4} className="p-4">
-                <button 
-                  onClick={addQuestion}
-                  className="w-full py-4 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 font-bold hover:border-slate-400 hover:text-slate-600 transition-all flex items-center justify-center gap-2"
-                >
-                  <Plus size={18} /> Add Question
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        </div>
       </Card>
 
       <div className="flex justify-end gap-4">

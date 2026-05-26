@@ -5,6 +5,7 @@ from django.http import HttpResponse
 from .excel_generators import (
     generate_nba_attainment_report,
     generate_marks_template,
+    generate_generic_marks_template,
     generate_student_template,
     generate_subject_template,
     generate_co_summary_report,
@@ -51,15 +52,12 @@ class TemplateGenerationView(APIView):
         
         try:
             if template_type == 'marks':
-                # For generic template, we use a dummy or first available if no alloc_id provided
-                # But marks usually need an allocation. We'll return a generic student list if possible.
-                # For now, let's just return generate_marks_template if allocation provided
                 alloc_id = request.query_params.get('allocation')
                 assess_code = request.query_params.get('assessment', 'CIA1')
                 if alloc_id:
                     excel_data = generate_marks_template(alloc_id, assess_code)
                 else:
-                    return Response({"error": "allocation_id required for marks template"}, status=400)
+                    excel_data = generate_generic_marks_template()
             elif template_type == 'students':
                 excel_data = generate_student_template()
             elif template_type == 'subjects':

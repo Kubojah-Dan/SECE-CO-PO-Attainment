@@ -10,22 +10,29 @@ class AcademicYearSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class CourseOutcomeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CourseOutcome
-        fields = '__all__'
-
-
 class COPOMappingSerializer(serializers.ModelSerializer):
+    po_code = serializers.CharField(source='po.po_code', read_only=True)
+
     class Meta:
         model = COPOMapping
-        fields = '__all__'
+        fields = ['id', 'co', 'po', 'po_code', 'correlation_level']
 
 
 class COPSOMappingSerializer(serializers.ModelSerializer):
+    pso_code = serializers.CharField(source='pso.pso_code', read_only=True)
+
     class Meta:
         model = COPSOMapping
-        fields = '__all__'
+        fields = ['id', 'co', 'pso', 'pso_code', 'correlation_level']
+
+
+class CourseOutcomeSerializer(serializers.ModelSerializer):
+    po_mappings = COPOMappingSerializer(many=True, read_only=True)
+    pso_mappings = COPSOMappingSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = CourseOutcome
+        fields = ['id', 'subject', 'co_number', 'co_code', 'description', 'bloom_level', 'po_mappings', 'pso_mappings']
 
 
 class SubjectSerializer(serializers.ModelSerializer):

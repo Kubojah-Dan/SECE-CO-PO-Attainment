@@ -79,7 +79,7 @@ class AssessmentType(models.Model):
     default_max_marks = models.DecimalField(max_digits=6, decimal_places=2, null=True)
     weightage_percent = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     display_order = models.IntegerField(default=0)
-    is_system = models.BooleanField(default=True)              # System-defined, not deletable
+    is_system = models.BooleanField(default=False)             # System-defined types are seeded; custom ones are not
 
     class Meta:
         db_table = 'assessment_type'
@@ -104,8 +104,30 @@ class SubjectAssessmentConfig(models.Model):
     is_enabled = models.BooleanField(default=True)
     max_marks = models.DecimalField(max_digits=6, decimal_places=2)
     passing_marks = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+    # Per-allocation override weightage; if null, falls back to assessment_type.weightage_percent
+    weightage = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def threshold_pct(self):
+        """Passing threshold as a percentage of max marks."""
+        if self.max_marks and self.passing_marks:
+            return round(float(self.passing_marks) / float(self.max_marks) * 100)
+        return 50
+
+    @property
+    def effective_weightage(self):
+        """Weightage to use — per-allocation override or global type default."""
+        if self.weightage is not None:
+            return self.weightage
+        return self.assessment_type.weightage_percent
+
+    def save(self, *args, **kwargs):
+        from decimal import Decimal
+        if self.max_marks is not None:
+            self.passing_marks = self.max_marks * Decimal('0.5')
+        super().save(*args, **kwargs)
 
     class Meta:
         db_table = 'subject_assessment_config'
@@ -144,3 +166,59 @@ class COAssessmentMapping(models.Model):
 
     def __str__(self):
         return f"{self.co.co_code} ↔ {self.assessment_type.code} ({self.weightage}%)"
+
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from decimal import Decimal
+
+@receiver(post_save, sender=SubjectAllocation)
+def initialize_assessment_configs(sender, instance, created, **kwargs):
+    if created:
+        for at in AssessmentType.objects.all():
+            max_val = at.default_max_marks or Decimal('100.00')
+            SubjectAssessmentConfig.objects.get_or_create(
+                subject_allocation=instance,
+                assessment_type=at,
+                defaults={
+                    'is_enabled': True,
+                    'max_marks': max_val,
+                    'passing_marks': max_val * Decimal('0.5')
+                }
+            )
+
+@receiver(post_save, sender=SubjectAssessmentConfig)
+def initialize_co_assessment_mappings(sender, instance, created, **kwargs):
+    if created:
+        from apps.subjects.models import CourseOutcome
+        # Check if mappings already exist for this allocation and assessment type
+        existing_mappings = COAssessmentMapping.objects.filter(
+            subject_allocation=instance.subject_allocation,
+            assessment_type=instance.assessment_type
+        )
+        if not existing_mappings.exists():
+            cos = list(CourseOutcome.objects.filter(subject=instance.subject_allocation.subject).order_by('co_number'))
+            if not cos:
+                # Auto create default 5 COs if not present
+                for i in range(1, 6):
+                    co, _ = CourseOutcome.objects.get_or_create(
+                        subject=instance.subject_allocation.subject,
+                        co_number=i,
+                        defaults={
+                            'co_code': f'CO{i}',
+                            'description': f'Understand and apply concepts of Course Outcome {i}',
+                            'bloom_level': 'Apply'
+                        }
+                    )
+                    cos.append(co)
+            
+            eq_weight = Decimal('100.00') / Decimal(str(len(cos)))
+            mappings = [
+                COAssessmentMapping(
+                    co=co,
+                    assessment_type=instance.assessment_type,
+                    subject_allocation=instance.subject_allocation,
+                    weightage=eq_weight
+                ) for co in cos
+            ]
+            COAssessmentMapping.objects.bulk_create(mappings)

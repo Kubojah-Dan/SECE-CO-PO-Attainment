@@ -19,6 +19,7 @@ export default function AppLayout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [lastNotificationId, setLastNotificationId] = useState(null);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   const queryClient = useQueryClient();
   const { data: notifData } = useQuery({
@@ -34,7 +35,10 @@ export default function AppLayout() {
   useEffect(() => {
     if (notifications.length > 0) {
       const latest = notifications[0];
-      if (!latest.is_read && latest.id !== lastNotificationId) {
+      if (!hasInitialized) {
+        setLastNotificationId(latest.id);
+        setHasInitialized(true);
+      } else if (!latest.is_read && latest.id !== lastNotificationId) {
         setLastNotificationId(latest.id);
         const toastType = latest.level === 'success' ? 'success' :
                           latest.level === 'warning' ? 'warning' :
@@ -47,8 +51,10 @@ export default function AppLayout() {
           { autoClose: 5000, hideProgressBar: false }
         );
       }
+    } else {
+      setHasInitialized(true);
     }
-  }, [notifications, lastNotificationId]);
+  }, [notifications, lastNotificationId, hasInitialized]);
 
   const markReadMutation = useMutation({
     customKey: 'mark-read',
@@ -231,7 +237,7 @@ export default function AppLayout() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden">
           <motion.div
             className="page-enter"
             key={location.pathname}

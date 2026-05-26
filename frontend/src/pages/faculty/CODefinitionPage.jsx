@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { subjectService } from '../../services/api';
@@ -19,9 +19,12 @@ export default function CODefinitionPage() {
   const { data: subjectData, isLoading } = useQuery({
     queryKey: ['subject-allocation', allocId],
     queryFn: () => subjectService.getAllocationDetail(allocId),
-    onSuccess: (data) => {
-      if (data.data.course_outcomes?.length > 0) {
-        setCos(data.data.course_outcomes);
+  });
+
+  useEffect(() => {
+    if (subjectData?.data) {
+      if (subjectData.data.course_outcomes?.length > 0) {
+        setCos(subjectData.data.course_outcomes);
       } else {
         // Default 5 COs
         setCos(Array(5).fill(0).map((_, i) => ({
@@ -32,7 +35,7 @@ export default function CODefinitionPage() {
         })));
       }
     }
-  });
+  }, [subjectData]);
 
   const saveMutation = useMutation({
     mutationFn: (data) => subjectService.saveCOs(allocId, data),

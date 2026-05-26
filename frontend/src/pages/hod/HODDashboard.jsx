@@ -13,6 +13,7 @@ import {
 import StatCard from '../../components/ui/StatCard';
 import Card from '../../components/ui/Card';
 import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { analyticsService, allocationService, reportService } from '../../services/api';
 import AcademicYearSelector from '../../components/ui/AcademicYearSelector';
 import { useSelection } from '../../contexts/SelectionContext';
@@ -160,7 +161,12 @@ export default function HODDashboard() {
                     </div>
                   </td>
                   <td className="py-4 px-2">
-                    <span className="text-sm text-gray-700 font-medium">{row.subject_name}</span>
+                    <Link 
+                      to={`/hod/co-attainment?subject_allocation=${row.id}`}
+                      className="text-sm font-bold text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                    >
+                      {row.subject_name}
+                    </Link>
                   </td>
                   <td className="py-4 px-2 text-center">
                     <div className="flex flex-col items-center gap-1">

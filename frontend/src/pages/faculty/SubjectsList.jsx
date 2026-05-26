@@ -9,13 +9,14 @@ import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import Card from '../../components/ui/Card';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useSelection } from '../../contexts/SelectionContext';
 import { allocationService, attainmentService } from '../../services/api';
 import AcademicYearSelector from '../../components/ui/AcademicYearSelector';
 
 export default function SubjectsList() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedAY, setSelectedAY] = useState(1);
+  const { selectedAY, setSelectedAY } = useSelection();
   const [selectedSemester, setSelectedSemester] = useState('All');
   const [calculatingId, setCalculatingId] = useState(null);
 
@@ -103,8 +104,11 @@ export default function SubjectsList() {
         {subjects.length > 0 ? subjects.map((alloc) => (
           <Card 
             key={alloc.id} 
-            className="group cursor-pointer hover:shadow-2xl hover:border-blue-200 transition-all border-2 border-transparent relative overflow-hidden"
-            onClick={() => navigate(`/faculty/subjects/${alloc.id}`)}
+            className="group hover:shadow-2xl hover:border-blue-200 transition-all border-2 border-transparent relative overflow-hidden"
+            onClick={(e) => {
+              if (e.target.closest('button')) return;
+              navigate(`/faculty/subjects/${alloc.id}`);
+            }}
           >
             <div className="flex flex-col h-full">
               <div className="flex items-start justify-between mb-4">

@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Card from '../../components/ui/Card';
 import { Target, BarChart3, PieChart, Activity, Download, ChevronRight, Layers, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { useSelection } from '../../contexts/SelectionContext';
 import { attainmentService } from '../../services/api';
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import AcademicYearSelector from '../../components/ui/AcademicYearSelector';
 
 export default function HODPOAttainment() {
-  const [selectedAY, setSelectedAY] = useState(1);
+  const { selectedAY, setSelectedAY } = useSelection();
 
   const { data: poData, isLoading } = useQuery({
     queryKey: ['hod', 'po-attainment', selectedAY],

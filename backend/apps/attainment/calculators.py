@@ -143,11 +143,19 @@ class COAttainmentCalculator:
         Calculate attainment for a single CO.
         Returns dict with attainment_percentage, level, student breakdown.
         """
+        # Get all enabled assessments for this allocation
+        from apps.allocations.models import SubjectAssessmentConfig
+        enabled_types = SubjectAssessmentConfig.objects.filter(
+            subject_allocation_id=self.allocation_id,
+            is_enabled=True
+        ).values_list('assessment_type_id', flat=True)
+
         # Get all assessments covering this CO
         co_assessments = list(
             COAssessmentMapping.objects.filter(
                 co_id=co_id,
-                subject_allocation_id=self.allocation_id
+                subject_allocation_id=self.allocation_id,
+                assessment_type_id__in=enabled_types
             ).select_related('assessment_type')
         )
 

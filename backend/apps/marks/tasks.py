@@ -73,14 +73,17 @@ def process_marks_excel(self, upload_log_id: int):
         roll_col_idx = -1
         
         # 1. Find Header Row
+        HEADER_KEYS = ('ROLL NO', 'ROLL NUMBER', 'REGISTER NO', 'REG NO', 'REG. NO', 'ROLLNO', 'REGISTERNO', 'REGISTER NUMBER', 'REGISTER', 'REG. NUMBER')
+        HEADER_ROW_KEYS = HEADER_KEYS + ('SERIAL NUMBER', 'S.NO', 'S.NO.')
+        
         for i, row in raw_df.head(15).iterrows():
             row_str = [str(cell).strip().upper() for cell in row]
             # Match Roll No or Register No in a highly flexible way (check substring)
-            if any(any(k in cell for k in ('ROLL NO', 'ROLL NUMBER', 'REGISTER NO', 'REG NO', 'REG. NO', 'ROLLNO', 'REGISTERNO')) for cell in row_str):
+            if any(any(k in cell for k in HEADER_ROW_KEYS) for cell in row_str):
                 header_row_idx = i
-                # Find which column index is the Roll Number
+                # Find which column index is the Roll Number (ONLY match actual roll keys, NEVER serial number)
                 for idx, cell in enumerate(row_str):
-                    if any(k in cell for k in ('ROLL NO', 'ROLL NUMBER', 'REGISTER NO', 'REG NO', 'REG. NO', 'ROLLNO', 'REGISTERNO')):
+                    if any(k in cell for k in HEADER_KEYS):
                         roll_col_idx = idx
                         break
                 break
@@ -157,41 +160,57 @@ def process_marks_excel(self, upload_log_id: int):
             if not roll_raw or roll_raw in ('NAN', 'NONE', ''):
                 continue
 
+            # Dynamically resolve student name from name column if present (keys in cols are uppercase)
+            name_col = next((c for k, c in cols.items() if 'NAME' in k), None)
+            excel_name = str(row.get(name_col)).strip() if name_col is not None else None
+            if excel_name and excel_name.lower() not in ('nan', 'none', ''):
+                student_name = excel_name
+            else:
+                student_name = None
+
             student = students_map.get(roll_raw)
             if not student:
-                # Dynamically resolve student name from name column if present
-                name_col = next((c for k, c in cols.items() if 'name' in k), None)
-                student_name = str(row.get(name_col)).strip() if name_col else f"Student {roll_raw}"
-                if not student_name or student_name == 'nan':
-                    student_name = f"Student {roll_raw}"
+                # Check if student exists globally
+                student = Student.objects.filter(roll_number=roll_raw).first()
                 
-                try:
-                    # Check if student exists globally
-                    student = Student.objects.filter(roll_number=roll_raw).first()
-                    if not student:
-                        student = Student.objects.create(
-                            department=log.subject_allocation.subject.department,
-                            roll_number=roll_raw,
-                            name=student_name,
-                            batch=log.subject_allocation.section.batch,
-                            section=log.subject_allocation.section,
-                            is_active=True
-                        )
-                    else:
-                        # Update student details if already exists globally
+            resolved_name = student_name or f"Student {roll_raw}"
+
+            try:
+                if not student:
+                    student = Student.objects.create(
+                        department=log.subject_allocation.subject.department,
+                        roll_number=roll_raw,
+                        name=resolved_name,
+                        batch=log.subject_allocation.section.batch,
+                        section=log.subject_allocation.section,
+                        is_active=True
+                    )
+                else:
+                    # Update existing student's section/batch/name if required
+                    needs_save = False
+                    if student.section != log.subject_allocation.section:
                         student.section = log.subject_allocation.section
+                        needs_save = True
+                    if student.batch != log.subject_allocation.section.batch:
                         student.batch = log.subject_allocation.section.batch
-                        student.name = student_name
-                        student.save()
+                        needs_save = True
                     
-                    students_map[roll_raw] = student
-                except Exception as ex:
-                    errors.append({
-                        'row': row_num,
-                        'roll_number': roll_raw,
-                        'error': f"Failed to dynamically register student '{roll_raw}': {str(ex)}"
-                    })
-                    continue
+                    current_is_placeholder = student.name.startswith('Student ') or not student.name or student.name.strip() == ''
+                    if student_name and (current_is_placeholder or student.name != student_name):
+                        student.name = student_name
+                        needs_save = True
+                    
+                    if needs_save:
+                        student.save()
+                
+                students_map[roll_raw] = student
+            except Exception as ex:
+                errors.append({
+                    'row': row_num,
+                    'roll_number': roll_raw,
+                    'error': f"Failed to dynamically register/update student '{roll_raw}': {str(ex)}"
+                })
+                continue
 
             # Attendance check
             absent_col = next((c for k, c in cols.items() if any(x in k for x in ('ABSENT', 'ATTENDANCE'))), None)

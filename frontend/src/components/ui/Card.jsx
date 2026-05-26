@@ -1,8 +1,8 @@
 import React from 'react';
 
-export default function Card({ title, subtitle, children, footer, className = "" }) {
+export default function Card({ title, subtitle, children, footer, className = "", ...props }) {
   return (
-    <div className={`bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden ${className}`}>
+    <div className={`bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden ${className}`} {...props}>
       {(title || subtitle) && (
         <div className="px-6 py-4 border-b border-gray-50 bg-gray-50/30">
           {title && <h3 className="text-lg font-bold text-gray-900">{title}</h3>}

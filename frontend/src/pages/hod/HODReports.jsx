@@ -1,8 +1,6 @@
-/**
- * SECE CO-PO Platform — Premium HOD Reports Page
- */
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useSelection } from '../../contexts/SelectionContext';
 import { 
   FileText, Download, Filter, Search, 
   BarChart3, PieChart, TrendingUp, Users,
@@ -15,7 +13,7 @@ import AcademicYearSelector from '../../components/ui/AcademicYearSelector';
 
 export default function HODReports() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedAY, setSelectedAY] = useState(1);
+  const { selectedAY, setSelectedAY } = useSelection();
 
   const { data: deptInfo, isLoading: deptLoading } = useQuery({
     queryKey: ['hod-department'],

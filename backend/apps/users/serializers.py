@@ -12,6 +12,11 @@ class FacultyProfileSerializer(serializers.ModelSerializer):
         fields = ['id', 'department', 'employee_id', 'designation', 'qualification', 'experience_years', 'specialization', 'joined_date', 'allocations_count']
 
     def get_allocations_count(self, obj):
+        request = self.context.get('request')
+        if request:
+            ay = request.query_params.get('academic_year')
+            if ay:
+                return obj.allocations.filter(is_active=True, academic_year_id=ay).count()
         return obj.allocations.filter(is_active=True).count()
 
 

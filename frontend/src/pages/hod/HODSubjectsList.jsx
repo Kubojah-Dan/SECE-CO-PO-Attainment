@@ -13,6 +13,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSelection } from '../../contexts/SelectionContext';
+import AcademicYearSelector from '../../components/ui/AcademicYearSelector';
 
 export default function HODSubjectsList() {
   const { user } = useAuth();
@@ -101,16 +102,19 @@ export default function HODSubjectsList() {
           <h1 className="text-2xl font-bold text-gray-900 font-display">Department Subjects</h1>
           <p className="text-sm text-gray-500">Assign and monitor subject allocations for {user?.department_name}</p>
         </div>
-        <button 
-          onClick={() => {
-            queryClient.invalidateQueries(['hod', 'faculty']);
-            setIsModalOpen(true);
-          }}
-          className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-2xl text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
-        >
-          <Plus size={18} />
-          Assign Subject
-        </button>
+        <div className="flex items-center gap-3">
+          <AcademicYearSelector align="right" />
+          <button 
+            onClick={() => {
+              queryClient.invalidateQueries(['hod', 'faculty']);
+              setIsModalOpen(true);
+            }}
+            className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-2xl text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
+          >
+            <Plus size={18} />
+            Assign Subject
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

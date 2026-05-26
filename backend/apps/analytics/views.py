@@ -18,12 +18,67 @@ class IQACDashboardView(APIView):
         ay_id = request.query_params.get('academic_year')
         
         if not ay_id:
-            return Response({"error": "academic_year parameter is required"}, status=400)
+            current_ay = AcademicYear.objects.filter(is_current=True).first()
+            if not current_ay:
+                return Response({"error": "No academic year found"}, status=400)
+            ay_id = current_ay.id
+
+        overall_attainment = POAttainment.objects.filter(academic_year_id=ay_id).aggregate(Avg('attainment_value'))['attainment_value__avg'] or 0
+        department_count = Department.objects.count()
+        faculty_count = FacultyProfile.objects.count()
+
+        dept_metrics = []
+        for dept in Department.objects.all():
+            attainment = POAttainment.objects.filter(
+                section__batch__programme__department=dept,
+                academic_year_id=ay_id
+            ).aggregate(Avg('attainment_value'))['attainment_value__avg'] or 0
             
+            readiness = AccreditationReadinessService.get_department_readiness(dept.id, ay_id)
+            readiness_score = readiness.get('nba_readiness_score', 0) if isinstance(readiness, dict) else 0
+
+            dept_metrics.append({
+                "dept": dept.short_name,
+                "score": float(readiness_score),
+                "attainment": float(attainment)
+            })
+
+        overall_readiness = sum([d['score'] for d in dept_metrics]) / max(len(dept_metrics), 1)
+
+        from apps.attainment.models import ActionTakenReport
+        recent_atrs_qs = ActionTakenReport.objects.filter(subject_allocation__academic_year_id=ay_id).select_related('subject_allocation__subject').order_by('-created_at')[:4]
+        recent_atrs = []
+        
+        status_map = {
+            'SUBMITTED': ('In Review', 'Activity', 'blue'),
+            'REVIEWED': ('Delayed', 'AlertTriangle', 'amber'),
+            'IMPLEMENTED': ('Open', 'Users', 'purple'),
+            'EFFECTIVE': ('Ready', 'CheckCircle2', 'emerald')
+        }
+
+        for atr in recent_atrs_qs:
+            status_info = status_map.get(atr.implementation_status, ('Pending', 'Activity', 'slate'))
+            recent_atrs.append({
+                "label": f"{atr.subject_allocation.subject.subject_code} ATR Review",
+                "status": status_info[0],
+                "icon": status_info[1],
+                "color": status_info[2]
+            })
+
+        if not recent_atrs:
+            recent_atrs = [
+                { "label": "SAR Verification (Auto)", "status": "In Review", "icon": "Activity", "color": "blue" },
+                { "label": "Attainment Analytics", "status": "Ready", "icon": "CheckCircle2", "color": "emerald" }
+            ]
+
         data = {
             "college_name": "Sri Eshwar College of Engineering",
-            "readiness": AccreditationReadinessService.get_department_readiness(dept_id, ay_id) if dept_id else None,
-            "overall_attainment": POAttainment.objects.filter(academic_year_id=ay_id).aggregate(Avg('attainment_value'))['attainment_value__avg'] or 0
+            "overall_attainment": float(overall_attainment),
+            "overall_readiness": round(overall_readiness),
+            "department_count": department_count,
+            "faculty_count": faculty_count,
+            "department_metrics": dept_metrics,
+            "recent_atrs": recent_atrs
         }
         return Response(data)
 
@@ -78,8 +133,13 @@ class HODDashboardView(APIView):
         dept_id = request.query_params.get('department')
         ay_id = request.query_params.get('academic_year')
         
-        if not dept_id or not ay_id:
-            return Response({"error": "department and academic_year parameters are required"}, status=400)
+        if not dept_id:
+            return Response({"error": "department parameter is required"}, status=400)
+        if not ay_id:
+            current_ay = AcademicYear.objects.filter(is_current=True).first()
+            if not current_ay:
+                return Response({"error": "No academic year found"}, status=400)
+            ay_id = current_ay.id
             
         from apps.allocations.models import SubjectAllocation
         from django.db.models import Count, Q
@@ -130,13 +190,64 @@ class HODDashboardView(APIView):
                     "avg_attainment": float(COAttainment.objects.filter(subject_allocation=alloc).aggregate(Avg('final_attainment'))['final_attainment__avg'] or 0)
                 })
 
+        readiness_data = AccreditationReadinessService.get_department_readiness(dept_id, ay_id)
+        if isinstance(readiness_data, dict):
+            readiness_data['active_subjects'] = allocations.count()
+            
+            # Avg PO attainment across this dept
+            dept_attainment = POAttainment.objects.filter(
+                section__batch__programme__department_id=dept_id,
+                academic_year_id=ay_id
+            ).aggregate(Avg('attainment_value'))['attainment_value__avg'] or 0
+            readiness_data['overall_attainment'] = float(dept_attainment)
+            
+            # Faculty participation (percent of allocated faculty who have entered marks)
+            total_fac = allocations.values('faculty').distinct().count()
+            participating_fac = allocations.filter(
+                id__in=[f['id'] for f in faculty_progress if f['progress'] > 0]
+            ).values('faculty').distinct().count()
+            readiness_data['faculty_participation'] = int((participating_fac / total_fac * 100) if total_fac > 0 else 0)
+
         return Response({
-            "readiness": AccreditationReadinessService.get_department_readiness(dept_id, ay_id),
+            "readiness": readiness_data,
             "faculty_progress": faculty_progress,
             "critical_subjects": critical_subjects,
             "department_id": dept_id,
             "academic_year_id": ay_id
         })
+
+class HODDepartmentReportsView(APIView):
+    """Provides reporting table data for HOD Reports view."""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        dept_id = request.user.department_id
+        ay_id = request.query_params.get('academic_year')
+        
+        if not dept_id or not ay_id:
+            return Response({"error": "Missing dept or academic year"}, status=400)
+            
+        from apps.allocations.models import SubjectAllocation
+        allocations = SubjectAllocation.objects.filter(
+            subject__department_id=dept_id,
+            academic_year_id=ay_id
+        ).select_related('subject', 'faculty__user')
+        
+        reports = []
+        for alloc in allocations:
+            # overall attainment = avg of final_attainment of COs
+            att = COAttainment.objects.filter(subject_allocation=alloc).aggregate(Avg('final_attainment'))['final_attainment__avg']
+            
+            reports.append({
+                "id": alloc.id,
+                "course_name": alloc.subject.subject_name,
+                "course_code": alloc.subject.subject_code,
+                "instructor_name": alloc.faculty.user.get_full_name() if alloc.faculty and alloc.faculty.user else "Not Assigned",
+                "attainment_score": round(float(att or 0), 1),
+                "updated_at": alloc.updated_at.strftime("%b %d, %Y") if alloc.updated_at else "Never"
+            })
+            
+        return Response(reports)
 
 class HODAttainmentSummaryView(APIView):
     """Aggregated attainment statistics for a department."""
@@ -146,8 +257,13 @@ class HODAttainmentSummaryView(APIView):
         dept_id = request.query_params.get('department')
         ay_id = request.query_params.get('academic_year')
         
-        if not dept_id or not ay_id:
-            return Response({"error": "department and academic_year parameters are required"}, status=400)
+        if not dept_id:
+            return Response({"error": "department parameter is required"}, status=400)
+        if not ay_id:
+            current_ay = AcademicYear.objects.filter(is_current=True).first()
+            if not current_ay:
+                return Response({"error": "No academic year found"}, status=400)
+            ay_id = current_ay.id
 
         # Aggregated PO attainment averages for the department
         po_averages = POAttainment.objects.filter(

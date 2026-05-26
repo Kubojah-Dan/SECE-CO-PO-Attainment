@@ -4,6 +4,11 @@ from .models import (
 )
 
 class ActionTakenReportSerializer(serializers.ModelSerializer):
+    subject_code = serializers.CharField(source='subject_allocation.subject.subject_code', read_only=True)
+    subject_name = serializers.CharField(source='subject_allocation.subject.subject_name', read_only=True)
+    section_name = serializers.CharField(source='subject_allocation.section.name', read_only=True)
+    faculty_name = serializers.CharField(source='subject_allocation.faculty.user.get_full_name', read_only=True)
+
     class Meta:
         model = ActionTakenReport
         fields = '__all__'

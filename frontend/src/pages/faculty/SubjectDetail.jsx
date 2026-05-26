@@ -148,57 +148,79 @@ export default function SubjectDetail() {
       </div>
 
       {/* Overview Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           { label: 'CO Definition', value: `${cosDefined} COs`, icon: Settings, color: 'blue', sub: 'Min 5 Required' },
           { label: 'Mapping Status', value: mappingsComplete ? 'Mapped' : 'Pending', icon: Database, color: 'purple', sub: '12 POs / 2 PSOs' },
           { label: 'Marks Entry', value: `${subject.marks_completion_pct || 0}%`, icon: Upload, color: 'green', sub: 'All assessments' },
           { label: 'Attainment', value: subject.has_attainment ? 'Calculated' : 'Pending', icon: Calculator, color: 'indigo', sub: 'NBA Method 1' },
-        ].map((stat, i) => (
-          <Card key={i} className="p-6 border-none shadow-xl shadow-slate-100/50 relative overflow-hidden group">
-            <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 bg-${stat.color}-500/5 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700`} />
-            <div className="flex items-center gap-4 relative">
-              <div className={`p-4 rounded-2xl bg-${stat.color}-50 text-${stat.color}-600 shadow-sm`}>
-                <stat.icon size={22} />
+        ].map((stat, i) => {
+          const colorClasses = {
+            blue: { bg: 'bg-blue-50', text: 'text-blue-600', glow: 'bg-blue-500/5' },
+            purple: { bg: 'bg-purple-50', text: 'text-purple-600', glow: 'bg-purple-500/5' },
+            green: { bg: 'bg-green-50', text: 'text-green-600', glow: 'bg-green-500/5' },
+            indigo: { bg: 'bg-indigo-50', text: 'text-indigo-600', glow: 'bg-indigo-500/5' }
+          };
+          const cls = colorClasses[stat.color] || colorClasses.blue;
+          
+          return (
+            <Card key={i} className="p-6 border-none shadow-xl shadow-slate-100/50 relative overflow-hidden group">
+              <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 ${cls.glow} rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700`} />
+              <div className="flex items-center gap-4 relative">
+                <div className={`p-4 rounded-2xl ${cls.bg} ${cls.text} shadow-sm`}>
+                  <stat.icon size={22} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest truncate">{stat.label}</p>
+                  <p className="text-xl font-black text-slate-900 mt-0.5 truncate">{stat.value}</p>
+                  <p className="text-[10px] text-gray-500 font-medium mt-1 truncate">{stat.sub}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{stat.label}</p>
-                <p className="text-xl font-black text-slate-900 mt-0.5">{stat.value}</p>
-                <p className="text-[10px] text-gray-500 font-medium mt-1">{stat.sub}</p>
-              </div>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          );
+        })}
       </div>
 
       {/* Action Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {actions.map((action) => (
-          <Card 
-            key={action.id} 
-            className={`group cursor-pointer hover:shadow-2xl transition-all duration-500 border-2 ${action.complete ? 'border-transparent' : 'border-dashed border-gray-100'}`}
-            onClick={() => navigate(action.to)}
-          >
-            <div className="flex items-start gap-4">
-              <div className={`p-4 rounded-2xl bg-${action.color}-50 text-${action.color}-600 transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-sm`}>
-                <action.icon size={24} />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{action.title}</h3>
-                  <ChevronRight size={16} className="text-gray-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
+        {actions.map((action) => {
+          const colorClasses = {
+            blue: { bg: 'bg-blue-50', text: 'text-blue-600' },
+            purple: { bg: 'bg-purple-50', text: 'text-purple-600' },
+            green: { bg: 'bg-green-50', text: 'text-green-600' },
+            indigo: { bg: 'bg-indigo-50', text: 'text-indigo-600' },
+            amber: { bg: 'bg-amber-50', text: 'text-amber-600' },
+            gray: { bg: 'bg-gray-50', text: 'text-gray-600' }
+          };
+          const cls = colorClasses[action.color] || colorClasses.blue;
+          
+          return (
+            <Card 
+              key={action.id} 
+              className={`group cursor-pointer hover:shadow-2xl transition-all duration-500 border-2 ${action.complete ? 'border-transparent' : 'border-dashed border-gray-100'}`}
+              onClick={() => navigate(action.to)}
+            >
+              <div className="flex items-start gap-4">
+                <div className={`p-4 rounded-2xl ${cls.bg} ${cls.text} transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-sm`}>
+                  <action.icon size={24} />
                 </div>
-                <p className="text-xs text-gray-500 leading-relaxed mb-4">{action.desc}</p>
-                <div className="flex items-center justify-between">
-                   <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded ${action.complete ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-gray-50 text-gray-500 border border-gray-100'}`}>
-                    {action.status}
-                   </span>
-                   {action.complete && <CheckCircle2 size={14} className="text-green-500" />}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate">{action.title}</h3>
+                    <ChevronRight size={16} className="text-gray-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all flex-shrink-0" />
+                  </div>
+                  <p className="text-xs text-gray-500 leading-relaxed mb-4 line-clamp-2">{action.desc}</p>
+                  <div className="flex items-center justify-between">
+                     <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded truncate ${action.complete ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-gray-50 text-gray-500 border border-gray-100'}`}>
+                      {action.status}
+                     </span>
+                     {action.complete && <CheckCircle2 size={14} className="text-green-500 flex-shrink-0" />}
+                  </div>
                 </div>
               </div>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          );
+        })}
       </div>
 
       {/* Dynamic Attainment Actions */}

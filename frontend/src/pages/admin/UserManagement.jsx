@@ -114,11 +114,35 @@ export default function UserManagement() {
               if (!file) return;
               const toastId = toast.loading('Processing bulk import...');
               try {
-                await userService.bulkCreate(file);
-                toast.update(toastId, { render: 'Import successful', type: 'success', isLoading: false, autoClose: 3000 });
+                const res = await userService.bulkCreate(file);
+                const data = res.data;
+                
+                if (data.errors && data.errors.length > 0) {
+                  const errorMsgs = data.errors.map(err => `Row ${err.row}: ${err.error || err.email}`).slice(0, 3).join(', ');
+                  toast.update(toastId, { 
+                    render: `Imported ${data.created_count} users. Errors: ${errorMsgs}${data.errors.length > 3 ? '...' : ''}`, 
+                    type: 'warning', 
+                    isLoading: false, 
+                    autoClose: 8000 
+                  });
+                } else {
+                  toast.update(toastId, { 
+                    render: `Successfully imported ${data.created_count} users!`, 
+                    type: 'success', 
+                    isLoading: false, 
+                    autoClose: 4000 
+                  });
+                }
                 fetchUsers();
               } catch (err) {
-                toast.update(toastId, { render: 'Import failed', type: 'error', isLoading: false, autoClose: 3000 });
+                console.error(err);
+                const errMsg = err.response?.data?.error || 'Import failed. Please check the Excel file formatting.';
+                toast.update(toastId, { 
+                  render: errMsg, 
+                  type: 'error', 
+                  isLoading: false, 
+                  autoClose: 5000 
+                });
               }
             }}
           />

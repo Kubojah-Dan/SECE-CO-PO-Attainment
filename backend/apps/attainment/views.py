@@ -12,21 +12,21 @@ from apps.marks.tasks import calculate_attainment
 
 
 class ActionTakenReportViewSet(viewsets.ModelViewSet):
-    queryset = ActionTakenReport.objects.all()
+    queryset = ActionTakenReport.objects.all().order_by('id')
     serializer_class = ActionTakenReportSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['subject_allocation', 'implementation_status']
 
 
 class AttainmentConfigViewSet(viewsets.ModelViewSet):
-    queryset = AttainmentConfig.objects.all()
+    queryset = AttainmentConfig.objects.all().order_by('id')
     serializer_class = AttainmentConfigSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['department']
 
 
 class COAttainmentViewSet(viewsets.ModelViewSet):
-    queryset = COAttainment.objects.all()
+    queryset = COAttainment.objects.all().order_by('id')
     serializer_class = COAttainmentSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['subject_allocation', 'co']
@@ -53,7 +53,7 @@ class COAttainmentViewSet(viewsets.ModelViewSet):
         if subject_allocation_id:
             qs = qs.filter(subject_allocation_id=subject_allocation_id)
             
-        return qs
+        return qs.order_by('co__co_code')
 
     @action(detail=False, methods=['post'])
     def calculate(self, request):
@@ -67,7 +67,7 @@ class COAttainmentViewSet(viewsets.ModelViewSet):
 
 
 class POAttainmentViewSet(viewsets.ModelViewSet):
-    queryset = POAttainment.objects.all()
+    queryset = POAttainment.objects.all().order_by('id')
     serializer_class = POAttainmentSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['po']
@@ -82,11 +82,11 @@ class POAttainmentViewSet(viewsets.ModelViewSet):
                 qs = qs.filter(section=allocation.section, academic_year=allocation.academic_year)
             except SubjectAllocation.DoesNotExist:
                 return POAttainment.objects.none()
-        return qs
+        return qs.order_by('id')
 
 
 class PSOAttainmentViewSet(viewsets.ModelViewSet):
-    queryset = PSOAttainment.objects.all()
+    queryset = PSOAttainment.objects.all().order_by('id')
     serializer_class = PSOAttainmentSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['pso']
@@ -101,4 +101,4 @@ class PSOAttainmentViewSet(viewsets.ModelViewSet):
                 qs = qs.filter(section=allocation.section, academic_year=allocation.academic_year)
             except SubjectAllocation.DoesNotExist:
                 return PSOAttainment.objects.none()
-        return qs
+        return qs.order_by('id')

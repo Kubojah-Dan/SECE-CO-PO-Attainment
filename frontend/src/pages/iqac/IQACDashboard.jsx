@@ -11,12 +11,13 @@ import {
 } from 'recharts';
 import Card from '../../components/ui/Card';
 import { useQuery } from '@tanstack/react-query';
+import { useSelection } from '../../contexts/SelectionContext';
 import { analyticsService, reportService } from '../../services/api';
 import { Loader2 } from 'lucide-react';
 import AcademicYearSelector from '../../components/ui/AcademicYearSelector';
 
 export default function IQACDashboard() {
-  const [selectedAY, setSelectedAY] = useState(1);
+  const { selectedAY, setSelectedAY } = useSelection();
 
   const { data: dashboard, isLoading } = useQuery({
     queryKey: ['iqac', 'dashboard', selectedAY],
@@ -37,7 +38,7 @@ export default function IQACDashboard() {
   return (
     <div className="p-8 max-w-[1600px] mx-auto space-y-8 font-ui">
       {/* Premium Hero Header */}
-      <div className="relative overflow-hidden rounded-[2rem] bg-slate-900 p-10 text-white shadow-2xl">
+      <div className="relative overflow-visible rounded-[2rem] bg-slate-900 p-10 text-white shadow-2xl">
         <div className="relative z-10 max-w-3xl">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -57,7 +58,7 @@ export default function IQACDashboard() {
             <span className="text-blue-500">Outcome Insights</span>
           </motion.h1>
           <div className="mt-8 flex items-center gap-4">
-             <AcademicYearSelector selectedId={selectedAY} onChange={setSelectedAY} />
+             <AcademicYearSelector selectedId={selectedAY} onChange={setSelectedAY} align="left" />
              <button 
                onClick={async () => {
                  try {
@@ -187,20 +188,20 @@ export default function IQACDashboard() {
           <Card className="p-8 border-none shadow-2xl bg-white">
             <h3 className="text-xl font-bold text-slate-900 font-display mb-6">IQAC Audit Log</h3>
             <div className="space-y-4">
-              {[
-                { label: 'CSE SAR Verification', status: 'In Review', icon: Activity, color: 'blue' },
-                { label: 'MECH Attainment Audit', status: 'Delayed', icon: AlertTriangle, color: 'amber' },
-                { label: 'Annual Quality Report', status: 'Ready', icon: CheckCircle2, color: 'emerald' },
-                { label: 'Faculty Feedback Loop', status: 'Open', icon: Users, color: 'purple' },
-              ].map((item, idx) => (
-                <div key={idx} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-blue-200 transition-all cursor-pointer">
+              {(dashboard?.recent_atrs || []).map((item, idx) => {
+                const IconComponent = {
+                  Activity, AlertTriangle, CheckCircle2, Users
+                }[item.icon] || Activity;
+                
+                return (
+                <div key={idx} className={`flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-${item.color}-200 transition-all cursor-pointer`}>
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 bg-${item.color}-50 text-${item.color}-600 rounded-lg`}><item.icon size={16} /></div>
-                    <span className="text-xs font-bold text-slate-700">{item.label}</span>
+                    <div className={`p-2 bg-${item.color}-50 text-${item.color}-600 rounded-lg`}><IconComponent size={16} /></div>
+                    <span className="text-xs font-bold text-slate-700">{item.label} - <span className={`text-${item.color}-600 uppercase text-[10px]`}>{item.status}</span></span>
                   </div>
                   <ChevronRight size={14} className="text-slate-300 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
                 </div>
-              ))}
+              )})}
             </div>
           </Card>
 
@@ -210,7 +211,7 @@ export default function IQACDashboard() {
               <h4 className="text-sm font-bold uppercase tracking-widest">Readiness Warning</h4>
             </div>
             <p className="text-amber-50 font-bold leading-relaxed">
-              Based on the selected year, 3 departments have pending attainment calculations.
+              Based on the selected year, {institutionalData.filter(d => (d.attainment || 0) === 0).length} departments have pending attainment calculations.
             </p>
           </div>
         </div>

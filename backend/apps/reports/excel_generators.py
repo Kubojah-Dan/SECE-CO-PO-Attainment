@@ -115,81 +115,253 @@ def generate_marks_template(allocation_id, assessment_type_code):
     output.seek(0)
     return output.read()
 
+def generate_generic_marks_template():
+    """
+    Generates a generic, empty SECE Excel template for previewing the marks entry structure.
+    Used primarily by the Admin Excel Automation page when no allocation_id is provided.
+    """
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Marks Entry"
+
+    header_fill = PatternFill(start_color="1E4A8A", end_color="1E4A8A", fill_type="solid")
+    header_font = Font(color="FFFFFF", bold=True, size=12)
+    border = Border(
+        left=Side(style='thin'), right=Side(style='thin'),
+        top=Side(style='thin'), bottom=Side(style='thin')
+    )
+
+    ws.merge_cells('A1:D1')
+    ws['A1'] = "SRI ESHWAR COLLEGE OF ENGINEERING (AUTONOMOUS)"
+    ws['A1'].font = Font(size=14, bold=True, color="1E4A8A")
+    ws['A1'].alignment = Alignment(horizontal="center")
+
+    ws.merge_cells('A2:D2')
+    ws['A2'] = "CO-PO Attainment Management System — Marks Entry Template (Generic Preview)"
+    ws['A2'].font = Font(size=11, italic=True)
+    ws['A2'].alignment = Alignment(horizontal="center")
+
+    headers = ["Roll Number", "Name", "Q1", "Q2", "Q3", "Q4", "Q5"]
+    for col_num, header_title in enumerate(headers, 1):
+        cell = ws.cell(row=8, column=col_num, value=header_title)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.border = border
+        ws.column_dimensions[cell.column_letter].width = 20 if col_num == 2 else 15
+
+    dummy_data = [
+        ("24CS001", "ALEX P", 10, 10, 10, 10, 10),
+        ("24CS002", "JOHN D", 8, 9, 10, 7, 8),
+        ("24CS003", "SARAH M", "", "", "", "", "")
+    ]
+
+    for row_idx, student in enumerate(dummy_data, start=9):
+        for col_idx, value in enumerate(student, 1):
+            c = ws.cell(row=row_idx, column=col_idx, value=value)
+            c.border = border
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output.read()
+
 def generate_nba_attainment_report(allocation_id):
     """
     Generates a comprehensive NBA/NAAC Attainment Report.
-    Sheets: PO_AND_PSO, CO_PO_MAPPING, CO_ATTAINMENT_CALC, FINAL_MATRIX.
+    Sheets: Single combined sheet with Correlation and Attainment matrices.
     """
     try:
         allocation = SubjectAllocation.objects.select_related(
-            'subject__department', 'section__batch__programme', 'academic_year'
+            'subject__department', 'section__batch__programme', 'academic_year', 'faculty__user'
         ).get(id=allocation_id)
     except SubjectAllocation.DoesNotExist:
         raise ValueError("Invalid allocation")
 
     wb = Workbook()
+    ws = wb.active
+    ws.title = "NBA Attainment Matrix"
     
     # ── Style Definitions ────────────────────────────────────────
-    header_fill = PatternFill(start_color="2C3E50", end_color="2C3E50", fill_type="solid")
-    header_font = Font(color="FFFFFF", bold=True)
+    title_font = Font(size=14, bold=True, color="1E4A8A")
+    subtitle_font = Font(size=11, italic=True)
+    header_fill = PatternFill(start_color="1E4A8A", end_color="1E4A8A", fill_type="solid")
+    header_font = Font(color="FFFFFF", bold=True, size=11)
+    info_font = Font(bold=True)
     center_align = Alignment(horizontal="center", vertical="center")
     border = Border(
         left=Side(style='thin'), right=Side(style='thin'),
         top=Side(style='thin'), bottom=Side(style='thin')
     )
 
-    # ── Sheet 1: PO & PSO ────────────────────────────────────────
-    ws1 = wb.active
-    ws1.title = "PO_AND_PSO"
-    ws1.append(["PO/PSO", "Statement / Description"])
-    
-    pos = ProgramOutcome.objects.filter(programme=allocation.section.batch.programme)
-    for po in pos:
-        ws1.append([po.po_code, po.description])
-    
-    psos = ProgramSpecificOutcome.objects.filter(programme=allocation.section.batch.programme)
-    for pso in psos:
-        ws1.append([pso.pso_code, pso.description])
+    pos = list(ProgramOutcome.objects.filter(programme=allocation.section.batch.programme).order_by('po_number'))
+    psos = list(ProgramSpecificOutcome.objects.filter(programme=allocation.section.batch.programme).order_by('pso_number'))
+    cos = list(CourseOutcome.objects.filter(subject=allocation.subject).order_by('co_number'))
 
-    # ── Sheet 2: CO_PO MAPPING ───────────────────────────────────
-    ws2 = wb.create_sheet("CO_PO MAPPING")
-    cos = CourseOutcome.objects.filter(subject=allocation.subject)
-    headers = ["Course Outcome"] + [p.po_code for p in pos] + [p.pso_code for p in psos]
-    ws2.append(headers)
+    # Fetch mapping data
+    co_po_mappings = COPOMapping.objects.filter(co__in=cos)
+    co_pso_mappings = COPSOMapping.objects.filter(co__in=cos)
+    
+    mapping_dict = {}
+    for m in co_po_mappings:
+        mapping_dict[(m.co_id, m.po_id)] = m.correlation_level
+    for m in co_pso_mappings:
+        mapping_dict[(m.co_id, f"pso_{m.pso_id}")] = m.correlation_level
+
+    # Fetch attainment data
+    attainments = COAttainment.objects.filter(subject_allocation=allocation)
+    att_dict = {a.co_id: a for a in attainments}
+
+    def col_letter(n):
+        string = ""
+        while n > 0:
+            n, remainder = divmod(n - 1, 26)
+            string = chr(65 + remainder) + string
+        return string
+
+    total_cols = 3 + len(pos) + len(psos)
+    end_col = col_letter(total_cols)
+
+    # ── Header Section ───────────────────────────────────────────
+    ws.merge_cells(f'A1:{end_col}1')
+    ws['A1'] = "SRI ESHWAR COLLEGE OF ENGINEERING (AUTONOMOUS)"
+    ws['A1'].font = title_font
+    ws['A1'].alignment = center_align
+
+    ws.merge_cells(f'A2:{end_col}2')
+    ws['A2'] = "Course Outcome - Program Outcome Attainment Matrix (NBA SAR Format)"
+    ws['A2'].font = subtitle_font
+    ws['A2'].alignment = center_align
+
+    # Course Info
+    ws['A4'] = "Course:"
+    ws['B4'] = f"{allocation.subject.subject_code} — {allocation.subject.subject_name}"
+    ws['A5'] = "Faculty:"
+    ws['B5'] = allocation.faculty.user.get_full_name() if allocation.faculty else "N/A"
+    
+    ws['F4'] = "Section / Sem:"
+    ws['G4'] = f"Sem {allocation.semester} - {allocation.section.name}"
+    ws['F5'] = "Academic Year:"
+    ws['G5'] = str(allocation.academic_year)
+
+    for cell in ['A4', 'A5', 'F4', 'F5']:
+        ws[cell].font = info_font
+
+    # ── TABLE 1: Correlation Matrix ──────────────────────────────
+    row_num = 7
+    ws.cell(row=row_num, column=1, value="TABLE 1: CO-PO/PSO CORRELATION MATRIX").font = Font(bold=True, color="1E4A8A")
+    row_num += 1
+
+    headers = ["CO Code", "Description", "Att. Level"] + [p.po_code for p in pos] + [p.pso_code for p in psos]
+    
+    for col, text in enumerate(headers, 1):
+        cell = ws.cell(row=row_num, column=col, value=text)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = center_align
+        cell.border = border
+
+    row_num += 1
     
     for co in cos:
-        row = [co.co_code]
-        mappings = COPOMapping.objects.filter(co=co)
-        pso_mappings = COPSOMapping.objects.filter(co=co)
+        att = att_dict.get(co.id)
+        att_level = att.attainment_level if att and att.attainment_level is not None else 0
         
-        mapping_dict = {m.po_id: m.correlation_level for m in mappings}
-        pso_mapping_dict = {m.pso_id: m.correlation_level for m in pso_mappings}
-        
+        row_data = [co.co_code, co.description, att_level]
         for po in pos:
-            row.append(mapping_dict.get(po.id, ""))
+            val = mapping_dict.get((co.id, po.id), 0)
+            row_data.append(val if val else "-")
         for pso in psos:
-            row.append(pso_mapping_dict.get(pso.id, ""))
-        ws2.append(row)
+            val = mapping_dict.get((co.id, f"pso_{pso.id}"), 0)
+            row_data.append(val if val else "-")
+            
+        for col, val in enumerate(row_data, 1):
+            cell = ws.cell(row=row_num, column=col, value=val)
+            cell.border = border
+            if col != 2:
+                cell.alignment = center_align
+        row_num += 1
 
-    # ── Sheet 3: CO ATTAINMENT CALC ──────────────────────────────
-    ws3 = wb.create_sheet("CO ATTAINMENT")
-    ws3.append(["CO Code", "Direct Attainment (%)", "Indirect Attainment (%)", "Final Attainment (%)", "Attainment Level"])
+    # ── TABLE 2: Attainment Matrix ──────────────────────────────
+    row_num += 2
+    ws.cell(row=row_num, column=1, value="TABLE 2: FINAL PO/PSO ATTAINMENT MATRIX").font = Font(bold=True, color="1E4A8A")
+    row_num += 1
+
+    for col, text in enumerate(headers, 1):
+        cell = ws.cell(row=row_num, column=col, value=text)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = center_align
+        cell.border = border
+
+    row_num += 1
+
+    po_sums = {po.id: {'sum': 0.0, 'count': 0} for po in pos}
+    pso_sums = {pso.id: {'sum': 0.0, 'count': 0} for pso in psos}
+
+    for co in cos:
+        att = att_dict.get(co.id)
+        att_level = att.attainment_level if att and att.attainment_level is not None else 0
+        
+        row_data = [co.co_code, co.description, att_level]
+        for po in pos:
+            mapping = mapping_dict.get((co.id, po.id), 0)
+            if mapping > 0:
+                po_att = (mapping * att_level) / 3.0
+                row_data.append(round(po_att, 2))
+                po_sums[po.id]['sum'] += po_att
+                po_sums[po.id]['count'] += 1
+            else:
+                row_data.append("-")
+                
+        for pso in psos:
+            mapping = mapping_dict.get((co.id, f"pso_{pso.id}"), 0)
+            if mapping > 0:
+                pso_att = (mapping * att_level) / 3.0
+                row_data.append(round(pso_att, 2))
+                pso_sums[pso.id]['sum'] += pso_att
+                pso_sums[pso.id]['count'] += 1
+            else:
+                row_data.append("-")
+                
+        for col, val in enumerate(row_data, 1):
+            cell = ws.cell(row=row_num, column=col, value=val)
+            cell.border = border
+            if col != 2:
+                cell.alignment = center_align
+        row_num += 1
+
+    # ── Average Row ──────────────────────────────
+    ws.cell(row=row_num, column=1, value="Average PO/PSO Attainment").font = Font(bold=True)
+    ws.merge_cells(start_row=row_num, start_column=1, end_row=row_num, end_column=3)
+    ws.cell(row=row_num, column=1).border = border
+    ws.cell(row=row_num, column=2).border = border
+    ws.cell(row=row_num, column=3).border = border
     
-    attainments = COAttainment.objects.filter(subject_allocation=allocation).order_by('co__co_number')
-    for att in attainments:
-        ws3.append([
-            att.co.co_code,
-            float(att.direct_attainment or 0),
-            float(att.indirect_attainment or 0),
-            float(att.final_attainment or 0),
-            att.attainment_level
-        ])
+    col_idx = 4
+    for po in pos:
+        cnt = po_sums[po.id]['count']
+        avg = po_sums[po.id]['sum'] / cnt if cnt > 0 else 0
+        cell = ws.cell(row=row_num, column=col_idx, value=round(avg, 2) if avg > 0 else "-")
+        cell.font = Font(bold=True)
+        cell.alignment = center_align
+        cell.border = border
+        col_idx += 1
+        
+    for pso in psos:
+        cnt = pso_sums[pso.id]['count']
+        avg = pso_sums[pso.id]['sum'] / cnt if cnt > 0 else 0
+        cell = ws.cell(row=row_num, column=col_idx, value=round(avg, 2) if avg > 0 else "-")
+        cell.font = Font(bold=True)
+        cell.alignment = center_align
+        cell.border = border
+        col_idx += 1
 
-    # ── Final Matrix formatting ──────────────────────────────────
-    for sheet in wb.worksheets:
-        for row in sheet.iter_rows():
-            for cell in row:
-                cell.border = border
+    # Widths
+    ws.column_dimensions['A'].width = 10
+    ws.column_dimensions['B'].width = 45
+    ws.column_dimensions['C'].width = 12
+    for c in range(4, total_cols + 1):
+        ws.column_dimensions[col_letter(c)].width = 10
 
     output = io.BytesIO()
     wb.save(output)
@@ -367,7 +539,13 @@ def generate_consolidated_marks_report(allocation_id):
         is_active=True
     ).order_by('roll_number')
 
-    assessments = list(AssessmentType.objects.all().order_by('id'))
+    # Only get assessment types that are enabled for this allocation
+    from apps.allocations.models import SubjectAssessmentConfig
+    enabled_type_ids = SubjectAssessmentConfig.objects.filter(
+        subject_allocation=allocation,
+        is_enabled=True
+    ).values_list('assessment_type_id', flat=True)
+    assessments = list(AssessmentType.objects.filter(id__in=enabled_type_ids).order_by('display_order', 'id'))
 
     wb = Workbook()
     ws = wb.active

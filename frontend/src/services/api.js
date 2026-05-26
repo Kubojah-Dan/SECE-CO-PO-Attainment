@@ -193,7 +193,8 @@ export const subjectService = {
   // Details
   getAllocationDetail: (allocId) => api.get(`/faculty/subjects/${allocId}/`),
   getAllocationStudents: (allocId) => api.get(`/faculty/subjects/${allocId}/students/`),
-  getProgrammePOs: (progId) => api.get('/admin/departments/pos/', { params: { programme: progId } }),
+  getProgrammePOs: (progId) => api.get('/admin/program-outcomes/', { params: { programme: progId } }),
+  getProgrammePSOs: (progId) => api.get('/admin/psos/', { params: { programme: progId } }),
 };
 
 export const allocationService = {
@@ -201,12 +202,26 @@ export const allocationService = {
   getSubject: (allocId) => api.get(`/faculty/subjects/${allocId}/`),
   getAssessments: (allocId) => api.get(`/faculty/subjects/${allocId}/assessments/`),
   updateAssessment: (allocId, typeId, data) =>
-    api.patch(`/faculty/subjects/${allocId}/assessments/${typeId}/`, data),
+    api.patch(`/allocations/assessment-configs/${typeId}/`, data),
+  createAssessmentConfig: (data) => api.post('/allocations/assessment-configs/', data),
   getStudents: (allocId) => api.get(`/faculty/subjects/${allocId}/students/`),
   approve: (allocId, data) => api.post(`/allocations/allocations/${allocId}/approve/`, data),
   list: (params) => api.get('/allocations/allocations/', { params }),
   create: (data) => api.post('/allocations/allocations/', data),
   getAllocations: (params) => api.get('/allocations/allocations/', { params }),
+};
+
+export const assessmentTypeService = {
+  list: (params) => api.get('/allocations/assessment-types/', { params }),
+  create: (data) => api.post('/allocations/assessment-types/', data),
+  update: (id, data) => api.patch(`/allocations/assessment-types/${id}/`, data),
+  delete: (id) => api.delete(`/allocations/assessment-types/${id}/`),
+};
+
+export const attainmentConfigService = {
+  // Returns the list; filter by ?department= to get department-specific or global
+  list: (params) => api.get('/attainment/configs/', { params }),
+  update: (id, data) => api.patch(`/attainment/configs/${id}/`, data),
 };
 
 export const marksService = {
@@ -263,6 +278,7 @@ export const attainmentService = {
 };
 
 export const reportService = {
+  getDepartmentReports: (academicYear) => api.get('/hod/department-reports/', { params: { academic_year: academicYear } }),
   exportFaculty: (allocId, format, type) =>
     api.post(
       `/faculty/subjects/${allocId}/reports/export/`,

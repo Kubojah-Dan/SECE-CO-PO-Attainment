@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { subjectService } from '../../services/api';
 import { useSelection } from '../../contexts/SelectionContext';
 
-export default function AcademicYearSelector() {
+export default function AcademicYearSelector({ align = 'right' }) {
   const { selectedAY, setSelectedAY, setDateRange } = useSelection();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
@@ -68,7 +68,7 @@ export default function AcademicYearSelector() {
       toast.info(
         <div className="flex flex-col gap-2">
           <p className="font-bold">No Academic Year found</p>
-          <p className="text-xs mt-1">Please create one in Admin > Academic Years</p>
+          <p className="text-xs mt-1">Please create one in Admin &gt; Academic Years</p>
           {window.location.pathname.includes('/admin/') && (
             <button 
               onClick={() => window.location.href = '/admin/academic-years'}
@@ -108,7 +108,7 @@ export default function AcademicYearSelector() {
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="absolute right-0 mt-2 w-72 bg-white border border-border rounded-2xl shadow-2xl z-50 overflow-hidden"
+            className={`absolute ${align === 'left' ? 'left-0' : 'right-0'} mt-2 w-72 bg-white border border-border rounded-2xl shadow-2xl z-50 overflow-hidden`}
           >
             <div className="p-3 bg-slate-50 border-b border-border">
               <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest px-2">Select Academic Year</h4>
@@ -122,7 +122,7 @@ export default function AcademicYearSelector() {
                   className={`w-full flex items-center justify-between p-3 rounded-xl transition-all mb-1 ${
                     selectedAY === year.id 
                       ? 'bg-accent/10 text-accent' 
-                      : 'hover:bg-slate-50 text-text-h'
+                      : 'hover:bg-slate-50 text-slate-700'
                   }`}
                 >
                   <div className="flex flex-col items-start">

@@ -98,59 +98,61 @@ export default function COAttainmentPage() {
         />
       </div>
 
-      <Card className="p-0 overflow-hidden border-none shadow-xl">
+      <Card className="p-0 overflow-hidden border-none shadow-xl bg-white">
         <div className="bg-slate-50 p-4 border-b border-gray-100 flex items-center justify-between">
           <h3 className="font-bold text-slate-800 text-sm">Course Outcomes Breakdown</h3>
           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Calculated per NBA Methodology</span>
         </div>
-        <table className="w-full text-left">
-          <thead>
-            <tr className="border-b border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-widest bg-white">
-              <th className="p-4">CO Code</th>
-              <th className="p-4">Direct (80%)</th>
-              <th className="p-4">Indirect (20%)</th>
-              <th className="p-4">Final Attainment</th>
-              <th className="p-4 text-center">Level</th>
-              <th className="p-4 text-right">Status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50 bg-white">
-            {results.map((r) => (
-              <tr key={r.id} className="hover:bg-slate-50 transition-colors">
-                <td className="p-4">
-                  <div className="flex flex-col">
-                    <span className="font-bold text-slate-900">{r.co_code}</span>
-                    <span className="text-[10px] text-gray-400 truncate max-w-[150px]">{r.co_description}</span>
-                  </div>
-                </td>
-                <td className="p-4 text-sm font-medium text-gray-600">{parseFloat(r.direct_attainment || 0).toFixed(1)}%</td>
-                <td className="p-4 text-sm font-medium text-gray-600">{parseFloat(r.indirect_attainment || 0).toFixed(1)}%</td>
-                <td className="p-4">
-                  <div className="flex flex-col">
-                    <span className="text-sm font-black text-slate-900">{parseFloat(r.final_attainment || 0).toFixed(1)}%</span>
-                    <div className="w-20 h-1 bg-gray-100 rounded-full mt-1 overflow-hidden">
-                      <div className="h-full bg-blue-500 rounded-full" style={{width: `${r.final_attainment}%`}} />
-                    </div>
-                  </div>
-                </td>
-                <td className="p-4 text-center">
-                  <AttainmentBadge level={r.attainment_level} />
-                </td>
-                <td className="p-4 text-right">
-                  {r.target_achieved ? (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100 uppercase tracking-widest">
-                      <CheckCircle size={10} /> Target Met
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-100 uppercase tracking-widest">
-                      <AlertCircle size={10} /> Below Target
-                    </span>
-                  )}
-                </td>
+        <div className="overflow-x-auto w-full">
+          <table className="w-full text-left min-w-[600px]">
+            <thead>
+              <tr className="border-b border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-widest bg-white">
+                <th className="p-4">CO Code</th>
+                <th className="p-4">Direct (80%)</th>
+                <th className="p-4">Indirect (20%)</th>
+                <th className="p-4">Final Attainment</th>
+                <th className="p-4 text-center">Level</th>
+                <th className="p-4 text-right">Status</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-50 bg-white">
+              {results.map((r) => (
+                <tr key={r.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="p-4">
+                    <div className="flex flex-col">
+                      <span className="font-bold text-slate-900">{r.co_code}</span>
+                      <span className="text-[10px] text-gray-400 truncate max-w-[150px]">{r.co_description}</span>
+                    </div>
+                  </td>
+                  <td className="p-4 text-sm font-medium text-gray-600">{parseFloat(r.direct_attainment || 0).toFixed(1)}%</td>
+                  <td className="p-4 text-sm font-medium text-gray-600">{parseFloat(r.indirect_attainment || 0).toFixed(1)}%</td>
+                  <td className="p-4">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-black text-slate-900">{parseFloat(r.final_attainment || 0).toFixed(1)}%</span>
+                      <div className="w-20 h-1 bg-gray-100 rounded-full mt-1 overflow-hidden">
+                        <div className="h-full bg-blue-500 rounded-full" style={{width: `${r.final_attainment}%`}} />
+                      </div>
+                    </div>
+                  </td>
+                  <td className="p-4 text-center">
+                    <AttainmentBadge level={r.attainment_level} />
+                  </td>
+                  <td className="p-4 text-right">
+                    {r.target_achieved ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100 uppercase tracking-widest">
+                        <CheckCircle size={10} /> Target Met
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-100 uppercase tracking-widest">
+                        <AlertCircle size={10} /> Below Target
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Card>
 
       {!calculateMutation.isPending && results.length === 0 && (

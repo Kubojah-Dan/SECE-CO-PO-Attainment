@@ -11,14 +11,33 @@ from .serializers import (
 
 
 class AssessmentTypeViewSet(viewsets.ModelViewSet):
-    queryset = AssessmentType.objects.all()
+    queryset = AssessmentType.objects.all().order_by('display_order', 'id')
     serializer_class = AssessmentTypeSerializer
     permission_classes = [permissions.IsAuthenticated]
-    filterset_fields = ['category', 'is_active']
+    filterset_fields = ['category', 'is_system']
+
+    def perform_create(self, serializer):
+        """When a new AssessmentType is created, auto-create SubjectAssessmentConfig
+        entries for ALL existing SubjectAllocations so calculations pick it up."""
+        from decimal import Decimal
+        instance = serializer.save()
+        max_val = instance.default_max_marks or Decimal('100.00')
+        allocations = SubjectAllocation.objects.all()
+        configs = [
+            SubjectAssessmentConfig(
+                subject_allocation=alloc,
+                assessment_type=instance,
+                is_enabled=True,
+                max_marks=max_val,
+                passing_marks=max_val * Decimal('0.5')
+            )
+            for alloc in allocations
+        ]
+        SubjectAssessmentConfig.objects.bulk_create(configs, ignore_conflicts=True)
 
 
 class SubjectAllocationViewSet(viewsets.ModelViewSet):
-    queryset = SubjectAllocation.objects.all()
+    queryset = SubjectAllocation.objects.all().order_by('id')
     serializer_class = SubjectAllocationSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['faculty', 'subject', 'section', 'academic_year', 'subject__department']
@@ -56,14 +75,14 @@ class SubjectAllocationViewSet(viewsets.ModelViewSet):
 
 
 class SubjectAssessmentConfigViewSet(viewsets.ModelViewSet):
-    queryset = SubjectAssessmentConfig.objects.all()
+    queryset = SubjectAssessmentConfig.objects.all().order_by('id')
     serializer_class = SubjectAssessmentConfigSerializer
     permission_classes = [permissions.IsAuthenticated]
-    filterset_fields = ['allocation', 'assessment_type', 'is_enabled']
+    filterset_fields = ['subject_allocation', 'assessment_type', 'is_enabled']
 
 
 class COAssessmentMappingViewSet(viewsets.ModelViewSet):
-    queryset = COAssessmentMapping.objects.all()
+    queryset = COAssessmentMapping.objects.all().order_by('id')
     serializer_class = COAssessmentMappingSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['assessment_config', 'co']

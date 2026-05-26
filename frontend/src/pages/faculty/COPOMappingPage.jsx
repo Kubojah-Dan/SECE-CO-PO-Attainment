@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { subjectService, analyticsService } from '../../services/api';
@@ -15,42 +15,74 @@ export default function COPOMappingPage() {
   const { data: subjectData, isLoading: isSubLoading } = useQuery({
     queryKey: ['subject-allocation', allocId],
     queryFn: () => subjectService.getAllocationDetail(allocId),
-    onSuccess: (res) => {
+  });
+
+  useEffect(() => {
+    if (subjectData?.data) {
       // Initialize mappings from existing data
       const existing = {};
-      res.data.course_outcomes?.forEach(co => {
+      subjectData.data.course_outcomes?.forEach(co => {
         co.po_mappings?.forEach(m => {
-          existing[`${co.id}-${m.po_id}`] = m.correlation_level;
+          existing[`${co.id}-po-${m.po_id}`] = m.correlation_level;
+        });
+        co.pso_mappings?.forEach(m => {
+          existing[`${co.id}-pso-${m.pso_id}`] = m.correlation_level;
         });
       });
       setMappings(existing);
     }
-  });
+  }, [subjectData]);
 
   const { data: poData, isLoading: isPOLoading } = useQuery({
     queryKey: ['programme-pos', subjectData?.data?.programme_id],
-    queryFn: () => subjectService.getProgrammePOs(subjectData?.data?.programme_id),
+    queryFn: () => {
+      const progId = subjectData?.data?.programme_id;
+      return subjectService.getProgrammePOs(progId);
+    },
     enabled: !!subjectData?.data?.programme_id,
-    select: (res) => res.data
+    select: (res) => Array.isArray(res.data) ? res.data : (res.data?.results || [])
+  });
+
+  const { data: psoData, isLoading: isPSOLoading } = useQuery({
+    queryKey: ['programme-psos', subjectData?.data?.programme_id],
+    queryFn: () => {
+      const progId = subjectData?.data?.programme_id;
+      return subjectService.getProgrammePSOs(progId);
+    },
+    enabled: !!subjectData?.data?.programme_id,
+    select: (res) => Array.isArray(res.data) ? res.data : (res.data?.results || [])
   });
 
   const saveMutation = useMutation({
+    customKey: 'save-copo-mappings',
     mutationFn: (data) => subjectService.saveCOPOMappings(allocId, data),
     onSuccess: () => {
-      toast.success('CO-PO Mappings saved successfully');
+      toast.success('CO-PO/PSO Mappings saved successfully');
       queryClient.invalidateQueries(['subject-allocation', allocId]);
       navigate(`/faculty/subjects/${allocId}`);
     }
   });
 
-  const handleLevelChange = (coId, poId, level) => {
+  const handleLevelChange = (coId, targetId, targetType, level) => {
+    const key = `${coId}-${targetType}-${targetId}`;
     setMappings(prev => ({
       ...prev,
-      [`${coId}-${poId}`]: level === prev[`${coId}-${poId}`] ? 0 : level
+      [key]: level === prev[key] ? 0 : level
     }));
   };
 
-  if (isSubLoading || isPOLoading) {
+  const handleSave = () => {
+    const fullMappings = {};
+    cos.forEach(co => {
+      allTargets.forEach(t => {
+        const key = `${co.id}-${t.type}-${t.id}`;
+        fullMappings[key] = mappings[key] || 0;
+      });
+    });
+    saveMutation.mutate(fullMappings);
+  };
+
+  if (isSubLoading || isPOLoading || isPSOLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="animate-spin text-blue-500" size={48} />
@@ -60,6 +92,12 @@ export default function COPOMappingPage() {
 
   const cos = subjectData?.data?.course_outcomes || [];
   const pos = poData || [];
+  const psos = psoData || [];
+  
+  const allTargets = [
+    ...pos.map(p => ({ ...p, type: 'po', code: p.po_code })),
+    ...psos.map(p => ({ ...p, type: 'pso', code: p.pso_code }))
+  ];
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-6">
@@ -71,7 +109,7 @@ export default function COPOMappingPage() {
           <ArrowLeft size={16} className="mr-2" /> Back
         </button>
         <div className="text-right">
-          <h1 className="text-2xl font-black text-gray-900 font-display">CO-PO Mapping Matrix</h1>
+          <h1 className="text-2xl font-black text-gray-900 font-display">CO-PO/PSO Mapping Matrix</h1>
           <p className="text-xs text-gray-500 font-medium uppercase tracking-widest">{subjectData?.data?.subject_name}</p>
         </div>
       </div>
@@ -82,7 +120,7 @@ export default function COPOMappingPage() {
         </div>
         <div className="text-sm">
           <p className="font-bold text-amber-900">Correlation Levels</p>
-          <p className="text-amber-700 mt-1">1: Low Correlation | 2: Medium Correlation | 3: High Correlation. Leave blank for no correlation.</p>
+          <p className="text-amber-700 mt-1">1: Low Correlation | 2: Medium Correlation | 3: High Correlation. Leave blank/unselected for no correlation (value of 0).</p>
         </div>
       </div>
 
@@ -92,9 +130,9 @@ export default function COPOMappingPage() {
             <thead>
               <tr className="bg-slate-900 text-white">
                 <th className="p-4 text-left border-r border-slate-800 sticky left-0 z-10 bg-slate-900 min-w-[200px]">Course Outcomes</th>
-                {pos.map(po => (
-                  <th key={po.id} className="p-4 text-center border-r border-slate-800 min-w-[60px]" title={po.description}>
-                    {po.po_code}
+                {allTargets.map(t => (
+                  <th key={`${t.type}-${t.id}`} className="p-4 text-center border-r border-slate-800 min-w-[60px]" title={t.description}>
+                    {t.code}
                   </th>
                 ))}
               </tr>
@@ -106,15 +144,15 @@ export default function COPOMappingPage() {
                     <div className="font-bold text-sm text-slate-900">{co.co_code}</div>
                     <div className="text-[10px] text-gray-500 truncate max-w-[180px]">{co.description}</div>
                   </td>
-                  {pos.map(po => {
-                    const currentLevel = mappings[`${co.id}-${po.id}`] || 0;
+                  {allTargets.map(t => {
+                    const currentLevel = mappings[`${co.id}-${t.type}-${t.id}`] || 0;
                     return (
-                      <td key={po.id} className="p-2 border-r border-gray-100 text-center">
+                      <td key={`${t.type}-${t.id}`} className="p-2 border-r border-gray-100 text-center">
                         <div className="flex flex-col gap-1 items-center">
                           {[1, 2, 3].map(level => (
                             <button
                               key={level}
-                              onClick={() => handleLevelChange(co.id, po.id, level)}
+                              onClick={() => handleLevelChange(co.id, t.id, t.type, level)}
                               className={`w-8 h-6 rounded flex items-center justify-center text-[10px] font-black transition-all ${
                                 currentLevel === level 
                                 ? 'bg-blue-600 text-white shadow-md scale-110' 
@@ -137,7 +175,7 @@ export default function COPOMappingPage() {
 
       <div className="flex justify-end pt-4">
         <button 
-          onClick={() => saveMutation.mutate(mappings)}
+          onClick={handleSave}
           disabled={saveMutation.isPending}
           className="px-8 py-4 bg-blue-600 text-white rounded-2xl flex items-center justify-center font-bold hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 disabled:opacity-50"
         >

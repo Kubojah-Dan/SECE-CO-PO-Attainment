@@ -8,11 +8,14 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, 
   Tooltip, ResponsiveContainer, Cell 
 } from 'recharts';
+import { useSelection } from '../../contexts/SelectionContext';
 
 export default function IQACPOAttainment() {
+  const { selectedAY } = useSelection();
+
   const { data: globalData, isLoading } = useQuery({
-    queryKey: ['iqac', 'global-attainment'],
-    queryFn: () => analyticsService.adminOverview({ academic_year: 1 }),
+    queryKey: ['iqac', 'global-attainment', selectedAY],
+    queryFn: () => analyticsService.adminOverview({ academic_year: selectedAY }),
     select: (res) => res.data
   });
 
@@ -46,7 +49,7 @@ export default function IQACPOAttainment() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={deptPerformance}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#6b7280', fontSize: 11}} dy={10} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#6b7280', fontSize: 10}} interval={0} angle={-30} textAnchor="end" height={60} dy={10} />
                 <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={{fill: '#6b7280', fontSize: 11}} />
                 <Tooltip 
                   cursor={{fill: '#f8fafc'}}

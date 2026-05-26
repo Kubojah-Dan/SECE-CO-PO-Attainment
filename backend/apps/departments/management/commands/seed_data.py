@@ -66,6 +66,7 @@ ASSESSMENT_TYPES = [
     {"code": "PROJ_R3", "name": "Project Review 3", "category": "PROJECT", "default_max_marks": 50, "weightage_percent": None, "display_order": 9},
     {"code": "PROJ_FINAL", "name": "Final Review", "category": "PROJECT", "default_max_marks": 100, "weightage_percent": None, "display_order": 10},
     {"code": "PRESENTATION", "name": "Presentation", "category": "CONTINUOUS", "default_max_marks": 50, "weightage_percent": None, "display_order": 11},
+    {"code": "LAB", "name": "Lab Marks", "category": "CONTINUOUS", "default_max_marks": 100, "weightage_percent": None, "display_order": 12},
 ]
 
 

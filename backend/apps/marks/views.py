@@ -19,7 +19,28 @@ class StudentMarkViewSet(viewsets.ModelViewSet):
     queryset = StudentMark.objects.all()
     serializer_class = StudentMarkSerializer
     permission_classes = [permissions.IsAuthenticated]
-    filterset_fields = ['student', 'subject_allocation', 'assessment_type']
+    pagination_class = None
+
+    def get_queryset(self):
+        queryset = StudentMark.objects.all().select_related('student', 'subject_allocation', 'assessment_type', 'entered_by')
+        
+        subject_allocation = self.request.query_params.get('subject_allocation')
+        assessment_type = self.request.query_params.get('assessment_type')
+        student = self.request.query_params.get('student')
+
+        if subject_allocation:
+            queryset = queryset.filter(subject_allocation_id=subject_allocation)
+        
+        if assessment_type:
+            if assessment_type.isdigit():
+                queryset = queryset.filter(assessment_type_id=assessment_type)
+            else:
+                queryset = queryset.filter(assessment_type__code__iexact=assessment_type)
+                
+        if student:
+            queryset = queryset.filter(student_id=student)
+
+        return queryset.order_by('student__roll_number')
 
     @action(detail=False, methods=['post', 'put'])
     def bulk_update(self, request, alloc_id=None):
@@ -31,14 +52,19 @@ class StudentMarkViewSet(viewsets.ModelViewSet):
         if not allocation_id or not assessment_code:
             return Response({'error': 'subject_allocation and assessment_type are required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        from apps.allocations.models import AssessmentType
+        from apps.allocations.models import AssessmentType, SubjectAssessmentConfig
         try:
             assessment_type = AssessmentType.objects.get(code=assessment_code)
+            cfg = SubjectAssessmentConfig.objects.filter(
+                subject_allocation_id=allocation_id,
+                assessment_type=assessment_type
+            ).first()
+            if cfg and not cfg.is_enabled:
+                return Response({'error': f'Assessment type {assessment_code} is disabled/excluded for this subject.'}, status=status.HTTP_400_BAD_REQUEST)
         except AssessmentType.DoesNotExist:
             return Response({'error': f'Invalid assessment type: {assessment_code}'}, status=status.HTTP_400_BAD_REQUEST)
 
         # Persist max_marks to SubjectAssessmentConfig
-        from apps.allocations.models import SubjectAssessmentConfig
         max_marks_val = request.data.get('max_marks', 100)
         SubjectAssessmentConfig.objects.update_or_create(
             subject_allocation_id=allocation_id,
@@ -84,9 +110,15 @@ class ExcelUploadLogViewSet(viewsets.ModelViewSet):
         if not file or not allocation_id or not assessment_code:
             return Response({'error': 'File, subject_allocation, and assessment_type are required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        from apps.allocations.models import AssessmentType
+        from apps.allocations.models import AssessmentType, SubjectAssessmentConfig
         try:
             assessment_type = AssessmentType.objects.get(code=assessment_code)
+            cfg = SubjectAssessmentConfig.objects.filter(
+                subject_allocation_id=allocation_id,
+                assessment_type=assessment_type
+            ).first()
+            if cfg and not cfg.is_enabled:
+                return Response({'error': f'Assessment type {assessment_code} is disabled/excluded for this subject.'}, status=status.HTTP_400_BAD_REQUEST)
         except AssessmentType.DoesNotExist:
             return Response({'error': f'Invalid assessment type: {assessment_code}'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -131,7 +163,29 @@ class QuestionCOMappingViewSet(viewsets.ModelViewSet):
     queryset = QuestionCOMapping.objects.all()
     serializer_class = QuestionCOMappingSerializer
     permission_classes = [permissions.IsAuthenticated]
-    filterset_fields = ['subject_allocation', 'assessment_type', 'question_number']
+    pagination_class = None
+
+    def get_queryset(self):
+        queryset = QuestionCOMapping.objects.all().select_related('subject_allocation', 'assessment_type', 'co')
+        
+        alloc_id = self.request.query_params.get('subject_allocation')
+        assessment_type = self.request.query_params.get('assessment_type')
+        assessment_type_code = self.request.query_params.get('assessment_type__code')
+        question_number = self.request.query_params.get('question_number')
+
+        if alloc_id:
+            queryset = queryset.filter(subject_allocation_id=alloc_id)
+        if assessment_type:
+            if assessment_type.isdigit():
+                queryset = queryset.filter(assessment_type_id=assessment_type)
+            else:
+                queryset = queryset.filter(assessment_type__code__iexact=assessment_type)
+        if assessment_type_code:
+            queryset = queryset.filter(assessment_type__code__iexact=assessment_type_code)
+        if question_number:
+            queryset = queryset.filter(question_number=question_number)
+
+        return queryset.order_by('question_number')
 
     def perform_create(self, serializer):
         # Resolve assessment_type if code is provided instead of ID
@@ -148,7 +202,26 @@ class StudentQuestionMarkViewSet(viewsets.ModelViewSet):
     queryset = StudentQuestionMark.objects.all()
     serializer_class = StudentQuestionMarkSerializer
     permission_classes = [permissions.IsAuthenticated]
-    filterset_fields = ['student', 'question_mapping']
+    pagination_class = None
+
+    def get_queryset(self):
+        queryset = StudentQuestionMark.objects.all().select_related('student', 'question_mapping')
+        
+        student = self.request.query_params.get('student')
+        question_mapping = self.request.query_params.get('question_mapping')
+        alloc_id = self.request.query_params.get('question_mapping__subject_allocation')
+        assessment_code = self.request.query_params.get('question_mapping__assessment_type__code')
+
+        if student:
+            queryset = queryset.filter(student_id=student)
+        if question_mapping:
+            queryset = queryset.filter(question_mapping_id=question_mapping)
+        if alloc_id:
+            queryset = queryset.filter(question_mapping__subject_allocation_id=alloc_id)
+        if assessment_code:
+            queryset = queryset.filter(question_mapping__assessment_type__code__iexact=assessment_code)
+
+        return queryset.order_by('student__roll_number', 'question_mapping__question_number')
 
     @action(detail=False, methods=['post'])
     def bulk_update(self, request):
@@ -177,7 +250,7 @@ class StudentQuestionMarkViewSet(viewsets.ModelViewSet):
 
 class FacultySubjectViewSet(viewsets.ReadOnlyModelViewSet):
     """Viewset for faculty to view their assigned subjects and related data."""
-    queryset = SubjectAllocation.objects.all()
+    queryset = SubjectAllocation.objects.all().order_by('id')
     serializer_class = SubjectAllocationSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -186,7 +259,7 @@ class FacultySubjectViewSet(viewsets.ReadOnlyModelViewSet):
         ay = self.request.query_params.get('academic_year')
         if ay:
             qs = qs.filter(academic_year_id=ay)
-        return qs
+        return qs.order_by('id')
 
     @action(detail=True, methods=['get'])
     def students(self, request, pk=None):
@@ -242,35 +315,47 @@ class FacultySubjectViewSet(viewsets.ReadOnlyModelViewSet):
 
         with transaction.atomic():
             for key, level in mapping_data.items():
-                # key is "coId-poId" or "coId-psoId"
                 try:
                     parts = key.split('-')
-                    if len(parts) != 2: continue
-                    co_id, target_id = parts
-                    
-                    # We need to distinguish between PO and PSO. 
-                    # Usually passed as separate dicts, but here we detect based on the target_id type or prefix?
-                    # For simplicity, we check both tables or expect prefixes.
-                    # Frontend currently sends IDs.
-                    
-                    # Attempt PO mapping
-                    if level > 0:
-                        # Check if target_id is a PO
-                        from apps.departments.models import ProgramOutcome, ProgramSpecificOutcome
-                        if ProgramOutcome.objects.filter(id=target_id).exists():
-                            COPOMapping.objects.update_or_create(
-                                co_id=co_id, po_id=target_id,
-                                defaults={'correlation_level': level}
-                            )
-                        elif ProgramSpecificOutcome.objects.filter(id=target_id).exists():
-                            COPSOMapping.objects.update_or_create(
-                                co_id=co_id, pso_id=target_id,
-                                defaults={'correlation_level': level}
-                            )
-                    else:
-                        # If level is 0, delete mapping
-                        COPOMapping.objects.filter(co_id=co_id, po_id=target_id).delete()
-                        COPSOMapping.objects.filter(co_id=co_id, pso_id=target_id).delete()
+                    if len(parts) == 3:
+                        co_id, target_type, target_id = parts
+                        if target_type == 'po':
+                            if level > 0:
+                                COPOMapping.objects.update_or_create(
+                                    co_id=co_id, po_id=target_id,
+                                    defaults={'correlation_level': level}
+                                )
+                            else:
+                                COPOMapping.objects.filter(co_id=co_id, po_id=target_id).delete()
+                        elif target_type == 'pso':
+                            if level > 0:
+                                COPSOMapping.objects.update_or_create(
+                                    co_id=co_id, pso_id=target_id,
+                                    defaults={'correlation_level': level}
+                                )
+                            else:
+                                COPSOMapping.objects.filter(co_id=co_id, pso_id=target_id).delete()
+                    elif len(parts) == 2:
+                        co_id, target_id = parts
+                        
+                        # Attempt PO mapping
+                        if level > 0:
+                            # Check if target_id is a PO
+                            from apps.departments.models import ProgramOutcome, ProgramSpecificOutcome
+                            if ProgramOutcome.objects.filter(id=target_id).exists():
+                                COPOMapping.objects.update_or_create(
+                                    co_id=co_id, po_id=target_id,
+                                    defaults={'correlation_level': level}
+                                )
+                            elif ProgramSpecificOutcome.objects.filter(id=target_id).exists():
+                                COPSOMapping.objects.update_or_create(
+                                    co_id=co_id, pso_id=target_id,
+                                    defaults={'correlation_level': level}
+                                )
+                        else:
+                            # If level is 0, delete mapping
+                            COPOMapping.objects.filter(co_id=co_id, po_id=target_id).delete()
+                            COPSOMapping.objects.filter(co_id=co_id, pso_id=target_id).delete()
                 except Exception:
                     continue
 

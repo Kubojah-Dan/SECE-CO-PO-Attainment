@@ -4,11 +4,15 @@ import { Users, Mail, Phone, BookOpen } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { userService } from '../../services/api';
 import { Loader2 } from 'lucide-react';
+import AcademicYearSelector from '../../components/ui/AcademicYearSelector';
+import { useSelection } from '../../contexts/SelectionContext';
 
 export default function HODFacultyList() {
+  const { selectedAY } = useSelection();
+
   const { data: facultyData, isLoading } = useQuery({
-    queryKey: ['hod', 'faculty'],
-    queryFn: () => userService.getFaculty(),
+    queryKey: ['hod', 'faculty', selectedAY],
+    queryFn: () => userService.getFaculty({ academic_year: selectedAY }),
     select: (res) => res.data
   });
 
@@ -32,6 +36,7 @@ export default function HODFacultyList() {
           <h1 className="text-2xl font-bold text-gray-900 font-display">Department Faculty</h1>
           <p className="text-gray-500 font-medium">Manage and track faculty progress within your department</p>
         </div>
+        <AcademicYearSelector align="right" />
       </div>
 
       {faculty.length === 0 ? (
