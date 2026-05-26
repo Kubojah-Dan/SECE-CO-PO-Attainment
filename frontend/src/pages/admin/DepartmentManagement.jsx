@@ -12,6 +12,16 @@ import { toast } from 'react-toastify';
 import { Link } from 'react-router-dom';
 
 export default function DepartmentManagement() {
+
+  const DEPT_COLORS = [
+    { bg: 'var(--primary-100)', text: 'var(--primary-600)' },
+    { bg: 'var(--accent-100)',  text: 'var(--accent-600)' },
+    { bg: '#D1FAE5',            text: '#059669' },
+    { bg: '#FEE2E2',            text: '#DC2626' },
+    { bg: '#EDE9FE',            text: '#7C3AED' },
+    { bg: '#FCE7F3',            text: '#BE185D' },
+  ];
+  const getDeptColor = (name = '') => DEPT_COLORS[name.charCodeAt(0) % DEPT_COLORS.length];
   const [searchTerm, setSearchTerm] = useState('');
   const [departments, setDepartments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -68,18 +78,21 @@ export default function DepartmentManagement() {
   );
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8 font-ui">
+    <div className="p-8 max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 font-display tracking-tight">Institutional Departments</h1>
-          <p className="text-slate-500 mt-1">Manage academic departments and their administrative hierarchy</p>
+          <h1 className="text-2xl font-semibold text-[var(--text-primary)] tracking-tight">Institutional Departments</h1>
+          <p className="text-sm text-[var(--text-muted)] mt-0.5">Manage academic departments and their administrative hierarchy</p>
         </div>
         <button 
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/10"
+          className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white rounded-xl transition-all"
+          style={{ background: 'var(--primary-500)' }}
+          onMouseEnter={e => e.currentTarget.style.background = 'var(--primary-600)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'var(--primary-500)'}
         >
-          <Plus size={18} /> Add Department
+          <Plus size={16} /> Add Department
         </button>
       </div>
 
@@ -130,7 +143,10 @@ export default function DepartmentManagement() {
             >
               <Card className="p-6 border-none shadow-lg bg-white hover:shadow-2xl transition-all group relative overflow-hidden">
                 <div className="flex items-start justify-between relative z-10">
-                  <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg shadow-inner">
+                  <div 
+                    className="w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg shadow-inner"
+                    style={{ background: getDeptColor(dept.short_name || dept.name).bg, color: getDeptColor(dept.short_name || dept.name).text }}
+                  >
                     {dept.short_name?.charAt(0) || dept.name?.charAt(0)}
                   </div>
                   <div className="flex gap-1">
@@ -243,7 +259,7 @@ export default function DepartmentManagement() {
               }}>
                 <div>
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Department Name</label>
-                  <input name="name" defaultValue={editingDept?.name} required type="text" className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-bold text-sm" placeholder="e.g. Mechanical Engineering" />
+                  <input name="name" defaultValue={editingDept?.name} required type="text" className="w-full p-3 bg-[var(--surface-secondary)] border border-[var(--border)] rounded-xl outline-none focus:ring-2 focus:ring-[var(--primary-100)] focus:border-[var(--primary-500)] transition-all font-medium text-sm" placeholder="e.g. Mechanical Engineering" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -262,7 +278,10 @@ export default function DepartmentManagement() {
                 <button 
                   type="submit" 
                   disabled={isSaving}
-                  className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold mt-4 shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2"
+                  className="w-full py-3.5 text-white rounded-xl font-semibold mt-4 flex items-center justify-center gap-2 transition-all"
+                  style={{ background: 'var(--primary-500)' }}
+                  onMouseEnter={e => !isSaving && (e.currentTarget.style.background = 'var(--primary-600)')}
+                  onMouseLeave={e => !isSaving && (e.currentTarget.style.background = 'var(--primary-500)')}
                 >
                   {isSaving ? <Loader2 size={16} className="animate-spin" /> : (editingDept ? <Save size={16} /> : <ArrowRight size={16} />)}
                   {editingDept ? 'Update Details' : 'Register Department'}

@@ -177,17 +177,16 @@ export default function FacultyDashboard() {
   ];
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-8 max-w-7xl mx-auto">
       {/* ── Header ────────────────────────────────────────────── */}
       <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1
-            className="text-2xl font-bold mb-1"
-            style={{ fontFamily: 'var(--font-display)', color: 'var(--primary-900)' }}
+            className="text-2xl font-semibold mb-1 text-[var(--text-primary)] tracking-tight"
           >
             Good {getGreeting()}, {user?.first_name}!
           </h1>
-          <p style={{ color: 'var(--gray-500)', fontSize: '0.9rem' }}>
+          <p className="text-sm text-[var(--text-muted)]">
             {department && <span className="font-medium">{department} · </span>}
             Here's your subjects overview.
           </p>
@@ -205,7 +204,7 @@ export default function FacultyDashboard() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.08 }}
-                className="stat-card"
+                className="stat-card card-enter"
               >
                 <div className="flex items-start justify-between mb-3">
                   <div

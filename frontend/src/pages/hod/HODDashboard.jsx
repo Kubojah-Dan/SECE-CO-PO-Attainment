@@ -17,6 +17,7 @@ import { Link } from 'react-router-dom';
 import { analyticsService, allocationService, reportService } from '../../services/api';
 import AcademicYearSelector from '../../components/ui/AcademicYearSelector';
 import { useSelection } from '../../contexts/SelectionContext';
+import { DESIGN_TOKENS } from '../../constants';
 
 export default function HODDashboard() {
   const { user } = useAuth();
@@ -38,8 +39,8 @@ export default function HODDashboard() {
 
   if (isDashLoading || isAttainmentLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin text-blue-500" size={48} />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--surface-page)' }}>
+        <Loader2 className="animate-spin text-[var(--primary-500)]" size={40} />
       </div>
     );
   }
@@ -57,16 +58,19 @@ export default function HODDashboard() {
   })).sort((a, b) => a.subject.localeCompare(b.subject, undefined, { numeric: true }));
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8">
+    <div className="p-8 max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">{deptName}</h1>
-          <p className="text-gray-500 mt-1">Real-time academic performance and accreditation status</p>
+          <h1 className="text-2xl font-semibold text-[var(--text-primary)] tracking-tight">{deptName}</h1>
+          <p className="text-sm text-[var(--text-muted)] mt-0.5">Real-time academic performance and accreditation status</p>
         </div>
         <div className="flex items-center gap-3">
           <AcademicYearSelector />
-          <button className="flex items-center px-4 py-2 bg-[#1e4a8a] text-white rounded-xl text-sm font-medium hover:bg-[#1a4077]">
+          <button className="flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-white transition-all" style={{ background: 'var(--primary-500)' }}
+            onMouseEnter={e => e.currentTarget.style.background = 'var(--primary-600)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'var(--primary-500)'}
+          >
             <Download className="w-4 h-4 mr-2" />
             Export Summary
           </button>
@@ -75,30 +79,10 @@ export default function HODDashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard 
-          title="Active Subjects" 
-          value={readiness.active_subjects || 0} 
-          icon={BookOpen} 
-          color="blue" 
-        />
-        <StatCard 
-          title="NBA Readiness" 
-          value={`${readiness.documentation_completeness || 0}%`} 
-          icon={Users} 
-          color="indigo" 
-        />
-        <StatCard 
-          title="Avg. PO Attainment" 
-          value={`${readiness.overall_attainment?.toFixed(1) || 0}%`} 
-          icon={Award} 
-          color="emerald" 
-        />
-        <StatCard 
-          title="Faculty Participation" 
-          value={`${readiness.faculty_participation || 0}%`} 
-          icon={TrendingUp} 
-          color="amber" 
-        />
+        <StatCard title="Active Subjects" value={readiness.active_subjects || 0} icon={BookOpen} color="blue" />
+        <StatCard title="NBA Readiness" value={`${readiness.documentation_completeness || 0}%`} icon={Users} color="amber" />
+        <StatCard title="Avg. PO Attainment" value={`${readiness.overall_attainment?.toFixed(1) || 0}%`} icon={Award} color="green" />
+        <StatCard title="Faculty Participation" value={`${readiness.faculty_participation || 0}%`} icon={TrendingUp} color="blue" />
       </div>
 
       <div className="grid grid-cols-1 gap-8">
@@ -114,8 +98,8 @@ export default function HODDashboard() {
                   <Radar
                     name="Attainment"
                     dataKey="attainment"
-                    stroke="#1e4a8a"
-                    fill="#1e4a8a"
+                    stroke={DESIGN_TOKENS.PRIMARY}
+                    fill={DESIGN_TOKENS.PRIMARY}
                     fillOpacity={0.6}
                   />
                   <Tooltip 

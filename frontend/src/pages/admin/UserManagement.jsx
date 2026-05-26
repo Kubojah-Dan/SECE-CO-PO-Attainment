@@ -96,12 +96,12 @@ export default function UserManagement() {
   });
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8 font-ui">
+    <div className="p-8 max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 font-display tracking-tight">User Management</h1>
-          <p className="text-slate-500 mt-1">Manage institutional roles, permissions and account access</p>
+          <h1 className="text-2xl font-semibold text-[var(--text-primary)] tracking-tight">User Management</h1>
+          <p className="text-sm text-[var(--text-muted)] mt-0.5">Manage institutional roles, permissions and account access</p>
         </div>
         <div className="flex items-center gap-3">
           <input 
@@ -148,14 +148,17 @@ export default function UserManagement() {
           />
           <button 
             onClick={() => document.getElementById('bulk-import-input').click()}
-            className="flex items-center px-4 py-2 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 transition-all"
+            className="flex items-center px-4 py-2.5 border border-[var(--border-strong)] rounded-xl text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)] transition-all"
           >
-            <Upload className="w-4 h-4 mr-2 text-blue-500" />
+            <Upload className="w-4 h-4 mr-2 text-[var(--primary-500)]" />
             Bulk Import
           </button>
           <button 
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/10"
+            className="flex items-center px-4 py-2.5 text-sm font-medium text-white rounded-xl transition-all"
+            style={{ background: 'var(--primary-500)' }}
+            onMouseEnter={e => e.currentTarget.style.background = 'var(--primary-600)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'var(--primary-500)'}
           >
             <UserPlus className="w-4 h-4 mr-2" />
             Add User
@@ -230,13 +233,13 @@ export default function UserManagement() {
                         </div>
                       </td>
                       <td className="py-6 px-8">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-blue-100/50 text-blue-700 border border-blue-200/50">
-                          <Shield size={12} className="mr-1.5" />
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wide bg-[var(--primary-100)] text-[var(--primary-600)]">
+                          <Shield size={11} className="mr-1" />
                           {user.role}
                         </span>
                       </td>
                       <td className="py-6 px-8">
-                        <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full uppercase tracking-wide whitespace-nowrap">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[var(--surface-tertiary)] text-[var(--text-secondary)]">
                           {(() => {
                             if (user.role === 'admin') return 'SECE (Admin)';
                             const deptId = user.faculty_profile?.department || user.hod_profile?.department || user.department || user.department_id;
@@ -248,12 +251,12 @@ export default function UserManagement() {
                       <td className="py-6 px-8">
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center gap-2">
-                            <div className={`w-2 h-2 rounded-full ${user.is_online ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} />
-                            <span className={`text-[10px] font-bold uppercase tracking-widest ${user.is_online ? 'text-emerald-700 font-extrabold' : 'text-slate-500'}`}>
+                            <div className={`w-2 h-2 rounded-full ${user.is_online ? 'bg-emerald-500 animate-pulse' : 'bg-[var(--border-strong)]'}`} />
+                            <span className={`text-[11px] font-semibold ${user.is_online ? 'text-emerald-700' : 'text-[var(--text-muted)]'}`}>
                               {user.is_online ? 'Online' : 'Offline'}
                             </span>
                           </div>
-                          <span className={`text-[9px] font-bold uppercase tracking-wider ${user.is_active ? 'text-blue-500' : 'text-red-500'}`}>
+                          <span className={`text-[10px] font-semibold uppercase tracking-wide ${user.is_active ? 'text-[var(--primary-500)]' : 'text-[var(--danger)]'}`}>
                             {user.is_active ? 'Account OK' : 'Locked'}
                           </span>
                         </div>
@@ -378,7 +381,7 @@ export default function UserManagement() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">First Name</label>
-                    <input name="first_name" defaultValue={editingUser?.first_name} required type="text" className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-bold text-sm" placeholder="John" />
+                    <input name="first_name" defaultValue={editingUser?.first_name} required type="text" className="w-full p-3 bg-[var(--surface-secondary)] border border-[var(--border)] rounded-xl outline-none focus:ring-2 focus:ring-[var(--primary-100)] focus:border-[var(--primary-500)] transition-all font-medium text-sm" placeholder="John" />
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Last Name</label>
@@ -449,7 +452,10 @@ export default function UserManagement() {
                     </select>
                   </div>
                 </div>
-                <button type="submit" className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold mt-4 shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2">
+                <button type="submit" className="w-full py-3.5 text-white rounded-xl font-semibold mt-4 flex items-center justify-center gap-2 transition-all" style={{ background: 'var(--primary-500)' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--primary-600)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'var(--primary-500)'}
+                >
                   <Lock size={16} />
                   {editingUser ? 'Update Account' : 'Provision Account'}
                 </button>

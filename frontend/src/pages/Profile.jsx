@@ -85,9 +85,9 @@ export default function Profile() {
   };
 
   return (
-    <div className="p-8 max-w-[1200px] mx-auto space-y-8 font-ui">
+    <div className="p-8 max-w-7xl mx-auto space-y-6">
       {/* Hero Header */}
-      <div className={`relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br ${ROLE_COLORS[role] || 'from-blue-600 to-indigo-700'} p-10 text-white shadow-2xl`}>
+      <div className="relative overflow-hidden rounded-2xl p-10 text-white shadow-xl" style={{ background: 'linear-gradient(135deg, var(--primary-800) 0%, var(--primary-600) 100%)' }}>
         <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
           {/* Avatar Section */}
           <div className="relative group">
@@ -145,7 +145,7 @@ export default function Profile() {
                     type="text" 
                     name="first_name"
                     defaultValue={user?.first_name}
-                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-blue-500/20 outline-none transition-all font-bold text-slate-800"
+                    className="w-full p-3.5 bg-[var(--surface-secondary)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[var(--primary-100)] focus:border-[var(--primary-500)] outline-none transition-all font-medium text-[var(--text-primary)]"
                   />
                 </div>
                 <div className="space-y-2">
@@ -154,7 +154,7 @@ export default function Profile() {
                     type="text" 
                     name="last_name"
                     defaultValue={user?.last_name}
-                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-blue-500/20 outline-none transition-all font-bold text-slate-800"
+                    className="w-full p-3.5 bg-[var(--surface-secondary)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[var(--primary-100)] focus:border-[var(--primary-500)] outline-none transition-all font-medium text-[var(--text-primary)]"
                   />
                 </div>
               </div>

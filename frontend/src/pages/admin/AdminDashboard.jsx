@@ -21,6 +21,7 @@ import AcademicYearSelector from '../../components/ui/AcademicYearSelector';
 import { useSelection } from '../../contexts/SelectionContext';
 import { reportService } from '../../services/api';
 import { toast } from 'react-toastify';
+import { DESIGN_TOKENS } from '../../constants';
 
 export default function AdminDashboard() {
   const { selectedAY } = useSelection();
@@ -33,8 +34,8 @@ export default function AdminDashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin text-blue-500" size={48} />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--surface-page)' }}>
+        <Loader2 className="animate-spin text-[var(--primary-500)]" size={40} />
       </div>
     );
   }
@@ -51,11 +52,11 @@ export default function AdminDashboard() {
   })).sort((a, b) => a.subject.localeCompare(b.subject, undefined, { numeric: true }));
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8 bg-slate-50/50 min-h-screen">
+    <div className="p-8 max-w-7xl mx-auto space-y-6">
       {/* Premium Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Institutional Intelligence</h1>
+          <h1 className="text-2xl font-semibold text-[var(--text-primary)] tracking-tight">Institutional Intelligence</h1>
           <div className="flex items-center gap-2 mt-1">
              <AcademicYearSelector />
           </div>
@@ -190,8 +191,8 @@ export default function AdminDashboard() {
                   <Radar
                     name="Attainment"
                     dataKey="attainment"
-                    stroke="#3b82f6"
-                    fill="#3b82f6"
+                  stroke={DESIGN_TOKENS.INFO}
+                    fill={DESIGN_TOKENS.INFO}
                     fillOpacity={0.6}
                   />
                   <Tooltip />
@@ -211,8 +212,8 @@ export default function AdminDashboard() {
                 <BarChart data={deptPerformance} margin={{ bottom: 30 }}>
                   <defs>
                     <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#1e4a8a" />
-                      <stop offset="100%" stopColor="#3b82f6" />
+                      <stop offset="0%" stopColor={DESIGN_TOKENS.PRIMARY} />
+                      <stop offset="100%" stopColor={DESIGN_TOKENS.INFO} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -233,7 +234,7 @@ export default function AdminDashboard() {
                   />
                   <Bar dataKey="attainment" radius={[8, 8, 0, 0]} barSize={32}>
                     {deptPerformance.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.attainment >= 70 ? 'url(#barGradient)' : '#ef4444'} />
+                      <Cell key={`cell-${index}`} fill={entry.attainment >= 70 ? 'url(#barGradient)' : DESIGN_TOKENS.DANGER} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -258,7 +259,7 @@ export default function AdminDashboard() {
           { label: 'Settings', icon: Settings, path: '/admin/settings', color: 'slate' },
         ].map((action) => (
           <Link key={action.label} to={action.path} className="group">
-            <Card className="p-4 flex flex-col items-center justify-center text-center hover:border-blue-200 hover:shadow-xl transition-all cursor-pointer h-full">
+            <Card className="card-enter p-4 flex flex-col items-center justify-center text-center hover:border-[var(--primary-200)] hover:shadow-md transition-all cursor-pointer h-full">
               <div className={`p-3 rounded-2xl bg-${action.color}-50 text-${action.color}-600 group-hover:scale-110 transition-transform mb-3`}>
                 <action.icon size={20} />
               </div>

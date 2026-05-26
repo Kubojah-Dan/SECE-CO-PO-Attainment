@@ -75,13 +75,13 @@ export default function LoginPage() {
         />
         {/* Gradient overlay */}
         <div
-          className="absolute inset-0 bg-gradient-to-br from-blue-900/90 via-blue-900/60 to-transparent"
+          style={{ background: 'linear-gradient(145deg, var(--primary-900) 0%, var(--primary-700) 60%, var(--primary-600) 100%)', position: 'absolute', inset: 0 }}
         />
         {/* Content over photo */}
         <div className="relative z-10 flex flex-col justify-between p-16 w-full text-white">
           {/* Logo & Name */}
           <div className="flex items-center gap-4">
-            <div className="w-20 h-20 bg-white p-2 rounded-2xl shadow-2xl transition-transform hover:scale-105">
+            <div className="w-14 h-14 bg-white p-1.5 rounded-2xl shadow-lg">
               <img src={logo} alt="SECE Logo" className="w-full h-full object-contain" />
             </div>
             <div>
@@ -129,8 +129,8 @@ export default function LoginPage() {
           >
             {/* Institutional Heading */}
             <div className="mb-10 text-center lg:text-left">
-              <h2 className="text-4xl font-bold text-slate-900 font-display tracking-tight">Institutional Login</h2>
-              <p className="text-slate-500 font-medium mt-2">Access your department analytics and tracking tools</p>
+              <h2 className="text-2xl font-semibold text-[var(--text-primary)] tracking-tight">Institutional Login</h2>
+              <p className="text-sm text-[var(--text-muted)] font-medium mt-2">Access your department analytics and tracking tools</p>
             </div>
 
             {/* Role Selector */}
@@ -142,15 +142,16 @@ export default function LoginPage() {
                     key={role.id}
                     type="button"
                     onClick={() => setSelectedRole(role.id)}
-                    className={`text-left p-4 rounded-2xl border-2 transition-all relative overflow-hidden group ${selectedRole === role.id
-                      ? 'border-blue-600 bg-blue-50/50 shadow-lg shadow-blue-500/10'
-                      : 'border-slate-100 bg-white hover:border-slate-200'
-                      }`}
+                    className={`text-left p-4 rounded-xl border-2 transition-all relative overflow-hidden group ${
+                      selectedRole === role.id
+                        ? 'border-[var(--primary-500)] bg-[var(--primary-50)] shadow-md shadow-[var(--primary-500)]/10'
+                        : 'border-[var(--border)] bg-white hover:border-[var(--border-strong)]'
+                    }`}
                   >
-                    <div className={`font-bold text-sm ${selectedRole === role.id ? 'text-blue-700' : 'text-slate-700'}`}>
+                    <div className={`font-semibold text-sm ${selectedRole === role.id ? 'text-[var(--primary-600)]' : 'text-[var(--text-primary)]'}`}>
                       {role.label}
                     </div>
-                    <div className={`text-[10px] mt-1 font-bold uppercase tracking-tight ${selectedRole === role.id ? 'text-blue-400' : 'text-slate-400'}`}>
+                    <div className={`text-[10px] mt-1 font-medium uppercase tracking-tight ${selectedRole === role.id ? 'text-[var(--primary-400)]' : 'text-[var(--text-muted)]'}`}>
                       {role.description}
                     </div>
                   </button>
@@ -170,7 +171,7 @@ export default function LoginPage() {
                     {...register('email')}
                     type="email"
                     placeholder="name@sece.ac.in"
-                    className="w-full h-14 pl-14 pr-4 bg-white border-2 border-slate-100 rounded-2xl focus:border-blue-600 focus:ring-0 outline-none transition-all font-semibold text-slate-900 placeholder:text-slate-300"
+                    className="w-full h-14 pl-14 pr-4 bg-white border border-[var(--border-strong)] rounded-2xl focus:border-[var(--primary-500)] focus:ring-2 focus:ring-[var(--primary-100)] outline-none transition-all font-medium text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
                   />
                 </div>
                 {errors.email && (
@@ -190,7 +191,7 @@ export default function LoginPage() {
                     {...register('password')}
                     type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
-                    className="w-full h-14 pl-14 pr-14 bg-white border-2 border-slate-100 rounded-2xl focus:border-blue-600 focus:ring-0 outline-none transition-all font-semibold text-slate-900 placeholder:text-slate-300"
+                    className="w-full h-14 pl-14 pr-14 bg-white border border-[var(--border-strong)] rounded-2xl focus:border-[var(--primary-500)] focus:ring-2 focus:ring-[var(--primary-100)] outline-none transition-all font-medium text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
                   />
                   <button
                     type="button"
@@ -223,7 +224,10 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-14 bg-blue-600 text-white rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-blue-700 active:scale-[0.98] transition-all shadow-xl shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full h-14 text-white rounded-xl font-semibold flex items-center justify-center gap-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ background: 'var(--primary-500)' }}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--primary-600)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'var(--primary-500)'}
               >
                 {isLoading ? (
                   <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />

@@ -15,6 +15,7 @@ import { useSelection } from '../../contexts/SelectionContext';
 import { analyticsService, reportService } from '../../services/api';
 import { Loader2 } from 'lucide-react';
 import AcademicYearSelector from '../../components/ui/AcademicYearSelector';
+import { DESIGN_TOKENS } from '../../constants';
 
 export default function IQACDashboard() {
   const { selectedAY, setSelectedAY } = useSelection();
@@ -27,8 +28,8 @@ export default function IQACDashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin text-blue-500" size={48} />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--surface-page)' }}>
+        <Loader2 className="animate-spin text-[var(--primary-500)]" size={40} />
       </div>
     );
   }
@@ -36,14 +37,14 @@ export default function IQACDashboard() {
   const institutionalData = dashboard?.department_metrics || [];
   
   return (
-    <div className="p-8 max-w-[1600px] mx-auto space-y-8 font-ui">
-      {/* Premium Hero Header */}
-      <div className="relative overflow-visible rounded-[2rem] bg-slate-900 p-10 text-white shadow-2xl">
+    <div className="p-8 max-w-7xl mx-auto space-y-6">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-2xl p-10 text-white shadow-xl" style={{ background: 'linear-gradient(135deg, var(--primary-800) 0%, var(--primary-600) 100%)' }}>
         <div className="relative z-10 max-w-3xl">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-3 text-blue-400 font-bold text-[10px] uppercase tracking-[0.3em] mb-4"
+            className="flex items-center gap-3 text-[var(--primary-200)] font-semibold text-[10px] uppercase tracking-[0.3em] mb-4"
           >
             <ShieldCheck className="w-5 h-5" />
             Quality Assurance Intelligence
@@ -52,10 +53,9 @@ export default function IQACDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-5xl font-bold font-display tracking-tight leading-[1.1]"
+            className="text-2xl font-semibold tracking-tight"
           >
-            Institutional <br />
-            <span className="text-blue-500">Outcome Insights</span>
+            Institutional Outcome Insights
           </motion.h1>
           <div className="mt-8 flex items-center gap-4">
              <AcademicYearSelector selectedId={selectedAY} onChange={setSelectedAY} align="left" />
@@ -80,10 +80,6 @@ export default function IQACDashboard() {
                Export SAR Data
              </button>
           </div>
-        </div>
-        
-        <div className="absolute right-0 top-0 bottom-0 w-1/2 overflow-hidden opacity-20 pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-600 rounded-full blur-[120px]" />
         </div>
       </div>
 
@@ -170,7 +166,7 @@ export default function IQACDashboard() {
                   />
                   <Bar dataKey="score" radius={[6, 6, 0, 0]} barSize={40}>
                     {institutionalData.map((entry, index) => (
-                      <Cell key={index} fill={(entry.score || entry.attainment) >= 70 ? '#1e40af' : '#94a3b8'} />
+                      <Cell key={index} fill={(entry.score || entry.attainment) >= 70 ? DESIGN_TOKENS.PRIMARY : DESIGN_TOKENS.TEXT_MUTED} />
                     ))}
                   </Bar>
                 </BarChart>
