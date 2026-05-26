@@ -35,9 +35,17 @@ export const API_ENDPOINTS = {
 };
 
 export const DESIGN_TOKENS = {
-  PRIMARY: '#1e4a8a',
-  SECONDARY: '#3b82f6',
-  SUCCESS: '#10b981',
-  DANGER: '#ef4444',
-  WARNING: '#f59e0b',
+  PRIMARY:       '#1E4A8A',
+  PRIMARY_DARK:  '#0D1F3C',
+  PRIMARY_LIGHT: '#EFF6FF',
+  ACCENT:        '#F59E0B',
+  ACCENT_LIGHT:  '#FFFBEB',
+  SUCCESS:       '#059669',
+  DANGER:        '#DC2626',
+  WARNING:       '#D97706',
+  INFO:          '#2563EB',
+  SURFACE:       '#FFFFFF',
+  PAGE_BG:       '#F4F6FB',
+  TEXT:          '#0F172A',
+  TEXT_MUTED:    '#94A3B8',
 };

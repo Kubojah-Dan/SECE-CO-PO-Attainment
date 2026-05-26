@@ -1,36 +1,37 @@
 /* ============================================================
    SECE CO-PO Attainment Platform — Global Styles
-   Design System: Navy Blue + SECE Gold
-   Fonts: Segoe UI + Roboto + Consolas
+   Design System: Navy Blue + SECE Gold (60:30:10)
+   Fonts: Inter (Primary) + Consolas (Mono)
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 @import "tailwindcss";
 @plugin "daisyui";
 
 /* ── CSS Custom Properties (Design Tokens) ─────────────────── */
 :root {
-  /* SECE Brand Colors */
+  /* ── 30% Primary Navy (structural chrome) */
   --primary-900: #0A1628;
   --primary-800: #0D1F3C;
   --primary-700: #102952;
   --primary-600: #1A3A6B;
-  --primary-500: #1E4A8A;
+  --primary-500: #1E4A8A;   /* THE primary brand color */
   --primary-400: #2563EB;
   --primary-300: #60A5FA;
   --primary-200: #BFDBFE;
   --primary-100: #EFF6FF;
   --primary-50:  #F0F6FF;
 
-  /* Accent — SECE Gold */
-  --accent-700: #B45309;
-  --accent-600: #D97706;
-  --accent-500: #F59E0B;
+  /* ── 10% Accent Gold (calls to action, highlights) */
+  --accent-700: #92400E;
+  --accent-600: #B45309;
+  --accent-500: #F59E0B;   /* THE accent — use sparingly */
   --accent-400: #FCD34D;
   --accent-100: #FFFBEB;
+  --accent-50:  #FEFCE8;
 
-  /* Semantic */
+  /* ── Semantic Colors */
   --success:       #059669;
   --success-light: #ECFDF5;
   --warning:       #D97706;
@@ -40,7 +41,7 @@
   --info:          #2563EB;
   --info-light:    #EFF6FF;
 
-  /* Attainment Level Colors */
+  /* ── Attainment Level Colors */
   --level-3:       #059669;   /* High — Emerald */
   --level-3-light: #D1FAE5;
   --level-2:       #2563EB;   /* Medium — Blue */
@@ -50,7 +51,18 @@
   --level-0:       #DC2626;   /* Not Attained — Red */
   --level-0-light: #FEE2E2;
 
-  /* Neutrals */
+  /* ── 60% Neutrals (dominant backgrounds and surfaces) */
+  --surface-page:      #F4F6FB;   /* unified page background */
+  --surface-primary:   #FFFFFF;
+  --surface-secondary: #F8FAFC;
+  --surface-tertiary:  #EEF2F7;
+  --border:            #E2E8F0;
+  --border-strong:     #CBD5E1;
+  --text-primary:      #0F172A;
+  --text-secondary:    #475569;
+  --text-muted:        #94A3B8;
+
+  /* ── Legacy neutral aliases (for backward compat) */
   --gray-50:  #F9FAFB;
   --gray-100: #F3F4F6;
   --gray-200: #E5E7EB;
@@ -62,19 +74,12 @@
   --gray-800: #1F2937;
   --gray-900: #111827;
 
-  /* Surface */
-  --surface-primary:   #FFFFFF;
-  --surface-secondary: #F9FAFB;
-  --surface-tertiary:  #F3F4F6;
-  --border:            #E5E7EB;
-  --border-strong:     #D1D5DB;
+  /* ── Typography */
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-ui:      'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:    ui-monospace, 'Cascadia Code', Consolas, monospace;
 
-  /* Typography (UPDATED) */
-  --font-display: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-ui:      'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-mono:    ui-monospace, Consolas, monospace;
-
-  /* Shadows */
+  /* ── Shadows */
   --shadow-sm:  0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow:     0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
   --shadow-md:  0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
@@ -82,7 +87,7 @@
   --shadow-xl:  0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
   --shadow-glow: 0 0 0 3px rgb(30 74 138 / 0.15);
 
-  /* Radius */
+  /* ── Radius */
   --radius-sm:  0.25rem;
   --radius:     0.5rem;
   --radius-md:  0.75rem;
@@ -90,7 +95,7 @@
   --radius-xl:  1.5rem;
   --radius-full: 9999px;
 
-  /* Transitions */
+  /* ── Transitions */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition:      200ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -108,11 +113,18 @@ html {
 
 body {
   font-family: var(--font-ui);
-  background-color: var(--surface-secondary);
-  color: var(--gray-900);
+  background-color: var(--surface-page);
+  color: var(--text-primary);
   line-height: 1.6;
   min-height: 100vh;
   margin: 0;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+/* ── Unified page background wrapper */
+.page-wrapper {
+  background-color: var(--surface-page);
+  min-height: 100vh;
 }
 
 /* ── Typography ─────────────────────────────────────────────── */
@@ -142,9 +154,10 @@ h4, h5, h6 {
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* ── Focus Ring (Accessibility) ─────────────────────────────── */
-:focus-visible {
+*:focus-visible {
   outline: 2px solid var(--primary-400);
   outline-offset: 2px;
+  border-radius: var(--radius);
 }
 
 /* ── Utility Classes ────────────────────────────────────────── */
@@ -359,13 +372,30 @@ h4, h5, h6 {
 
 /* ── Page Transitions ───────────────────────────────────────── */
 .page-enter {
-  animation: page-in 0.25s ease-out;
+  animation: page-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes page-in {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* ── Card Stagger Animation ─────────────────────────────────── */
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.99); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.card-enter {
+  animation: card-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.card-enter:nth-child(1) { animation-delay: 0ms; }
+.card-enter:nth-child(2) { animation-delay: 40ms; }
+.card-enter:nth-child(3) { animation-delay: 80ms; }
+.card-enter:nth-child(4) { animation-delay: 120ms; }
+.card-enter:nth-child(5) { animation-delay: 160ms; }
+.card-enter:nth-child(6) { animation-delay: 200ms; }
 
 /* ── Sidebar ────────────────────────────────────────────────── */
 .sidebar {
@@ -387,19 +417,21 @@ h4, h5, h6 {
   margin: 0.125rem 0.75rem;
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--primary-300);
+  color: rgba(255,255,255,0.6);
   text-decoration: none;
-  transition: all var(--transition-fast);
+  border-left: 2px solid transparent;
+  transition: border-color 150ms ease-out, background-color 150ms ease-out, color 150ms ease-out;
   cursor: pointer;
 }
 
 .sidebar-nav-item:hover {
-  background: var(--primary-800);
+  background: rgba(255,255,255,0.05);
   color: white;
 }
 
 .sidebar-nav-item.active {
-  background: var(--primary-600);
+  background: rgba(255,255,255,0.10);
+  border-left-color: var(--accent-500);
   color: white;
 }
 
@@ -520,8 +552,8 @@ h4, h5, h6 {
 }
 
 .sidebar-active-glow {
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.2), rgba(37, 99, 235, 0.1));
-  border-left: 3px solid var(--primary-400);
+  background: rgba(255, 255, 255, 0.10);
+  border-left: 2px solid var(--accent-500);
 }
 
 /* ── Mobile Bottom Navigation ───────────────────────────────── */
