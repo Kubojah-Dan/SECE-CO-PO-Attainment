@@ -95,7 +95,7 @@ export default function AppLayout() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: 'var(--surface-secondary)' }}>
+    <div className="flex h-screen overflow-hidden" style={{ background: 'var(--surface-page)' }}>
       <Sidebar
         isCollapsed={isCollapsed}
         onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
@@ -237,7 +237,7 @@ export default function AppLayout() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden page-wrapper">
           <motion.div
             className="page-enter"
             key={location.pathname}

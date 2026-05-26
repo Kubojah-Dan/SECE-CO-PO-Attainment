@@ -82,16 +82,16 @@ export default function Sidebar({ isCollapsed, onToggleCollapse, isMobileOpen, o
       <div className={`flex items-center border-b border-white/10 ${mini ? 'justify-center px-3 py-6' : 'px-5 py-6 gap-3'}`}>
         {!mini ? (
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-white p-1.5 shadow-lg">
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-white p-1 shadow-sm">
               <img src={logo} alt="logo" className="w-full h-full object-contain" />
             </div>
             <div className="min-w-0">
-              <p className="font-bold text-white text-sm leading-tight tracking-wide font-display">SECE CO-PO</p>
-              <p className="text-[10px] text-white/40 uppercase tracking-tighter font-semibold">Attainment Portal</p>
+              <p className="font-semibold text-white text-sm leading-tight tracking-wide">SECE CO-PO</p>
+              <p className="text-[11px] text-white/50 font-normal tracking-tight">Attainment Portal</p>
             </div>
           </div>
         ) : (
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white p-1.5 shadow-lg">
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-white p-1 shadow-sm">
             <img src={logo} alt="logo" className="w-full h-full object-contain" />
           </div>
         )}
@@ -121,10 +121,10 @@ export default function Sidebar({ isCollapsed, onToggleCollapse, isMobileOpen, o
               )}
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-bold text-white truncate">{user?.first_name} {user?.last_name}</p>
-              <p className="text-[10px] font-bold uppercase tracking-wider mt-0.5" style={{ color: '#60A5FA' }}>
+              <p className="text-sm font-semibold text-white truncate">{user?.first_name} {user?.last_name}</p>
+              <span className="inline-block text-[10px] font-semibold uppercase tracking-wider mt-1 px-2 py-0.5 rounded-full bg-[var(--accent-500)]/20 text-[var(--accent-400)]">
                 {ROLE_LABELS[role]}
-              </p>
+              </span>
             </div>
           </div>
         </div>
@@ -151,10 +151,10 @@ export default function Sidebar({ isCollapsed, onToggleCollapse, isMobileOpen, o
             to={item.to}
             title={mini ? item.label : undefined}
             className={({ isActive }) =>
-              `flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-200 ${mini ? 'justify-center px-2 py-3' : 'px-4 py-3'} ${
+              `flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-150 ease-out border-l-2 ${mini ? 'justify-center px-2 py-3 border-transparent' : 'px-4 py-2.5'} ${
                 isActive
-                ? 'sidebar-active-glow text-white shadow-lg bg-blue-600/10'
-                : 'text-white/50 hover:text-white/90 hover:bg-white/5'
+                ? `sidebar-active-glow text-white ${mini ? 'border-[var(--accent-500)]' : ''}`
+                : 'text-white/60 hover:text-white hover:bg-white/5 border-transparent'
               }`
             }
           >
