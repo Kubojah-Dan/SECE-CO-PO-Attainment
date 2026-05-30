@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  ChevronRight, Download, Calendar, Filter,
-  Building2, Users, BookOpen, BookMarked, 
-  FileSpreadsheet, Settings, ShieldCheck,
-  Trophy, Target, Zap, Loader2, Layout
+  ChevronRight, Download,
+  ShieldCheck, Trophy, Target, Loader2,
+  Network, Users2, Scale, Layers, BookOpenCheck,
+  CalendarDays, DatabaseZap, Settings2
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { 
@@ -56,14 +56,14 @@ export default function AdminDashboard() {
       {/* Premium Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-[var(--text-primary)] tracking-tight">Institutional Intelligence</h1>
+          <h1 className="text-2xl font-semibold text-[var(--text-primary)] tracking-tight">Institution Overview</h1>
           <div className="flex items-center gap-2 mt-1">
              <AcademicYearSelector />
           </div>
         </div>
         <div className="flex items-center gap-3">
           <Button 
-            variant="secondary" 
+            variant="dark" 
             icon={Download} 
             className="text-sm px-4 py-2 rounded-xl"
             onClick={async () => {
@@ -96,66 +96,79 @@ export default function AdminDashboard() {
       {/* Executive Score Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* NBA Readiness Score Card */}
-        <div className="lg:col-span-2 relative overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800 rounded-[2.5rem] p-8 shadow-2xl shadow-slate-200">
-          <div className="relative z-10 flex flex-col md:flex-row justify-between gap-8">
-            <div className="space-y-6">
+        {/* Accreditation Readiness — tinted enterprise card */}
+        <div className="lg:col-span-2 bg-slate-50 border border-slate-200 rounded-2xl p-7">
+          <div className="flex flex-col md:flex-row justify-between gap-8">
+
+            {/* Left: metrics */}
+            <div className="space-y-6 flex-1">
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-blue-500/20 rounded-2xl border border-blue-500/30">
-                  <ShieldCheck className="text-blue-400" size={24} />
+                <div className="p-2.5 bg-slate-100 rounded-xl border border-slate-200">
+                  <ShieldCheck className="text-slate-600" size={20} strokeWidth={1.75} />
                 </div>
-                <h2 className="text-xl font-bold text-white">Accreditation Readiness</h2>
+                <h2 className="text-base font-semibold text-slate-800">Accreditation Readiness</h2>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-8">
                 <div>
-                  <div className="text-5xl font-black text-white">{stats.nba_readiness || 0}<span className="text-2xl text-blue-400">%</span></div>
-                  <div className="text-slate-400 text-sm font-bold mt-1 uppercase tracking-widest">NBA READINESS</div>
+                  <div className="text-4xl font-bold text-slate-900">
+                    {stats.nba_readiness || 0}<span className="text-xl text-slate-400 font-semibold">%</span>
+                  </div>
+                  <div className="text-slate-400 text-[10px] font-bold mt-1 uppercase tracking-widest">NBA Readiness</div>
                 </div>
                 <div>
-                  <div className="text-5xl font-black text-white">{stats.naac_score || 0}<span className="text-2xl text-emerald-400">%</span></div>
-                  <div className="text-slate-400 text-sm font-bold mt-1 uppercase tracking-widest">NAAC SCORE</div>
+                  <div className="text-4xl font-bold text-slate-900">
+                    {stats.naac_score || 0}<span className="text-xl text-slate-400 font-semibold">%</span>
+                  </div>
+                  <div className="text-slate-400 text-[10px] font-bold mt-1 uppercase tracking-widest">NAAC Score</div>
                 </div>
               </div>
 
-              <div className="pt-4 flex items-center gap-6">
-                <div className="flex-1 space-y-2">
-                  <div className="flex justify-between text-xs font-bold text-slate-400">
-                    <span>DOCUMENTATION COMPLETENESS</span>
-                    <span className="text-white">{stats.doc_completeness || 0}%</span>
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                    <span>Documentation Completeness</span>
+                    <span className="text-slate-700">{stats.doc_completeness || 0}%</span>
                   </div>
-                  <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                    <motion.div initial={{ width: 0 }} animate={{ width: `${stats.doc_completeness || 0}%` }} className="h-full bg-blue-500" />
+                  <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${stats.doc_completeness || 0}%` }} className="h-full bg-slate-700 rounded-full" />
                   </div>
                 </div>
-                <div className="flex-1 space-y-2">
-                  <div className="flex justify-between text-xs font-bold text-slate-400">
-                    <span>ATTAINMENT ARCHIVING</span>
-                    <span className="text-white">{stats.attainment_archiving || 0}%</span>
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                    <span>Attainment Archiving</span>
+                    <span className="text-slate-700">{stats.attainment_archiving || 0}%</span>
                   </div>
-                  <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                    <motion.div initial={{ width: 0 }} animate={{ width: `${stats.attainment_archiving || 0}%` }} className="h-full bg-emerald-500" />
+                  <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${stats.attainment_archiving || 0}%` }} className="h-full bg-slate-700 rounded-full" />
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="flex flex-col justify-between items-end gap-4">
-               <div className="p-4 bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 text-right w-full md:w-auto">
-                 <div className="text-slate-400 text-[10px] font-black uppercase tracking-tighter">Status</div>
-                 <div className="text-emerald-400 font-black text-lg flex items-center justify-end gap-2 text-xs">
-                   {stats.nba_readiness >= 75 ? 'EXCELLENT' : stats.nba_readiness >= 50 ? 'GOOD' : 'PENDING'} <Zap size={16} fill="currentColor" />
-                 </div>
-               </div>
-               <Link to="/iqac/nba-report">
-                 <Button variant="outline" className="bg-white text-slate-900 group">
-                   VIEW SAR DRAFT <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                 </Button>
-               </Link>
+            {/* Right: status + CTA */}
+            <div className="flex flex-col justify-between items-start md:items-end gap-5">
+              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-right w-full md:w-auto min-w-[140px]">
+                <div className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1.5">Status</div>
+                <div className="flex items-center justify-end gap-2">
+                  {/* Semantic status dot — no icon flash */}
+                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                    stats.nba_readiness >= 75 ? 'bg-emerald-500' :
+                    stats.nba_readiness >= 50 ? 'bg-blue-500' :
+                    'bg-amber-400'
+                  }`} />
+                  <span className="text-slate-800 font-bold text-sm tracking-wide">
+                    {stats.nba_readiness >= 75 ? 'Excellent' : stats.nba_readiness >= 50 ? 'Good' : 'Pending'}
+                  </span>
+                </div>
+              </div>
+              <Link to="/iqac/nba-report">
+                <Button variant="secondary" className="group text-sm">
+                  View SAR Draft <ChevronRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
+                </Button>
+              </Link>
             </div>
           </div>
-          {/* Abstract Decorations */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 blur-[100px] -mr-32 -mt-32" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/10 blur-[100px] -ml-32 -mb-32" />
         </div>
 
         {/* Global Stats Mini Card */}
@@ -199,7 +212,17 @@ export default function AdminDashboard() {
                 </RadarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-slate-300 text-xs font-bold uppercase tracking-widest">No PO Mapping Data</div>
+              /* Empty state: faint axis grid communicates the chart container */
+              <div className="h-full w-full flex flex-col items-center justify-center gap-3"
+                style={{
+                  backgroundImage:
+                    'linear-gradient(to right, #f1f5f9 1px, transparent 1px), linear-gradient(to bottom, #f1f5f9 1px, transparent 1px)',
+                  backgroundSize: '16.66% 20%',
+                }}
+              >
+                <div className="w-24 h-24 rounded-full border-2 border-dashed border-slate-200" />
+                <p className="text-slate-400 text-[11px] font-semibold uppercase tracking-widest">No PO Mapping Data</p>
+              </div>
             )}
           </div>
         </Card>
@@ -240,31 +263,39 @@ export default function AdminDashboard() {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-slate-300 text-xs font-bold uppercase tracking-widest">No departmental data available</div>
+              <div className="h-full w-full flex flex-col items-center justify-center gap-3"
+                style={{
+                  backgroundImage:
+                    'repeating-linear-gradient(0deg, transparent, transparent calc(20% - 1px), #f1f5f9 calc(20% - 1px), #f1f5f9 20%)',
+                }}
+              >
+                <p className="text-slate-400 text-[11px] font-semibold uppercase tracking-widest">No Departmental Data Available</p>
+              </div>
             )}
           </div>
         </Card>
       </div>
 
       {/* Quick Access Center */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: 'Departments', icon: Building2, path: '/admin/departments', color: 'blue' },
-          { label: 'Users', icon: Users, path: '/admin/users', color: 'indigo' },
-          { label: 'Regulations', icon: BookOpen, path: '/admin/regulations', color: 'purple' },
-          { label: 'Sections', icon: Layout, path: '/admin/sections', color: 'blue' },
-          { label: 'Subjects', icon: BookMarked, path: '/admin/subjects', color: 'pink' },
-          { label: 'Acad. Years', icon: Calendar, path: '/admin/academic-years', color: 'amber' },
-          { label: 'Excel Tools', icon: FileSpreadsheet, path: '/admin/excel-tools', color: 'emerald' },
-          { label: 'Settings', icon: Settings, path: '/admin/settings', color: 'slate' },
+          { label: 'Departments', icon: Network,       path: '/admin/departments',   color: 'blue'   },
+          { label: 'Users',       icon: Users2,        path: '/admin/users',         color: 'indigo' },
+          { label: 'Regulations', icon: Scale,         path: '/admin/regulations',   color: 'purple' },
+          { label: 'Sections',    icon: Layers,        path: '/admin/sections',      color: 'blue'   },
+          { label: 'Subjects',    icon: BookOpenCheck, path: '/admin/subjects',      color: 'pink'   },
+          { label: 'Acad. Years', icon: CalendarDays,  path: '/admin/academic-years',color: 'amber'  },
+          { label: 'Excel Tools', icon: DatabaseZap,   path: '/admin/excel-tools',   color: 'emerald'},
+          { label: 'Settings',    icon: Settings2,     path: '/admin/settings',      color: 'slate'  },
         ].map((action) => (
           <Link key={action.label} to={action.path} className="group">
-            <Card className="card-enter p-4 flex flex-col items-center justify-center text-center hover:border-[var(--primary-200)] hover:shadow-md transition-all cursor-pointer h-full">
-              <div className={`p-3 rounded-2xl bg-${action.color}-50 text-${action.color}-600 group-hover:scale-110 transition-transform mb-3`}>
-                <action.icon size={20} />
+            {/* Monochromatic slate accent — no varied pastels */}
+            <div className="card-enter bg-white border border-gray-200 rounded-2xl flex flex-col items-center justify-center text-center hover:border-slate-400 hover:bg-slate-50 transition-all duration-200 cursor-pointer py-6 px-4">
+              <div className="p-3 rounded-xl bg-slate-100 text-slate-700 group-hover:bg-slate-200 group-hover:scale-105 transition-all duration-200 mb-3">
+                <action.icon size={20} strokeWidth={1.75} />
               </div>
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{action.label}</span>
-            </Card>
+              <span className="text-xs font-semibold text-slate-600 tracking-wide">{action.label}</span>
+            </div>
           </Link>
         ))}
       </div>

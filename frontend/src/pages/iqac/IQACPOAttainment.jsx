@@ -36,7 +36,7 @@ export default function IQACPOAttainment() {
           <h1 className="text-2xl font-bold text-gray-900 font-display">Institutional Attainment</h1>
           <p className="text-gray-500">Cross-departmental performance analysis and NBA readiness</p>
         </div>
-        <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all">
+        <button className="flex items-center px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-sm font-semibold transition-colors">
           <Download className="w-4 h-4 mr-2" />
           Download SAR Report
         </button>
@@ -67,31 +67,32 @@ export default function IQACPOAttainment() {
 
         {/* Quick Insights */}
         <div className="space-y-6">
-          <Card className="bg-gradient-to-br from-slate-900 to-slate-800 text-white border-none shadow-xl">
+          {/* Global Avg — light enterprise card */}
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Global Avg</p>
-                <h2 className="text-4xl font-black mt-1 font-display">{globalData?.stats?.avg_attainment?.toFixed(1)}%</h2>
+                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Global Avg</p>
+                <h2 className="text-4xl font-bold text-slate-900 mt-1 font-display">{globalData?.stats?.avg_attainment?.toFixed(1)}%</h2>
               </div>
-              <div className="p-2 bg-white/10 rounded-xl">
-                <TrendingUp className="text-emerald-400" />
+              <div className="p-2.5 bg-slate-200 rounded-xl">
+                <TrendingUp className="text-slate-700" size={18} strokeWidth={1.75} />
               </div>
             </div>
-            <p className="text-slate-400 text-[10px] font-medium mt-4">
+            <p className="text-slate-500 text-[11px] mt-4">
               Across {globalData?.stats?.total_departments} departments and {globalData?.stats?.total_subjects} active subjects.
             </p>
-          </Card>
+          </div>
 
           <div className="grid grid-cols-1 gap-4">
             {deptPerformance.slice(0, 3).map((dept, i) => (
-              <div key={i} className="p-4 bg-white rounded-2xl border border-gray-100 flex items-center justify-between hover:border-blue-100 transition-all cursor-default">
+              <div key={i} className="p-3.5 bg-white border border-gray-200 rounded-xl flex items-center justify-between hover:border-slate-300 transition-colors cursor-default">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
-                    <Building2 size={16} />
+                  <div className="p-2 bg-slate-100 text-slate-600 rounded-lg">
+                    <Building2 size={14} strokeWidth={1.75} />
                   </div>
-                  <span className="text-sm font-bold text-gray-700">{dept.name}</span>
+                  <span className="text-sm font-semibold text-gray-700">{dept.name}</span>
                 </div>
-                <span className="text-sm font-black text-blue-600">{dept.attainment}%</span>
+                <span className="text-sm font-bold text-slate-700">{dept.attainment}%</span>
               </div>
             ))}
           </div>

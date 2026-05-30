@@ -87,20 +87,20 @@ export default function Profile() {
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-6">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-2xl p-10 text-white shadow-xl" style={{ background: 'linear-gradient(135deg, var(--primary-800) 0%, var(--primary-600) 100%)' }}>
+      <div className="relative overflow-hidden rounded-2xl p-10 bg-slate-100 border border-slate-300">
         <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
           {/* Avatar Section */}
           <div className="relative group">
             <div 
-              className="w-32 h-32 rounded-[2.5rem] bg-white/20 backdrop-blur-md border-4 border-white/30 flex items-center justify-center overflow-hidden cursor-pointer group"
+              className="w-32 h-32 rounded-[2.5rem] bg-slate-200 border-4 border-slate-300 flex items-center justify-center overflow-hidden cursor-pointer group"
               onClick={handleImageClick}
             >
               {previewImage ? (
                 <img src={previewImage} alt="profile" className="w-full h-full object-cover" />
               ) : (
-                <User size={60} className="text-white/80" />
+                <User size={60} className="text-slate-500" />
               )}
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <Camera size={24} className="text-white" />
               </div>
             </div>
@@ -114,19 +114,20 @@ export default function Profile() {
           </div>
 
           <div className="text-center md:text-left">
-            <div className="flex items-center justify-center md:justify-start gap-2 text-white/70 text-[10px] font-bold uppercase tracking-[0.3em] mb-2">
-              <Shield size={14} /> {role} Access Level
+            <div className="flex items-center justify-center md:justify-start gap-2 text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em] mb-2">
+              <Shield size={14} className="text-slate-500" /> {role} Access Level
             </div>
-            <h1 className="text-4xl font-bold font-display tracking-tight leading-tight">
+            <h1 className="text-4xl font-bold font-display tracking-tight leading-tight text-slate-900">
               {user?.first_name} {user?.last_name}
             </h1>
-            <p className="text-white/80 mt-2 font-medium flex items-center justify-center md:justify-start gap-2">
+            <p className="text-slate-500 mt-2 font-medium flex items-center justify-center md:justify-start gap-2">
               <Mail size={16} /> {user?.email}
             </p>
           </div>
         </div>
         
-        <div className="absolute top-0 right-0 p-8 opacity-10">
+        {/* Decorative heartbeat icon — dark on light */}
+        <div className="absolute top-0 right-0 p-8 opacity-[0.06] text-slate-900">
           <Activity size={120} />
         </div>
       </div>
@@ -134,7 +135,7 @@ export default function Profile() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Profile Form */}
         <div className="lg:col-span-2">
-          <Card className="p-10 border-none shadow-2xl bg-white/80 backdrop-blur-md">
+          <Card className="p-8 border border-gray-200 bg-white">
             <h3 className="text-xl font-bold text-slate-900 font-display mb-8">Personal Information</h3>
             
             <form onSubmit={handleSave} className="space-y-6">
@@ -214,7 +215,7 @@ export default function Profile() {
                 <Button 
                   type="submit"
                   disabled={isSaving}
-                  variant="secondary"
+                  variant="dark"
                   icon={isSaving ? Loader2 : Save}
                   className="px-10 py-4 shadow-xl shadow-blue-600/20"
                 >
@@ -245,9 +246,9 @@ export default function Profile() {
             </div>
           </Card>
 
-          <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white shadow-2xl">
-            <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-blue-400 mb-2">Quick Note</h4>
-            <p className="text-sm font-medium text-slate-400 leading-relaxed">
+          <div className="bg-blue-50 border border-blue-100 rounded-xl p-5">
+            <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Quick Note</h4>
+            <p className="text-sm text-slate-600 leading-relaxed">
               If you need to change your registered email or department, please contact the institutional administrator.
             </p>
           </div>

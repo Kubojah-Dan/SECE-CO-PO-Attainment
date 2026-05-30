@@ -48,9 +48,9 @@ export default function HODFacultyList() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {faculty.map((f) => (
-            <Card key={f.id} className="hover:shadow-md transition-shadow">
+            <Card key={f.id} className="border border-gray-200 transition-colors hover:border-slate-300">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-lg">
+                <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-lg">
                   {f.first_name?.[0] || '?'}{f.last_name?.[0] || '?'}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -64,7 +64,7 @@ export default function HODFacultyList() {
                       <Mail size={14} className="text-gray-400" />
                       <span className="truncate">{f.email}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-blue-600 font-bold bg-blue-50 px-2 py-1 rounded-lg w-fit mt-2">
+                    <div className="flex items-center gap-2 text-xs text-slate-600 font-semibold bg-slate-100 px-2 py-1 rounded-lg w-fit mt-2">
                       <BookOpen size={14} />
                       <span>{f.faculty_profile?.allocations_count || 0} Assigned Subjects</span>
                     </div>

@@ -111,7 +111,7 @@ export default function HODATRReview() {
         <div className="lg:col-span-2">
           {selectedAtr ? (
             <div className="space-y-6">
-              <Card className="p-8 border-none shadow-2xl shadow-slate-200 rounded-[2.5rem]">
+              <Card className="p-8 border border-gray-200 rounded-2xl">
                 <div className="flex items-center justify-between mb-8">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600">
@@ -166,7 +166,7 @@ export default function HODATRReview() {
                     <button
                       onClick={() => handleApprove(selectedAtr)}
                       disabled={reviewMutation.isPending}
-                      className="flex-1 py-4 bg-slate-900 text-white rounded-2xl flex items-center justify-center font-bold hover:bg-black transition-all shadow-xl shadow-slate-200"
+                      className="flex-1 py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl flex items-center justify-center font-bold transition-colors"
                     >
                       {reviewMutation.isPending ? <Loader2 className="animate-spin mr-2" /> : <CheckCircle2 size={20} className="mr-2" />}
                       Approve ATR

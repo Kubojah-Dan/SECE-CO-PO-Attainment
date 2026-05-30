@@ -4,6 +4,14 @@ from .base import *
 DEBUG = True
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'backend', '0.0.0.0']
 
+# Use fast local in-memory cache in development instead of Redis
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'sece-copo-local-cache',
+    }
+}
+
 # Development database override (can use local postgres)
 # DATABASES['default']['HOST'] = 'localhost'
 

@@ -22,6 +22,12 @@ export default function DepartmentManagement() {
     { bg: '#FCE7F3',            text: '#BE185D' },
   ];
   const getDeptColor = (name = '') => DEPT_COLORS[name.charCodeAt(0) % DEPT_COLORS.length];
+
+  // Strip "Computer Science & Engineering (...)" → just the specialisation
+  const getDisplayName = (name = '') => {
+    const match = name.match(/^Computer Science & Engineering \((.+)\)$/);
+    return match ? match[1] : name;
+  };
   const [searchTerm, setSearchTerm] = useState('');
   const [departments, setDepartments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -131,68 +137,82 @@ export default function DepartmentManagement() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {isLoading ? (
           Array(6).fill(0).map((_, i) => (
-            <div key={i} className="bg-white rounded-3xl h-48 animate-pulse shadow-sm border border-slate-100" />
+            <div key={i} className="bg-white rounded-3xl h-44 animate-pulse shadow-sm border border-slate-100" />
           ))
         ) : filteredDepts.length > 0 ? (
           filteredDepts.map((dept) => (
             <motion.div
               key={dept.id}
               layout
-              initial={{ opacity: 0, scale: 0.9 }}
+              className="h-full"
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
             >
-              <Card className="p-6 border-none shadow-lg bg-white hover:shadow-2xl transition-all group relative overflow-hidden">
-                <div className="flex items-start justify-between relative z-10">
-                  <div 
-                    className="w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg shadow-inner"
-                    style={{ background: getDeptColor(dept.short_name || dept.name).bg, color: getDeptColor(dept.short_name || dept.name).text }}
-                  >
-                    {dept.short_name?.charAt(0) || dept.name?.charAt(0)}
+              <Card className="h-44 p-5 border-none shadow-md bg-white hover:shadow-xl transition-all duration-300 ease-out group relative overflow-hidden flex flex-col justify-between">
+
+                {/* Card Header: Name + Badge | Action Buttons */}
+                <div className="flex items-start justify-between gap-2 relative z-10">
+
+                  {/* Left: Name + Badge */}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-semibold text-[var(--text-primary)] leading-snug group-hover:text-[var(--primary-600)] transition-colors line-clamp-2">
+                      {getDisplayName(dept.name)}
+                    </h3>
+                    <div className="mt-1.5">
+                      <span
+                        className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold tracking-widest uppercase"
+                        style={{
+                          background: getDeptColor(dept.short_name || dept.name).bg,
+                          color: getDeptColor(dept.short_name || dept.name).text,
+                        }}
+                      >
+                        {dept.short_name || dept.code}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex gap-1">
-                    <button 
+
+                  {/* Right: Action Buttons — stacked vertically */}
+                  <div className="flex flex-col items-center gap-0.5 flex-shrink-0">
+                    <button
                       onClick={() => handleEdit(dept)}
-                      className="p-2 hover:bg-slate-50 text-slate-400 hover:text-blue-600 rounded-xl transition-all"
+                      className="p-1.5 hover:bg-slate-50 text-slate-300 hover:text-blue-500 rounded-lg transition-all"
                       title="Edit Department"
                     >
-                      <Edit2 size={16} />
+                      <Edit2 size={14} />
                     </button>
-                    <Link 
+                    <Link
                       to="/admin/sections"
                       state={{ departmentId: dept.id }}
-                      className="p-2 hover:bg-slate-50 text-slate-400 hover:text-indigo-600 rounded-xl transition-all"
+                      className="p-1.5 hover:bg-slate-50 text-slate-300 hover:text-indigo-500 rounded-lg transition-all"
                       title="Manage Sections"
                     >
-                      <Layout size={16} />
+                      <Layout size={14} />
                     </Link>
-                    <button 
+                    <button
                       onClick={() => handleDelete(dept.id)}
                       disabled={isDeleting === dept.id}
-                      className="p-2 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded-xl transition-all"
+                      className="p-1.5 hover:bg-red-50 text-slate-300 hover:text-red-500 rounded-lg transition-all"
                     >
-                      {isDeleting === dept.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                      {isDeleting === dept.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
                     </button>
                   </div>
                 </div>
 
-                <div className="mt-4 relative z-10">
-                  <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{dept.short_name || dept.name}</h3>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-0.5">{dept.code}</p>
-                </div>
-
-                <div className="mt-6 pt-6 border-t border-slate-50 grid grid-cols-2 gap-4 relative z-10">
-                  <div className="flex items-center gap-2">
-                    <Users size={14} className="text-slate-300" />
-                    <span className="text-xs font-bold text-slate-600">Faculty Sync</span>
+                {/* Footer */}
+                <div className="pt-3 border-t border-slate-100 grid grid-cols-2 gap-2 relative z-10">
+                  <div className="flex items-center gap-1.5">
+                    <Users size={12} className="text-slate-300" />
+                    <span className="text-[11px] font-semibold text-slate-400">Faculty Sync</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <GraduationCap size={14} className="text-slate-300" />
-                    <span className="text-xs font-bold text-slate-600">Live Analytics</span>
+                  <div className="flex items-center gap-1.5">
+                    <GraduationCap size={12} className="text-slate-300" />
+                    <span className="text-[11px] font-semibold text-slate-400">Live Analytics</span>
                   </div>
                 </div>
 
-                <div className="absolute right-[-20px] bottom-[-20px] text-blue-50/20 group-hover:text-blue-50/50 transition-colors -rotate-12 pointer-events-none">
-                  <Building2 size={120} />
+                {/* Decorative background icon */}
+                <div className="absolute right-[-16px] bottom-[-16px] text-blue-50/20 group-hover:text-blue-50/40 transition-colors -rotate-12 pointer-events-none">
+                  <Building2 size={90} />
                 </div>
               </Card>
             </motion.div>

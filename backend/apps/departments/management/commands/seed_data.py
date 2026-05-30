@@ -258,6 +258,95 @@ class Command(BaseCommand):
         )
         self.stdout.write('\n  📅 Created academic year 2024-25 (current)')
 
+        # ── 9. IQAC Coordinator ───────────────────────────────────────
+        self.stdout.write('\n  👤 Creating IQAC Coordinator...')
+        iqac_email = 'iqac@sece.ac.in'
+        if not User.objects.filter(email=iqac_email).exists():
+            iqac_user = User.objects.create_user(
+                email=iqac_email,
+                password='SECE@Test2026!',
+                first_name='IQAC',
+                last_name='Coordinator',
+                role='iqac',
+            )
+            from apps.users.models import IQACProfile
+            IQACProfile.objects.create(
+                user=iqac_user,
+                designation='IQAC Coordinator'
+            )
+            self.stdout.write(f'    ✓ Created IQAC Coordinator: {iqac_email} / SECE@Test2026!')
+        else:
+            self.stdout.write(f'    ~ IQAC Coordinator already exists: {iqac_email}')
+
+        # ── 10. HODs and Faculty for each Department ──────────────────
+        self.stdout.write('\n  👥 Creating HODs and Faculty for each department...')
+        from apps.users.models import HODProfile, FacultyProfile
+        
+        for dept in Department.objects.all():
+            # Create HOD if no HOD exists for this department
+            existing_hod = HODProfile.objects.filter(department=dept).first()
+            if existing_hod:
+                self.stdout.write(f"    ~ HOD for {dept.short_name} already exists: {existing_hod.user.email}")
+            else:
+                hod_email = f"hod_{dept.code.lower()}@sece.ac.in"
+                if not User.objects.filter(email=hod_email).exists():
+                    hod_user = User.objects.create_user(
+                        email=hod_email,
+                        password='SECE@Test2026!',
+                        first_name="HOD",
+                        last_name=dept.short_name,
+                        role='hod',
+                    )
+                    HODProfile.objects.create(
+                        user=hod_user,
+                        department=dept,
+                        employee_id=f"EMP_HOD_{dept.code}",
+                        designation=f"Head of {dept.short_name}",
+                        since_year=2020
+                    )
+                    self.stdout.write(f"    ✓ Created HOD for {dept.short_name}: {hod_email} / SECE@Test2026!")
+                else:
+                    self.stdout.write(f"    ~ User {hod_email} already exists but is not HOD for {dept.short_name}")
+                
+            # Create 2 Faculty members
+            for i in range(1, 3):
+                fac_email = f"faculty_{dept.code.lower()}{i}@sece.ac.in"
+                user_exists = User.objects.filter(email=fac_email).exists()
+                if user_exists:
+                    fac_user = User.objects.get(email=fac_email)
+                    profile_exists = FacultyProfile.objects.filter(user=fac_user).exists()
+                    if profile_exists:
+                        self.stdout.write(f"    ~ Faculty {i} for {dept.short_name} already exists: {fac_email}")
+                    else:
+                        FacultyProfile.objects.create(
+                            user=fac_user,
+                            department=dept,
+                            employee_id=f"EMP_FAC_{dept.code}_{i}",
+                            designation='Assistant Professor',
+                            qualification='M.E. / Ph.D.',
+                            experience_years=5 + i,
+                            specialization=f"Advanced {dept.short_name}"
+                        )
+                        self.stdout.write(f"    ✓ Created Faculty Profile for existing user: {fac_email}")
+                else:
+                    fac_user = User.objects.create_user(
+                        email=fac_email,
+                        password='SECE@Test2026!',
+                        first_name="Faculty",
+                        last_name=f"{dept.short_name} {i}",
+                        role='faculty',
+                    )
+                    FacultyProfile.objects.create(
+                        user=fac_user,
+                        department=dept,
+                        employee_id=f"EMP_FAC_{dept.code}_{i}",
+                        designation='Assistant Professor',
+                        qualification='M.E. / Ph.D.',
+                        experience_years=5 + i,
+                        specialization=f"Advanced {dept.short_name}"
+                    )
+                    self.stdout.write(f"    ✓ Created Faculty {i} for {dept.short_name}: {fac_email} / SECE@Test2026!")
+
         # ── Done ──────────────────────────────────────────────────────
         self.stdout.write(self.style.SUCCESS(
             '\n✅ Seeding complete!\n'

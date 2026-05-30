@@ -33,9 +33,9 @@ export default function HODReports() {
     : '0.0';
 
   const stats = [
-    { label: 'Courses Analyzed', value: safeReports.length, icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Avg Dept Attainment', value: `${avgAttainment}%`, icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-    { label: 'Active Faculty', value: deptInfo?.faculty_count || 0, icon: Users, color: 'text-amber-600', bg: 'bg-amber-50' },
+    { label: 'Courses Analyzed',    value: safeReports.length,        icon: FileText  },
+    { label: 'Avg Dept Attainment', value: `${avgAttainment}%`,        icon: TrendingUp },
+    { label: 'Active Faculty',      value: deptInfo?.faculty_count || 0, icon: Users    },
   ];
 
   if (deptLoading) {
@@ -61,7 +61,7 @@ export default function HODReports() {
         
         <div className="flex items-center gap-3">
           <AcademicYearSelector selectedId={selectedAY} onChange={setSelectedAY} />
-          <button className="flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-2xl text-sm font-bold hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/20">
+          <button className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-sm font-semibold transition-colors">
             <Download size={18} />
             Bulk Export All
           </button>
@@ -77,9 +77,12 @@ export default function HODReports() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
           >
-            <Card className="p-6 border-none shadow-md bg-white hover:shadow-xl transition-shadow cursor-default group">
+            <Card className="p-5 border border-gray-200 bg-white cursor-default">
               <div className="flex items-center gap-4">
-                <div className={`p-4 ${stat.bg} ${stat.color} rounded-2xl transition-transform group-hover:scale-110`}><stat.icon size={24} /></div>
+                {/* Monochromatic slate icon — no varied pastels */}
+                <div className="p-3 bg-slate-100 text-slate-600 rounded-xl flex-shrink-0">
+                  <stat.icon size={20} strokeWidth={1.75} />
+                </div>
                 <div>
                   <div className="text-2xl font-bold text-slate-900">{stat.value}</div>
                   <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.label}</div>

@@ -42,7 +42,7 @@ export default function HODPOAttainment() {
         </div>
         <div className="flex items-center gap-3">
           <AcademicYearSelector selectedId={selectedAY} onChange={setSelectedAY} />
-          <button className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-2xl text-xs font-bold shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all">
+          <button className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold transition-colors">
             <Download size={16} className="mr-2" /> Download PO Matrix
           </button>
         </div>

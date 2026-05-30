@@ -263,11 +263,11 @@ export default function SectionManagement() {
   };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8">
+    <div className="p-8 max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-slate-900 font-display tracking-tight">Academic Structure Console</h1>
-        <p className="text-slate-500 mt-1">Configure institutional Programmes, Batches, and Class Sections in one unified manager.</p>
+        <h1 className="text-2xl font-semibold text-[var(--text-primary)] tracking-tight">Academic Structure Console</h1>
+        <p className="text-sm text-[var(--text-muted)] mt-0.5">Configure institutional Programmes, Batches, and Class Sections in one unified manager.</p>
       </div>
 
       {/* Select Department */}
@@ -276,18 +276,16 @@ export default function SectionManagement() {
         <select 
           value={selectedDept} 
           onChange={(e) => setSelectedDept(e.target.value)}
-          className="w-full p-4 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/20 font-bold text-sm shadow-sm transition-all"
+          className="w-full p-3 bg-[var(--surface-secondary)] border border-[var(--border)] rounded-xl outline-none focus:ring-2 focus:ring-[var(--primary-100)] focus:border-[var(--primary-500)] font-medium text-sm shadow-sm transition-all"
         >
           <option value="">Select Department</option>
           {departments.map(d => <option key={d.id} value={d.id}>{d.name} ({d.short_name})</option>)}
         </select>
       </div>
 
-      {/* 3-Column Manager Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Column 1: Programmes */}
-        <Card className="p-6 flex flex-col min-h-[500px]">
+        <Card className="p-6 flex flex-col min-h-[200px]">
           <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
             <div>
               <h3 className="font-bold text-slate-800 flex items-center gap-2">
@@ -371,8 +369,7 @@ export default function SectionManagement() {
           )}
         </Card>
 
-        {/* Column 2: Batches */}
-        <Card className="p-6 flex flex-col min-h-[500px]">
+        <Card className="p-6 flex flex-col min-h-[200px]">
           <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
             <div>
               <h3 className="font-bold text-slate-800 flex items-center gap-2">
@@ -456,8 +453,7 @@ export default function SectionManagement() {
           )}
         </Card>
 
-        {/* Column 3: Sections */}
-        <Card className="p-6 flex flex-col min-h-[500px]">
+        <Card className="p-6 flex flex-col min-h-[200px]">
           <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
             <div>
               <h3 className="font-bold text-slate-800 flex items-center gap-2">

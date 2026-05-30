@@ -23,8 +23,8 @@ export default function AdminAnalytics() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50/50">
-        <Loader2 className="animate-spin text-blue-500" size={48} />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--surface-page)' }}>
+        <Loader2 className="animate-spin text-[var(--primary-500)]" size={40} />
       </div>
     );
   }
@@ -38,16 +38,16 @@ export default function AdminAnalytics() {
   };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8 bg-slate-50/50 min-h-screen">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div className="p-8 max-w-7xl mx-auto space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight">Institutional Analytics</h1>
-          <p className="text-gray-500 font-medium mt-2">Cross-departmental performance & accreditation audit</p>
+          <h1 className="text-2xl font-semibold text-[var(--text-primary)] tracking-tight">Institutional Analytics</h1>
+          <p className="text-sm text-[var(--text-muted)] mt-0.5">Cross-departmental performance &amp; accreditation audit</p>
         </div>
         <div className="flex items-center gap-3">
           <AcademicYearSelector />
-          <button className="flex items-center px-6 py-2.5 bg-blue-600 text-white rounded-2xl text-sm font-bold hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-500/25">
-            <Download size={18} className="mr-2" /> Export Audit Report
+          <button className="flex items-center px-4 py-2.5 text-white rounded-xl text-sm font-medium transition-all" style={{ background: 'var(--primary-500)' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--primary-600)'} onMouseLeave={e => e.currentTarget.style.background = 'var(--primary-500)'}>
+            <Download size={16} className="mr-2" /> Export Report
           </button>
         </div>
       </div>
@@ -112,22 +112,26 @@ export default function AdminAnalytics() {
         </Card>
       </div>
 
-      <Card title="Strategic Insights" className="bg-slate-900 text-white border-none shadow-2xl rounded-[2rem] p-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-4">
-          <div className="space-y-2">
-            <p className="text-blue-400 text-[10px] font-black uppercase tracking-widest">Top Performer</p>
-            <p className="text-2xl font-bold">{insights.top_performer?.dept} Department</p>
-            <p className="text-sm text-slate-400">{insights.top_performer?.score}% documentation readiness achieved.</p>
+      <Card className="border-[var(--border)]">
+        <div className="mb-4">
+          <h3 className="text-sm font-semibold text-[var(--text-primary)]">Strategic Insights</h3>
+          <p className="text-xs text-[var(--text-muted)] mt-0.5">Real-time institutional performance indicators</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="p-4 rounded-xl space-y-1" style={{ background: 'var(--primary-50)', border: '1px solid var(--primary-100)' }}>
+            <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--primary-500)' }}>Top Performer</p>
+            <p className="text-lg font-semibold text-[var(--text-primary)]">{insights.top_performer?.dept} Dept</p>
+            <p className="text-xs text-[var(--text-muted)]">{insights.top_performer?.score}% documentation readiness</p>
           </div>
-          <div className="space-y-2 border-x border-white/10 px-8">
-            <p className="text-amber-400 text-[10px] font-black uppercase tracking-widest">Action Required</p>
-            <p className="text-2xl font-bold">{insights.action_required?.dept}</p>
-            <p className="text-sm text-slate-400">Target attainment below threshold ({insights.action_required?.score}%). Review PO mapping.</p>
+          <div className="p-4 rounded-xl space-y-1 bg-amber-50 border border-amber-100">
+            <p className="text-[10px] font-semibold text-amber-600 uppercase tracking-widest">Action Required</p>
+            <p className="text-lg font-semibold text-[var(--text-primary)]">{insights.action_required?.dept}</p>
+            <p className="text-xs text-[var(--text-muted)]">Attainment below threshold ({insights.action_required?.score}%)</p>
           </div>
-          <div className="space-y-2">
-            <p className="text-emerald-400 text-[10px] font-black uppercase tracking-widest">Institution Status</p>
-            <p className="text-2xl font-bold font-display tracking-tight text-white">{insights.status?.label}</p>
-            <p className="text-sm text-slate-400">{insights.status?.score}% global documentation readiness score.</p>
+          <div className="p-4 rounded-xl space-y-1 bg-emerald-50 border border-emerald-100">
+            <p className="text-[10px] font-semibold text-emerald-600 uppercase tracking-widest">Institution Status</p>
+            <p className="text-lg font-semibold text-[var(--text-primary)]">{insights.status?.label}</p>
+            <p className="text-xs text-[var(--text-muted)]">{insights.status?.score}% global readiness score</p>
           </div>
         </div>
       </Card>

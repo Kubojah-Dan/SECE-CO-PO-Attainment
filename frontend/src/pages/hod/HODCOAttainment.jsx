@@ -117,7 +117,7 @@ export default function HODCOAttainment() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <button 
             onClick={() => navigate('/hod/subjects')}
-            className="flex items-center text-xs font-bold text-slate-500 hover:text-slate-900 transition-colors uppercase tracking-widest border border-slate-200 px-4 py-2 rounded-xl bg-white shadow-sm"
+            className="flex items-center text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors uppercase tracking-widest border border-gray-200 px-4 py-2 rounded-lg bg-white"
           >
             <ArrowLeft size={14} className="mr-2" /> Back to Subject Allocations
           </button>
@@ -130,10 +130,10 @@ export default function HODCOAttainment() {
 
         {/* Subject Detail Profile Card */}
         {allocationDetail && (
-          <Card className="p-6 border-slate-100 shadow-md bg-white">
+          <Card className="p-6 border border-gray-200 bg-white">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
               <div className="flex items-start gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-inner">
+                <div className="w-14 h-14 rounded-2xl bg-slate-100 text-slate-600 flex items-center justify-center">
                   <FileText size={28} />
                 </div>
                 <div>
@@ -254,8 +254,8 @@ export default function HODCOAttainment() {
         </Card>
 
         {/* HOD Verification & Verification Panel */}
-        <Card className="p-8 border-none shadow-2xl bg-white relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-2 h-full bg-blue-600" />
+        <Card className="p-8 border border-gray-200 bg-white relative">
+
           <h3 className="text-lg font-bold text-slate-900 font-display mb-2 flex items-center gap-2">
             <CheckCircle2 className="text-blue-600 w-5 h-5" /> Course File Approval Decision
           </h3>
@@ -339,7 +339,7 @@ export default function HODCOAttainment() {
         </div>
         <div className="flex items-center gap-3">
           <AcademicYearSelector selectedId={selectedAY} onChange={setSelectedAY} />
-          <button className="flex items-center px-4 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-black transition-all shadow-md">
+          <button className="flex items-center px-4 py-2.5 bg-slate-900 text-white rounded-lg text-xs font-semibold hover:bg-slate-800 transition-colors">
             <Download size={14} className="mr-2" /> Export Summary
           </button>
         </div>
@@ -352,9 +352,10 @@ export default function HODCOAttainment() {
           { label: 'Targets Met', value: targetsMet, icon: CheckCircle, color: 'emerald' },
           { label: 'Below Target', value: targetsBelow, icon: AlertCircle, color: 'amber' },
         ].map((stat, i) => (
-          <Card key={i} className="p-6 border-none shadow-md bg-white">
-            <div className={`p-2 bg-${stat.color}-50 text-${stat.color}-600 rounded-xl w-fit mb-4`}>
-              <stat.icon size={20} />
+          <Card key={i} className="p-6 border border-gray-200 bg-white">
+            {/* Monochromatic icon — no varied pastels */}
+            <div className="p-2 bg-slate-100 text-slate-600 rounded-xl w-fit mb-4">
+              <stat.icon size={20} strokeWidth={1.75} />
             </div>
             <p className="text-3xl font-black text-slate-900 leading-none">{stat.value}</p>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">{stat.label}</p>
@@ -362,16 +363,16 @@ export default function HODCOAttainment() {
         ))}
       </div>
 
-      <Card className="p-0 overflow-hidden border-none shadow-xl bg-white/80 backdrop-blur-md">
+      <Card className="p-0 overflow-hidden border border-gray-200 bg-white">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-slate-900 text-white">
+            <thead className="bg-gray-50">
               <tr>
-                <th className="p-4 text-[10px] font-bold uppercase tracking-widest">Subject</th>
-                <th className="p-4 text-[10px] font-bold uppercase tracking-widest">CO Code</th>
-                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-center">Attainment (%)</th>
-                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-center">Level</th>
-                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-right">Status</th>
+                <th className="p-4 text-[10px] font-semibold text-gray-600 uppercase tracking-widest">Subject</th>
+                <th className="p-4 text-[10px] font-semibold text-gray-600 uppercase tracking-widest">CO Code</th>
+                <th className="p-4 text-[10px] font-semibold text-gray-600 uppercase tracking-widest text-center">Attainment (%)</th>
+                <th className="p-4 text-[10px] font-semibold text-gray-600 uppercase tracking-widest text-center">Level</th>
+                <th className="p-4 text-[10px] font-semibold text-gray-600 uppercase tracking-widest text-right">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 bg-white">

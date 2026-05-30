@@ -38,47 +38,40 @@ export default function IQACDashboard() {
   
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-6">
-      {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-2xl p-10 text-white shadow-xl" style={{ background: 'linear-gradient(135deg, var(--primary-800) 0%, var(--primary-600) 100%)' }}>
-        <div className="relative z-10 max-w-3xl">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-3 text-[var(--primary-200)] font-semibold text-[10px] uppercase tracking-[0.3em] mb-4"
-          >
-            <ShieldCheck className="w-5 h-5" />
-            Quality Assurance Intelligence
-          </motion.div>
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-2xl font-semibold tracking-tight"
-          >
-            Institutional Outcome Insights
-          </motion.h1>
-          <div className="mt-8 flex items-center gap-4">
-             <AcademicYearSelector selectedId={selectedAY} onChange={setSelectedAY} align="left" />
-             <button 
-               onClick={async () => {
-                 try {
-                   toast.info('Preparing Institutional Report...');
-                   const res = await reportService.exportIQAC('excel', selectedAY);
-                   const url = window.URL.createObjectURL(new Blob([res.data]));
-                   const link = document.createElement('a');
-                   link.href = url;
-                   link.setAttribute('download', `SAR_Report_${selectedAY}.xlsx`);
-                   document.body.appendChild(link);
-                   link.click();
-                 } catch (err) {
-                   toast.error('Failed to generate report');
-                 }
-               }}
-               className="flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-2xl text-xs font-bold transition-all border border-white/10"
-             >
-               <Download size={16} />
-               Export SAR Data
-             </button>
+      {/* Hero Header — light enterprise banner, no overflow-hidden so dropdown floats freely */}
+      <div className="relative rounded-2xl p-8 bg-slate-50 border border-slate-200">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-slate-500 text-[9px] font-bold uppercase tracking-[0.3em] mb-2">
+              <ShieldCheck size={13} className="text-slate-400" />
+              Overview
+            </div>
+            <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
+              Institutional Outcome Insights
+            </h1>
+          </div>
+          <div className="flex items-center gap-3">
+            <AcademicYearSelector selectedId={selectedAY} onChange={setSelectedAY} align="left" />
+            <button
+              onClick={async () => {
+                try {
+                  toast.info('Preparing Institutional Report...');
+                  const res = await reportService.exportIQAC('excel', selectedAY);
+                  const url = window.URL.createObjectURL(new Blob([res.data]));
+                  const link = document.createElement('a');
+                  link.href = url;
+                  link.setAttribute('download', `SAR_Report_${selectedAY}.xlsx`);
+                  document.body.appendChild(link);
+                  link.click();
+                } catch (err) {
+                  toast.error('Failed to generate report');
+                }
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold transition-colors"
+            >
+              <Download size={14} />
+              Export SAR Data
+            </button>
           </div>
         </div>
       </div>
@@ -86,10 +79,10 @@ export default function IQACDashboard() {
       {/* Real-time Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { label: 'Overall Readiness', value: `${dashboard?.overall_readiness || 0}%`, target: '/ 100%', icon: ShieldCheck, color: 'text-blue-600', bg: 'bg-blue-50' },
-          { label: 'Avg Attainment', value: `${dashboard?.overall_attainment?.toFixed(1) || 0}%`, target: 'vs 70%', icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-          { label: 'Departments', value: dashboard?.department_count || '11', target: 'Verified', icon: Building2, color: 'text-purple-600', bg: 'bg-purple-50' },
-          { label: 'Active Faculty', value: dashboard?.faculty_count || '0', target: 'Participating', icon: Users, color: 'text-amber-600', bg: 'bg-amber-50' },
+          { label: 'Overall Readiness', value: `${dashboard?.overall_readiness || 0}%`, target: '/ 100%', icon: ShieldCheck },
+          { label: 'Avg Attainment',    value: `${dashboard?.overall_attainment?.toFixed(1) || 0}%`, target: 'vs 70%', icon: TrendingUp },
+          { label: 'Departments',       value: dashboard?.department_count || '11', target: 'Verified', icon: Building2 },
+          { label: 'Active Faculty',    value: dashboard?.faculty_count || '0', target: 'Participating', icon: Users },
         ].map((stat, idx) => (
           <motion.div
             key={stat.label}
@@ -97,7 +90,7 @@ export default function IQACDashboard() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: idx * 0.1 }}
           >
-            <Card className="p-6 border-none shadow-md bg-white group hover:shadow-2xl transition-all">
+            <Card className="p-5 border border-gray-200 bg-white">
               <div className="flex items-start justify-between">
                 <div>
                   <div className="text-3xl font-bold text-slate-900">{stat.value}</div>
@@ -105,8 +98,9 @@ export default function IQACDashboard() {
                     {stat.label} <span className="text-slate-300 ml-1">{stat.target}</span>
                   </div>
                 </div>
-                <div className={`p-3 ${stat.bg} ${stat.color} rounded-2xl group-hover:scale-110 transition-transform`}>
-                  <stat.icon size={20} />
+                {/* Monochromatic slate icon — no varied pastels */}
+                <div className="p-2.5 bg-slate-100 text-slate-600 rounded-xl">
+                  <stat.icon size={18} strokeWidth={1.75} />
                 </div>
               </div>
             </Card>
@@ -115,7 +109,7 @@ export default function IQACDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-2 p-8 border-none shadow-2xl bg-white/80 backdrop-blur-md">
+        <Card className="lg:col-span-2 p-8 border border-gray-200 bg-white">
           <div className="flex items-center justify-between mb-8">
             <div>
               <h3 className="text-xl font-bold text-slate-900 font-display">Department Performance Matrix</h3>
@@ -181,7 +175,7 @@ export default function IQACDashboard() {
         </Card>
 
         <div className="space-y-6">
-          <Card className="p-8 border-none shadow-2xl bg-white">
+          <Card className="p-8 border border-gray-200 bg-white">
             <h3 className="text-xl font-bold text-slate-900 font-display mb-6">IQAC Audit Log</h3>
             <div className="space-y-4">
               {(dashboard?.recent_atrs || []).map((item, idx) => {
@@ -190,23 +184,24 @@ export default function IQACDashboard() {
                 }[item.icon] || Activity;
                 
                 return (
-                <div key={idx} className={`flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-${item.color}-200 transition-all cursor-pointer`}>
+                <div key={idx} className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200 group hover:border-slate-300 transition-colors cursor-pointer">
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 bg-${item.color}-50 text-${item.color}-600 rounded-lg`}><IconComponent size={16} /></div>
-                    <span className="text-xs font-bold text-slate-700">{item.label} - <span className={`text-${item.color}-600 uppercase text-[10px]`}>{item.status}</span></span>
+                    {/* Monochromatic icon — no dynamic pastel colors */}
+                    <div className="p-2 bg-slate-100 text-slate-600 rounded-lg flex-shrink-0"><IconComponent size={15} strokeWidth={1.75} /></div>
+                    <span className="text-xs font-semibold text-slate-700">{item.label} <span className="text-slate-400 font-normal">— {item.status}</span></span>
                   </div>
-                  <ChevronRight size={14} className="text-slate-300 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
+                  <ChevronRight size={14} className="text-slate-300 group-hover:text-slate-600 group-hover:translate-x-0.5 transition-all" />
                 </div>
               )})}
             </div>
           </Card>
 
-          <div className="bg-gradient-to-br from-amber-500 to-amber-600 p-8 rounded-[2rem] text-white shadow-xl">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-white/20 rounded-xl"><Activity size={20} /></div>
-              <h4 className="text-sm font-bold uppercase tracking-widest">Readiness Warning</h4>
+          <div className="bg-amber-50 border border-amber-200 p-6 rounded-xl">
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="p-2 bg-amber-100 rounded-lg"><Activity size={16} className="text-amber-700" strokeWidth={1.75} /></div>
+              <h4 className="text-xs font-bold text-amber-800 uppercase tracking-widest">Readiness Warning</h4>
             </div>
-            <p className="text-amber-50 font-bold leading-relaxed">
+            <p className="text-amber-700 text-sm font-medium leading-relaxed">
               Based on the selected year, {institutionalData.filter(d => (d.attainment || 0) === 0).length} departments have pending attainment calculations.
             </p>
           </div>

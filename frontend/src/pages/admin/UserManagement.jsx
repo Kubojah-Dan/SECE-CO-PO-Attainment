@@ -10,6 +10,23 @@ import { userService, departmentService } from '../../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
 
+const abbrevDept = (name) => {
+  const abbreviations = {
+    "Computer Science & Engineering (Artificial Intelligence & Machine Learning)": "CSE (AI&ML)",
+    "Artificial Intelligence & Data Science": "AI&DS",
+    "Computer Science & Engineering": "CSE",
+    "Computer & Communication Engineering": "CCE",
+    "Computer Science & Business Systems": "CSBS",
+    "Computer Science & Engineering (Cyber Security)": "CSE (CY)",
+    "Electrical & Electronics Engineering": "EEE",
+    "Electronics & Communication Engineering (VLSI Design)": "ECE (VLSI)",
+    "Mechanical Engineering": "MECH",
+    "Electronics & Communication Engineering": "ECE",
+    "Information Technology": "IT"
+  };
+  return abbreviations[name] || name;
+};
+
 export default function UserManagement() {
   const [activeTab, setActiveTab] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
@@ -19,6 +36,7 @@ export default function UserManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [isDeleting, setIsDeleting] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const tabs = ['All', 'HOD', 'Faculty', 'Admin', 'IQAC'];
 
@@ -167,16 +185,14 @@ export default function UserManagement() {
       </div>
 
       {/* Tabs & Search */}
-      <div className="flex flex-col md:flex-row gap-6 items-center">
-        <div className="flex p-1.5 bg-slate-100/80 backdrop-blur-md rounded-2xl border border-slate-200 w-full md:w-auto">
+      <div className="flex flex-col md:flex-row gap-4 items-center">
+        <div className="flex p-1 bg-[var(--surface-secondary)] rounded-xl border border-[var(--border)] w-full md:w-auto">
           {tabs.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`flex-1 md:flex-none px-6 py-2 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all ${
-                activeTab === tab 
-                  ? 'bg-white text-blue-600 shadow-sm border border-slate-100' 
-                  : 'text-slate-500 hover:text-slate-700'
+            <button key={tab} onClick={() => setActiveTab(tab)}
+              className={`flex-1 md:flex-none px-4 py-1.5 rounded-lg text-[11px] font-semibold uppercase tracking-widest transition-all ${
+                activeTab === tab
+                  ? 'bg-white text-[var(--primary-600)] shadow-sm border border-[var(--border)]'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
               }`}
             >
               {tab}
@@ -184,23 +200,17 @@ export default function UserManagement() {
           ))}
         </div>
         <div className="relative flex-1 w-full">
-          <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-          <input 
-            type="text" 
-            placeholder="Search by name, email or department..."
-            className="w-full !pl-16 pr-4 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500/20 outline-none transition-all text-sm font-medium"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
+          <input type="text" placeholder="Search by name, email or department..." className="w-full pl-11 pr-4 py-2.5 bg-[var(--surface-secondary)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[var(--primary-100)] focus:border-[var(--primary-500)] outline-none transition-all text-sm font-medium" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
         </div>
       </div>
 
       {/* Users Table */}
-      <Card className="overflow-hidden p-0 border-none shadow-2xl bg-white/80 backdrop-blur-md">
+      <Card className="overflow-hidden p-0 border-[var(--border)] shadow-sm">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-24 gap-4">
-            <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
-            <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Syncing User Directory...</p>
+          <div className="flex flex-col items-center justify-center py-24 gap-3">
+            <Loader2 className="w-9 h-9 animate-spin" style={{ color: 'var(--primary-500)' }} />
+            <p className="text-[var(--text-muted)] text-xs uppercase tracking-widest font-medium">Loading users...</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -365,6 +375,7 @@ export default function UserManagement() {
                 }
                 
                 try {
+                  setIsSaving(true);
                   if (editingUser) {
                     await userService.update(editingUser.id, payload);
                     toast.success('User updated successfully');
@@ -376,6 +387,8 @@ export default function UserManagement() {
                   fetchUsers();
                 } catch (err) {
                   toast.error(err.response?.data?.message || 'Failed to process user');
+                } finally {
+                  setIsSaving(false);
                 }
               }}>
                 <div className="grid grid-cols-2 gap-4">
@@ -447,17 +460,19 @@ export default function UserManagement() {
                     >
                       <option value="">Select Dept</option>
                       {departments.map(dept => (
-                        <option key={dept.id} value={dept.id}>{dept.name}</option>
+                        <option key={dept.id} value={dept.id}>{abbrevDept(dept.name)}</option>
                       ))}
                     </select>
                   </div>
                 </div>
-                <button type="submit" className="w-full py-3.5 text-white rounded-xl font-semibold mt-4 flex items-center justify-center gap-2 transition-all" style={{ background: 'var(--primary-500)' }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'var(--primary-600)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'var(--primary-500)'}
+                <button type="submit" disabled={isSaving} className="w-full py-3.5 text-white rounded-xl font-semibold mt-4 flex items-center justify-center gap-2 transition-all disabled:opacity-60 disabled:cursor-not-allowed" style={{ background: 'var(--primary-500)' }}
+                  onMouseEnter={e => !isSaving && (e.currentTarget.style.background = 'var(--primary-600)')}
+                  onMouseLeave={e => !isSaving && (e.currentTarget.style.background = 'var(--primary-500)')}
                 >
-                  <Lock size={16} />
-                  {editingUser ? 'Update Account' : 'Provision Account'}
+                  {isSaving
+                    ? <><Loader2 size={16} className="animate-spin" /> Saving...</>
+                    : <><Lock size={16} /> {editingUser ? 'Update Account' : 'Provision Account'}</>
+                  }
                 </button>
               </form>
             </motion.div>

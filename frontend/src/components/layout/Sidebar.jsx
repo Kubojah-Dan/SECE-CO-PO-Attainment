@@ -6,48 +6,47 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import {
-  LayoutDashboard, BookOpen, Users, Building2, Settings,
-  BarChart3, FileText, GraduationCap, LogOut, ChevronRight,
-  ClipboardList, Calculator, Upload, Database, Bell, Menu, X,
-  Award, Layers, BookMarked, School, PanelLeftClose, PanelLeftOpen,
-  ChevronLeft, FileSpreadsheet, User, Calendar, Layout
+  LayoutDashboard, LogOut, ChevronRight, PanelLeftClose, X,
+  Network, CalendarDays, Scale, Layers, Users2, BookOpenCheck,
+  DatabaseZap, TrendingUp, CircleUser, Settings2,
+  Calculator, ClipboardList, FileText, Award, BarChart3,
+  BookMarked
 } from 'lucide-react';
-import logo from '../../assets/logo_web.webp';
 
 // ── Navigation config per role ─────────────────────────────────
 const NAV_CONFIG = {
   admin: [
-    { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { to: '/admin/departments', icon: Building2, label: 'Depts' },
-    { to: '/admin/academic-years', icon: Calendar, label: 'Academic Years' },
-    { to: '/admin/regulations', icon: Layers, label: 'Regulations' },
-    { to: '/admin/sections', icon: Layout, label: 'Sections' },
-    { to: '/admin/users', icon: Users, label: 'Users' },
-    { to: '/admin/subjects', icon: BookMarked, label: 'Subjects' },
-    { to: '/admin/excel-tools', icon: FileSpreadsheet, label: 'Excel Tools' },
-    { to: '/admin/analytics', icon: BarChart3, label: 'Analytics' },
-    { to: '/profile', icon: User, label: 'Profile' },
-    { to: '/admin/settings', icon: Settings, label: 'Settings' },
+    { to: '/admin/dashboard',     icon: LayoutDashboard, label: 'Dashboard'     },
+    { to: '/admin/departments',   icon: Network,         label: 'Depts'         },
+    { to: '/admin/academic-years',icon: CalendarDays,    label: 'Academic Years'},
+    { to: '/admin/regulations',   icon: Scale,           label: 'Regulations'   },
+    { to: '/admin/sections',      icon: Layers,          label: 'Sections'      },
+    { to: '/admin/users',         icon: Users2,          label: 'Users'         },
+    { to: '/admin/subjects',      icon: BookOpenCheck,   label: 'Subjects'      },
+    { to: '/admin/excel-tools',   icon: DatabaseZap,     label: 'Excel Tools'   },
+    { to: '/admin/analytics',     icon: TrendingUp,      label: 'Analytics'     },
+    { to: '/profile',             icon: CircleUser,      label: 'Profile'       },
+    { to: '/admin/settings',      icon: Settings2,       label: 'Settings'      },
   ],
   hod: [
-    { to: '/hod/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { to: '/hod/faculty', icon: Users, label: 'Faculty' },
-    { to: '/hod/subjects', icon: BookMarked, label: 'Subjects' },
-    { to: '/hod/co-attainment', icon: Calculator, label: 'CO' },
-    { to: '/hod/atr-review', icon: ClipboardList, label: 'ATR Review' },
-    { to: '/hod/reports', icon: FileText, label: 'Reports' },
-    { to: '/profile', icon: User, label: 'Profile' },
+    { to: '/hod/dashboard',       icon: LayoutDashboard, label: 'Dashboard'     },
+    { to: '/hod/faculty',         icon: Users2,          label: 'Faculty'       },
+    { to: '/hod/subjects',        icon: BookOpenCheck,   label: 'Subjects'      },
+    { to: '/hod/co-attainment',   icon: Calculator,      label: 'CO'            },
+    { to: '/hod/atr-review',      icon: ClipboardList,   label: 'ATR Review'    },
+    { to: '/hod/reports',         icon: FileText,        label: 'Reports'       },
+    { to: '/profile',             icon: CircleUser,      label: 'Profile'       },
   ],
   faculty: [
-    { to: '/faculty/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { to: '/faculty/subjects', icon: BookMarked, label: 'My Subjects' },
-    { to: '/profile', icon: User, label: 'Profile' },
+    { to: '/faculty/dashboard',   icon: LayoutDashboard, label: 'Dashboard'     },
+    { to: '/faculty/subjects',    icon: BookOpenCheck,   label: 'My Subjects'   },
+    { to: '/profile',             icon: CircleUser,      label: 'Profile'       },
   ],
   iqac: [
-    { to: '/iqac/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { to: '/iqac/po-attainment', icon: BarChart3, label: 'Attainment' },
-    { to: '/iqac/nba-report', icon: Award, label: 'NBA' },
-    { to: '/profile', icon: User, label: 'Profile' },
+    { to: '/iqac/dashboard',      icon: LayoutDashboard, label: 'Dashboard'     },
+    { to: '/iqac/po-attainment',  icon: TrendingUp,      label: 'Attainment'    },
+    { to: '/iqac/nba-report',     icon: Award,           label: 'NBA'           },
+    { to: '/profile',             icon: CircleUser,      label: 'Profile'       },
   ],
 };
 
@@ -79,11 +78,11 @@ export default function Sidebar({ isCollapsed, onToggleCollapse, isMobileOpen, o
   const SidebarContent = ({ mini }) => (
     <div className="flex flex-col h-full">
       {/* Logo Section */}
-      <div className={`flex items-center border-b border-white/10 ${mini ? 'justify-center px-3 py-6' : 'px-5 py-6 gap-3'}`}>
+      <div className={`flex items-center border-b border-white/5 ${mini ? 'justify-center px-3 py-6' : 'px-5 py-6 gap-3'}`}>
         {!mini ? (
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-white p-1 shadow-sm">
-              <img src={logo} alt="logo" className="w-full h-full object-contain" />
+              <img src="https://ik.imagekit.io/syustaging/SYU_PREPROD/LOGO_J2QP76yKfA.webp?tr=w-3840" alt="logo" className="w-full h-full object-contain" />
             </div>
             <div className="min-w-0">
               <p className="font-semibold text-white text-sm leading-tight tracking-wide">SECE CO-PO</p>
@@ -92,7 +91,7 @@ export default function Sidebar({ isCollapsed, onToggleCollapse, isMobileOpen, o
           </div>
         ) : (
           <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-white p-1 shadow-sm">
-            <img src={logo} alt="logo" className="w-full h-full object-contain" />
+            <img src="https://ik.imagekit.io/syustaging/SYU_PREPROD/LOGO_J2QP76yKfA.webp?tr=w-3840" alt="logo" className="w-full h-full object-contain" />
           </div>
         )}
         
@@ -108,7 +107,7 @@ export default function Sidebar({ isCollapsed, onToggleCollapse, isMobileOpen, o
 
       {/* User Profile Section */}
       {!mini ? (
-        <div className="px-5 py-5 border-b border-white/10 bg-white/5">
+        <div className="px-5 py-5 border-b border-white/5 bg-white/[0.03]">
           <div className="flex items-center gap-3">
             <div 
               className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center text-white font-bold text-sm shadow-inner overflow-hidden"
@@ -122,7 +121,7 @@ export default function Sidebar({ isCollapsed, onToggleCollapse, isMobileOpen, o
             </div>
             <div className="min-w-0">
               <p className="text-sm font-semibold text-white truncate">{user?.first_name} {user?.last_name}</p>
-              <span className="inline-block text-[10px] font-semibold uppercase tracking-wider mt-1 px-2 py-0.5 rounded-full bg-[var(--accent-500)]/20 text-[var(--accent-400)]">
+              <span className="inline-block text-[10px] font-semibold uppercase tracking-widest mt-1 px-2 py-0.5 rounded-full bg-white/10 border border-white/20 text-white/60">
                 {ROLE_LABELS[role]}
               </span>
             </div>
@@ -151,21 +150,21 @@ export default function Sidebar({ isCollapsed, onToggleCollapse, isMobileOpen, o
             to={item.to}
             title={mini ? item.label : undefined}
             className={({ isActive }) =>
-              `flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-150 ease-out border-l-2 ${mini ? 'justify-center px-2 py-3 border-transparent' : 'px-4 py-2.5'} ${
+              `flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-200 ease-out ${mini ? 'justify-center px-2 py-3' : 'px-4 py-2.5'} ${
                 isActive
-                ? `sidebar-active-glow text-white ${mini ? 'border-[var(--accent-500)]' : ''}`
-                : 'text-white/60 hover:text-white hover:bg-white/5 border-transparent'
+                ? 'bg-white/10 text-white'
+                : 'text-slate-400 hover:text-white hover:bg-white/5'
               }`
             }
           >
-            <item.icon size={18} className="flex-shrink-0" />
+            <item.icon size={18} strokeWidth={1.75} className="flex-shrink-0" />
             {!mini && <span className="flex-1 truncate">{item.label}</span>}
           </NavLink>
         ))}
       </nav>
 
       {/* Logout Footer */}
-      <div className={`py-4 border-t border-white/10 ${mini ? 'px-2' : 'px-4'}`}>
+      <div className={`py-4 border-t border-white/5 ${mini ? 'px-2' : 'px-4'}`}>
         <button
           onClick={handleLogout}
           title={mini ? 'Sign Out' : undefined}

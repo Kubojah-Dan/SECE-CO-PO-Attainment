@@ -109,7 +109,7 @@ export default function HODSubjectsList() {
               queryClient.invalidateQueries(['hod', 'faculty']);
               setIsModalOpen(true);
             }}
-            className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-2xl text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
+            className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-sm font-semibold transition-colors"
           >
             <Plus size={18} />
             Assign Subject
@@ -119,7 +119,7 @@ export default function HODSubjectsList() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {allocations?.length > 0 ? allocations.map((alloc) => (
-          <Card key={alloc.id} className="group hover:border-blue-200 transition-all border-slate-100 shadow-sm">
+          <Card key={alloc.id} className="group border border-gray-200 hover:border-slate-300 transition-colors">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors">
@@ -128,7 +128,7 @@ export default function HODSubjectsList() {
                 <div>
                   <h3 className="font-bold text-gray-900 leading-tight">{alloc.subject_name}</h3>
                   <div className="flex items-center gap-3 mt-1">
-                    <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase tracking-wider">
+                    <span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded uppercase tracking-wider">
                       {alloc.subject_code}
                     </span>
                     <span className="text-[10px] text-gray-400 font-bold flex items-center gap-1 uppercase tracking-widest">
@@ -186,7 +186,7 @@ export default function HODSubjectsList() {
       {/* Allocation Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <Card className="w-full max-w-lg p-0 overflow-hidden border-none shadow-2xl">
+          <Card className="w-full max-w-lg p-0 overflow-hidden border border-gray-200">
             <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-white">
               <h2 className="text-xl font-bold text-gray-900 font-display">Allocate New Subject</h2>
               <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-xl transition-all">
@@ -229,7 +229,7 @@ export default function HODSubjectsList() {
                 <button 
                   type="submit"
                   disabled={createMutation.isPending}
-                  className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 flex items-center justify-center gap-2"
+                  className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
                 >
                   {createMutation.isPending ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
                   Confirm Allocation

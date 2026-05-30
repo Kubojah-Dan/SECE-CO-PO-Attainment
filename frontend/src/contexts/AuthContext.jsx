@@ -47,9 +47,10 @@ export function AuthProvider({ children }) {
       return userData;
     } catch (err) {
       const message =
+        err.response?.data?.error ||
         err.response?.data?.message ||
         err.response?.data?.details?.non_field_errors?.[0] ||
-        'Login failed. Please check your credentials.';
+        'Invalid credentials. Please check your email and password.';
       setError(message);
       throw new Error(message);
     }

@@ -22,13 +22,14 @@ const Button = ({
   };
 
   const variants = {
-    primary:   'bg-[var(--primary-500)] hover:bg-[var(--primary-600)] text-white shadow-sm shadow-[var(--primary-500)]/20',
-    secondary: 'bg-white hover:bg-[var(--surface-secondary)] text-[var(--primary-500)] border border-[var(--border-strong)] shadow-sm',
+    primary:   'bg-[var(--primary-500)] hover:bg-[var(--primary-600)] text-white',
+    dark:      'bg-slate-900 hover:bg-slate-800 text-white',
+    secondary: 'bg-white hover:bg-slate-50 text-slate-700 border border-gray-200 hover:border-gray-400',
     outline:   'bg-transparent hover:bg-[var(--primary-50)] text-[var(--primary-500)] border border-[var(--primary-300)]',
     ghost:     'bg-transparent hover:bg-[var(--surface-tertiary)] text-[var(--text-secondary)]',
-    danger:    'bg-[var(--danger)] hover:bg-red-700 text-white shadow-sm',
-    success:   'bg-[var(--success)] hover:bg-emerald-700 text-white shadow-sm',
-    accent:    'bg-[var(--accent-500)] hover:bg-[var(--accent-600)] text-white font-semibold shadow-sm shadow-amber-400/20',
+    danger:    'bg-[var(--danger)] hover:bg-red-700 text-white',
+    success:   'bg-[var(--success)] hover:bg-emerald-700 text-white',
+    accent:    'bg-[var(--accent-500)] hover:bg-[var(--accent-600)] text-white font-semibold',
   };
 
   return (

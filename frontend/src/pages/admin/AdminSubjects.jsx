@@ -9,6 +9,23 @@ import { subjectService, departmentService } from '../../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
 
+const abbrevDept = (name) => {
+  const abbreviations = {
+    "Computer Science & Engineering (Artificial Intelligence & Machine Learning)": "CSE (AI&ML)",
+    "Artificial Intelligence & Data Science": "AI&DS",
+    "Computer Science & Engineering": "CSE",
+    "Computer & Communication Engineering": "CCE",
+    "Computer Science & Business Systems": "CSBS",
+    "Computer Science & Engineering (Cyber Security)": "CSE (CY)",
+    "Electrical & Electronics Engineering": "EEE",
+    "Electronics & Communication Engineering (VLSI Design)": "ECE (VLSI)",
+    "Mechanical Engineering": "MECH",
+    "Electronics & Communication Engineering": "ECE",
+    "Information Technology": "IT"
+  };
+  return abbreviations[name] || name;
+};
+
 export default function AdminSubjects() {
   const [searchTerm, setSearchTerm] = useState('');
   const [subjects, setSubjects] = useState([]);
@@ -81,40 +98,28 @@ export default function AdminSubjects() {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50/50 p-4 md:p-10 font-ui">
-      <div className="max-w-7xl mx-auto space-y-10">
+    <div className="p-8 max-w-7xl mx-auto space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 font-display tracking-tight">Master Subject Directory</h1>
-          <p className="text-slate-500 mt-1">Manage global course definitions and curriculum</p>
+          <h1 className="text-2xl font-semibold text-[var(--text-primary)] tracking-tight">Master Subject Directory</h1>
+          <p className="text-sm text-[var(--text-muted)] mt-0.5">Manage global course definitions and curriculum</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 transition-all">
-            <Download size={18} /> Export
+          <button className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-[var(--text-secondary)] border border-[var(--border)] hover:bg-[var(--surface-secondary)] transition-all">
+            <Download size={15} /> Export
           </button>
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/10"
-          >
-            <Plus size={18} /> Define Subject
+          <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 px-4 py-2.5 text-white rounded-xl text-sm font-medium transition-all" style={{ background: 'var(--primary-500)' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--primary-600)'} onMouseLeave={e => e.currentTarget.style.background = 'var(--primary-500)'}>
+            <Plus size={16} /> Define Subject
           </button>
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-          <input 
-            type="text" 
-            placeholder="Search by code, name or department..."
-            className="w-full pl-14 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none transition-all text-sm font-medium"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
+      <div className="relative">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={16} />
+        <input type="text" placeholder="Search by code, name or department..." className="w-full pl-11 pr-4 py-2.5 bg-[var(--surface-secondary)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[var(--primary-100)] focus:border-[var(--primary-500)] outline-none transition-all text-sm font-medium" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
       </div>
 
-      <Card className="p-0 overflow-hidden border-none shadow-xl bg-white/80 backdrop-blur-md">
+      <Card className="p-0 overflow-hidden border-[var(--border)] shadow-sm">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4">
             <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
@@ -203,95 +208,82 @@ export default function AdminSubjects() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl p-8 max-h-[90vh] overflow-y-auto"
+              className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
             >
-              <div className="flex items-center justify-between mb-8">
-                <h3 className="text-xl font-bold text-slate-900 font-display">
-                  {editingSubject ? 'Update Subject' : 'Define New Subject'}
-                </h3>
-                <button onClick={handleModalClose} className="p-2 hover:bg-slate-100 rounded-xl text-slate-400">
-                  <X size={20} />
+              <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border)] bg-[var(--surface-secondary)]">
+                <div>
+                  <h3 className="text-base font-semibold text-[var(--text-primary)]">{editingSubject ? 'Update Subject' : 'Define New Subject'}</h3>
+                </div>
+                <button onClick={handleModalClose} className="p-1.5 hover:bg-[var(--surface-tertiary)] rounded-lg text-[var(--text-muted)] transition-all">
+                  <X size={18} />
                 </button>
               </div>
-              
-              <form className="space-y-4" onSubmit={async (e) => {
-                e.preventDefault();
-                setIsSaving(true);
-                const formData = new FormData(e.target);
-                const data = Object.fromEntries(formData);
-                
-                // Type conversion
-                if (data.credits) data.credits = parseInt(data.credits);
-                if (data.semester) data.semester = parseInt(data.semester);
-                
-                // Duplicate fields for backend compatibility
-                data.subject_code = data.code;
-                data.subject_name = data.name;
-                if (data.department) data.department_id = data.department;
-                
-                try {
-                  if (editingSubject) {
-                    await subjectService.update(editingSubject.id || editingSubject.subject_id, data);
-                    toast.success('Subject updated successfully');
-                  } else {
-                    await subjectService.create(data);
-                    toast.success('Subject defined successfully');
+              <div className="p-6">
+                <form className="space-y-4" onSubmit={async (e) => {
+                  e.preventDefault();
+                  setIsSaving(true);
+                  const formData = new FormData(e.target);
+                  const data = Object.fromEntries(formData);
+                  if (data.credits) data.credits = parseInt(data.credits);
+                  if (data.semester) data.semester = parseInt(data.semester);
+                  data.subject_code = data.code;
+                  data.subject_name = data.name;
+                  if (data.department) data.department_id = data.department;
+                  try {
+                    if (editingSubject) {
+                      await subjectService.update(editingSubject.id || editingSubject.subject_id, data);
+                      toast.success('Subject updated successfully');
+                    } else {
+                      await subjectService.create(data);
+                      toast.success('Subject defined successfully');
+                    }
+                    handleModalClose();
+                    fetchSubjects();
+                  } catch (err) {
+                    toast.error(err.response?.data?.message || 'Failed to save subject');
+                  } finally {
+                    setIsSaving(false);
                   }
-                  handleModalClose();
-                  fetchSubjects();
-                } catch (err) {
-                  toast.error(err.response?.data?.message || 'Failed to save subject');
-                } finally {
-                  setIsSaving(false);
-                }
-              }}>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Subject Code</label>
-                    <input name="code" defaultValue={editingSubject?.code || editingSubject?.subject_code} required type="text" className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-bold text-sm" placeholder="e.g. CS8401" />
+                }}>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest block mb-2">Subject Code</label>
+                      <input name="code" defaultValue={editingSubject?.code || editingSubject?.subject_code} required type="text" className="w-full p-3 bg-[var(--surface-secondary)] border border-[var(--border)] rounded-xl outline-none focus:ring-2 focus:ring-[var(--primary-100)] transition-all font-medium text-sm" placeholder="e.g. CS8401" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest block mb-2">Credits</label>
+                      <input name="credits" defaultValue={editingSubject?.credits} required type="number" className="w-full p-3 bg-[var(--surface-secondary)] border border-[var(--border)] rounded-xl outline-none focus:ring-2 focus:ring-[var(--primary-100)] transition-all font-medium text-sm" placeholder="3" />
+                    </div>
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Credits</label>
-                    <input name="credits" defaultValue={editingSubject?.credits} required type="number" className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-bold text-sm" placeholder="3" />
+                    <label className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest block mb-2">Subject Name</label>
+                    <input name="name" defaultValue={editingSubject?.name || editingSubject?.subject_name} required type="text" className="w-full p-3 bg-[var(--surface-secondary)] border border-[var(--border)] rounded-xl outline-none focus:ring-2 focus:ring-[var(--primary-100)] transition-all font-medium text-sm" placeholder="Database Management Systems" />
                   </div>
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Subject Name</label>
-                  <input name="name" defaultValue={editingSubject?.name || editingSubject?.subject_name} required type="text" className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-bold text-sm" placeholder="Database Management Systems" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Department</label>
-                    <select name="department" defaultValue={editingSubject?.department?.id || editingSubject?.department} required className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-bold text-sm">
-                      <option value="">Select Dept</option>
-                      {departments.map(dept => (
-                        <option key={dept.id} value={dept.id}>{dept.name}</option>
-                      ))}
-                    </select>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest block mb-2">Department</label>
+                      <select name="department" defaultValue={editingSubject?.department?.id || editingSubject?.department} required className="w-full p-3 bg-[var(--surface-secondary)] border border-[var(--border)] rounded-xl outline-none focus:ring-2 focus:ring-[var(--primary-100)] transition-all font-medium text-sm">
+                        <option value="">Select Dept</option>
+                        {departments.map(dept => (<option key={dept.id} value={dept.id}>{abbrevDept(dept.name)}</option>))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest block mb-2">Semester</label>
+                      <select name="semester" defaultValue={editingSubject?.semester || 1} required className="w-full p-3 bg-[var(--surface-secondary)] border border-[var(--border)] rounded-xl outline-none focus:ring-2 focus:ring-[var(--primary-100)] transition-all font-medium text-sm">
+                        {[1,2,3,4,5,6,7,8].map(sem => (<option key={sem} value={sem}>Semester {sem}</option>))}
+                      </select>
+                    </div>
                   </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Semester</label>
-                    <select name="semester" defaultValue={editingSubject?.semester || 1} required className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-bold text-sm">
-                      {[1,2,3,4,5,6,7,8].map(sem => (
-                        <option key={sem} value={sem}>Semester {sem}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                <button 
-                  type="submit" 
-                  disabled={isSaving}
-                  className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold mt-4 shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2"
-                >
-                  {isSaving && <Loader2 size={18} className="animate-spin" />}
-                  {isSaving ? 'Saving...' : 'Save Subject'}
-                </button>
-              </form>
+                  <button type="submit" disabled={isSaving} className="w-full py-2.5 text-white rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all" style={{ background: 'var(--primary-500)' }} onMouseEnter={e => !isSaving && (e.currentTarget.style.background = 'var(--primary-600)')} onMouseLeave={e => !isSaving && (e.currentTarget.style.background = 'var(--primary-500)')}>
+                    {isSaving && <Loader2 size={16} className="animate-spin" />}
+                    {isSaving ? 'Saving...' : 'Save Subject'}
+                  </button>
+                </form>
+              </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
-      </div>
     </div>
   );
 }

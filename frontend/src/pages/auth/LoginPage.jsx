@@ -11,8 +11,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from '../../contexts/AuthContext';
-import campusHero from '../../assets/image2.png';
-import logo from '../../assets/logo.png';
 
 const loginSchema = z.object({
   email: z.string().email('Enter a valid email address'),
@@ -67,22 +65,28 @@ export default function LoginPage() {
   return (
     <div className="h-screen flex font-ui overflow-hidden">
       {/* ── Left: Campus Photo ─────────────────────────────────── */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-slate-950">
         <img
-          src={campusHero}
+          src="https://sece.ac.in/wp-content/uploads/2025/04/srieshwar_stats2.webp"
           alt="Sri Eshwar College of Engineering Campus"
-          className="absolute inset-0 w-full h-full object-cover scale-105"
+          className="absolute inset-0 w-full h-full object-cover scale-105 opacity-80"
         />
-        {/* Gradient overlay */}
+        {/* Gradient overlay to blend seamlessly with the brand blue */}
         <div
-          style={{ background: 'linear-gradient(145deg, var(--primary-900) 0%, var(--primary-700) 60%, var(--primary-600) 100%)', position: 'absolute', inset: 0 }}
+          style={{
+            background: 'linear-gradient(145deg, var(--primary-900) 0%, var(--primary-700) 60%, var(--primary-600) 100%)',
+            position: 'absolute',
+            inset: 0,
+            mixBlendMode: 'multiply',
+            opacity: 0.65
+          }}
         />
         {/* Content over photo */}
         <div className="relative z-10 flex flex-col justify-between p-16 w-full text-white">
           {/* Logo & Name */}
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 bg-white p-1.5 rounded-2xl shadow-lg">
-              <img src={logo} alt="SECE Logo" className="w-full h-full object-contain" />
+              <img src="https://ik.imagekit.io/syustaging/SYU_PREPROD/LOGO_J2QP76yKfA.webp?tr=w-3840" alt="SECE Logo" className="w-full h-full object-contain" />
             </div>
             <div>
               <h1 className="text-3xl font-bold font-display tracking-tight leading-none">SECE</h1>
@@ -142,11 +146,10 @@ export default function LoginPage() {
                     key={role.id}
                     type="button"
                     onClick={() => setSelectedRole(role.id)}
-                    className={`text-left p-4 rounded-xl border-2 transition-all relative overflow-hidden group ${
-                      selectedRole === role.id
-                        ? 'border-[var(--primary-500)] bg-[var(--primary-50)] shadow-md shadow-[var(--primary-500)]/10'
-                        : 'border-[var(--border)] bg-white hover:border-[var(--border-strong)]'
-                    }`}
+                    className={`text-left p-4 rounded-xl border-2 transition-all relative overflow-hidden group ${selectedRole === role.id
+                      ? 'border-[var(--primary-500)] bg-[var(--primary-50)] shadow-md shadow-[var(--primary-500)]/10'
+                      : 'border-[var(--border)] bg-white hover:border-[var(--border-strong)]'
+                      }`}
                   >
                     <div className={`font-semibold text-sm ${selectedRole === role.id ? 'text-[var(--primary-600)]' : 'text-[var(--text-primary)]'}`}>
                       {role.label}

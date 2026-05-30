@@ -82,72 +82,75 @@ export default function AcademicYears() {
 
   if (isLoading) return (
     <div className="h-96 flex items-center justify-center">
-      <Loader2 className="animate-spin text-blue-600" size={48} />
+      <Loader2 className="animate-spin text-[var(--primary-500)]" size={40} />
     </div>
   );
 
   return (
-    <div className="p-8 max-w-5xl mx-auto space-y-8">
+    <div className="p-8 max-w-5xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-black text-gray-900 font-display italic uppercase tracking-tighter">Academic Cycles</h1>
-          <p className="text-gray-500 font-medium text-sm mt-1">Configure active academic cycles and institutional timelines</p>
+          <h1 className="text-2xl font-semibold text-[var(--text-primary)] tracking-tight">Academic Cycles</h1>
+          <p className="text-sm text-[var(--text-muted)] mt-0.5">Configure active academic cycles and institutional timelines</p>
         </div>
         <button 
           onClick={() => { resetForm(); setIsModalOpen(true); }}
-          className="bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-2xl flex items-center gap-2 font-bold transition-all shadow-lg shadow-slate-200"
+          className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white rounded-xl transition-all"
+          style={{ background: 'var(--primary-500)' }}
+          onMouseEnter={e => e.currentTarget.style.background = 'var(--primary-600)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'var(--primary-500)'}
         >
-          <Plus size={18} /> New Cycle
+          <Plus size={16} /> New Cycle
         </button>
       </div>
 
       <div className="grid grid-cols-1 gap-4">
         {years?.map((year) => (
-          <Card key={year.id} className="relative overflow-hidden group border-slate-100 hover:border-blue-200 transition-all">
+          <Card key={year.id} className="relative overflow-hidden group border-[var(--border)] hover:border-[var(--primary-200)] transition-all duration-300">
             {year.is_current && (
-              <div className="absolute top-0 right-0 px-4 py-1.5 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-bl-2xl shadow-lg z-10">
+              <div className="absolute top-0 right-0 px-3 py-1 text-white text-[10px] font-semibold uppercase tracking-widest rounded-bl-xl z-10" style={{ background: 'var(--success)' }}>
                 Active Year
               </div>
             )}
             
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-2">
-              <div className="flex items-center gap-5">
-                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all ${
-                  year.is_current ? 'bg-blue-600 text-white shadow-xl shadow-blue-200' : 'bg-slate-100 text-slate-400'
-                }`}>
-                  <CalendarDays size={32} />
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-1">
+              <div className="flex items-center gap-4">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${
+                  year.is_current ? 'text-white shadow-md' : 'bg-[var(--surface-tertiary)] text-[var(--text-muted)]'
+                }`} style={year.is_current ? { background: 'var(--primary-500)' } : {}}>
+                  <CalendarDays size={20} />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-black text-slate-900 font-display">AY {year.label}</h3>
-                  <div className="flex items-center gap-4 mt-1.5">
-                    <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-lg">
-                      <Clock size={12} className="text-blue-500" /> {year.start_date || 'N/A'} to {year.end_date || 'N/A'}
+                  <h3 className="text-base font-semibold text-[var(--text-primary)]">AY {year.label}</h3>
+                  <div className="flex items-center gap-3 mt-1">
+                    <span className="text-xs text-[var(--text-muted)] flex items-center gap-1">
+                      <Clock size={11} className="text-[var(--primary-400)]" /> {year.start_date || 'N/A'} to {year.end_date || 'N/A'}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 {!year.is_current && (
                   <button 
                     onClick={() => setCurrentMutation.mutate(year.id)}
-                    className="text-xs font-bold text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-xl transition-all"
+                    className="text-xs font-medium text-[var(--primary-500)] hover:bg-[var(--primary-50)] px-3 py-1.5 rounded-lg transition-all"
                   >
                     Set as Active
                   </button>
                 )}
                 <button 
                   onClick={() => handleEdit(year)}
-                  className="p-3 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-2xl transition-all"
+                  className="p-2 text-[var(--text-muted)] hover:text-[var(--primary-500)] hover:bg-[var(--primary-50)] rounded-xl transition-all"
                 >
-                  <Edit2 size={18} />
+                  <Edit2 size={15} />
                 </button>
                 {!year.is_current && (
                   <button 
                     onClick={() => { if(window.confirm('Delete this year?')) deleteMutation.mutate(year.id); }}
-                    className="p-3 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-2xl transition-all"
+                    className="p-2 text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-red-50 rounded-xl transition-all"
                   >
-                    <Trash2 size={18} />
+                    <Trash2 size={15} />
                   </button>
                 )}
               </div>
@@ -160,8 +163,8 @@ export default function AcademicYears() {
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-[32px] w-full max-w-md overflow-hidden shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-200">
-            <div className="px-8 py-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
-              <h2 className="text-xl font-black text-slate-900 font-display italic uppercase tracking-tighter">
+          <div className="px-6 py-4 border-b border-[var(--border)] bg-[var(--surface-secondary)] flex items-center justify-between rounded-t-2xl">
+              <h2 className="text-base font-semibold text-[var(--text-primary)]">
                 {editingYear ? 'Edit Cycle' : 'New Academic Cycle'}
               </h2>
               <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-white rounded-full transition-all">

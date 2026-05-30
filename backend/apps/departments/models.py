@@ -58,7 +58,7 @@ class Department(models.Model):
     college = models.ForeignKey(
         College, on_delete=models.CASCADE, related_name='departments'
     )
-    name = models.CharField(max_length=200)          # Full name
+    name = models.CharField(max_length=200, unique=True)          # Full name
     code = models.CharField(max_length=20)            # "CSE_AIML"
     short_name = models.CharField(max_length=50)      # "CSE(AI&ML)"
     hod_name = models.CharField(max_length=200, blank=True)

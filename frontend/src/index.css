@@ -122,9 +122,11 @@ body {
 }
 
 /* ── Unified page background wrapper */
+/* NOTE: no min-height here — the parent <main> is overflow-y-auto with flex-1,
+   so forcing min-h-screen creates a double-scroll / clip bug. */
 .page-wrapper {
   background-color: var(--surface-page);
-  min-height: 100vh;
+  padding-bottom: 2rem; /* ensures last card is never clipped */
 }
 
 /* ── Typography ─────────────────────────────────────────────── */
@@ -640,16 +642,6 @@ h4, h5, h6 {
 }
 
 .stat-card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
-}
-
-.stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--primary-500), var(--primary-400));
+  border-color: var(--border-strong, #cbd5e1);
+  transform: translateY(-1px);
 }

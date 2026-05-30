@@ -67,7 +67,7 @@ function SubjectCard({ allocation, index }) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.06 }}
-      className="card p-5 hover:shadow-md transition-all"
+      className="card p-5 border border-gray-200 hover:border-slate-300 transition-colors"
     >
       <div className="flex items-start justify-between gap-4">
         {/* Subject info */}
@@ -170,11 +170,13 @@ export default function FacultyDashboard() {
     : 0;
 
   const STATS = [
-    { label: 'My Subjects', value: totalSubjects, icon: BookMarked, color: 'var(--primary-500)', bg: 'var(--primary-50)' },
-    { label: 'Total Students', value: totalStudents, icon: Users, color: '#7C3AED', bg: '#F5F3FF' },
-    { label: 'Avg Attainment', value: `${avgAttainment}%`, icon: TrendingUp, color: 'var(--success)', bg: 'var(--success-light)' },
-    { label: 'Pending Marks', value: pendingMarks, icon: AlertCircle, color: pendingMarks > 0 ? 'var(--warning)' : 'var(--success)', bg: pendingMarks > 0 ? 'var(--warning-light)' : 'var(--success-light)' },
+    { label: 'My Subjects',    value: totalSubjects },
+    { label: 'Total Students', value: totalStudents },
+    { label: 'Avg Attainment', value: `${avgAttainment}%` },
+    { label: 'Pending Marks',  value: pendingMarks },
   ];
+
+  const STAT_ICONS = [BookMarked, Users, TrendingUp, AlertCircle];
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
@@ -191,40 +193,38 @@ export default function FacultyDashboard() {
             Here's your subjects overview.
           </p>
         </div>
-        <AcademicYearSelector />
+        <AcademicYearSelector align="right" />
       </div>
 
       {/* ── Stat Cards ────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {isLoading
           ? Array(4).fill(0).map((_, i) => <StatCardSkeleton key={i} />)
-          : STATS.map((stat, i) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.08 }}
-                className="stat-card card-enter"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div
-                    className="w-9 h-9 rounded-xl flex items-center justify-center"
-                    style={{ background: stat.bg }}
-                  >
-                    <stat.icon size={18} style={{ color: stat.color }} />
-                  </div>
-                </div>
-                <div
-                  className="text-2xl font-bold font-mono mb-0.5"
-                  style={{ color: 'var(--gray-900)' }}
+          : STATS.map((stat, i) => {
+              const Icon = STAT_ICONS[i];
+              return (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.08 }}
+                  className="stat-card card-enter bg-white border border-gray-200 rounded-2xl p-5"
                 >
-                  {stat.value}
-                </div>
-                <div className="text-xs font-medium" style={{ color: 'var(--gray-500)' }}>
-                  {stat.label}
-                </div>
-              </motion.div>
-            ))}
+                  <div className="flex items-start justify-between mb-3">
+                    {/* Monochromatic slate icon — no varied pastels or colored borders */}
+                    <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center">
+                      <Icon size={18} className="text-slate-700" strokeWidth={1.75} />
+                    </div>
+                  </div>
+                  <div className="text-2xl font-bold font-mono mb-0.5" style={{ color: 'var(--gray-900)' }}>
+                    {stat.value}
+                  </div>
+                  <div className="text-xs font-medium" style={{ color: 'var(--gray-500)' }}>
+                    {stat.label}
+                  </div>
+                </motion.div>
+              );
+            })}
       </div>
 
       {/* ── My Subjects ───────────────────────────────────────── */}
@@ -254,7 +254,7 @@ export default function FacultyDashboard() {
             ))}
           </div>
         ) : subjects.length === 0 ? (
-          <div className="card p-12 text-center">
+          <div className="card p-12 text-center border border-gray-200">
             <BookMarked size={40} className="mx-auto mb-3" style={{ color: 'var(--gray-200)' }} />
             <h3 className="font-semibold mb-1" style={{ color: 'var(--gray-600)' }}>
               No subjects allocated for this year

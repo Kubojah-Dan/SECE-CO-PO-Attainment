@@ -67,11 +67,8 @@ export default function HODDashboard() {
         </div>
         <div className="flex items-center gap-3">
           <AcademicYearSelector />
-          <button className="flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-white transition-all" style={{ background: 'var(--primary-500)' }}
-            onMouseEnter={e => e.currentTarget.style.background = 'var(--primary-600)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'var(--primary-500)'}
-          >
-            <Download className="w-4 h-4 mr-2" />
+          <button className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-sm font-semibold transition-colors">
+            <Download className="w-4 h-4" />
             Export Summary
           </button>
         </div>
@@ -135,7 +132,7 @@ export default function HODDashboard() {
                 <tr key={row.id} className="hover:bg-gray-50 transition-colors group">
                   <td className="py-4 px-2">
                     <div className="flex items-center">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs mr-3">
+                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs mr-3">
                         {row.faculty_name.charAt(0)}
                       </div>
                       <div>

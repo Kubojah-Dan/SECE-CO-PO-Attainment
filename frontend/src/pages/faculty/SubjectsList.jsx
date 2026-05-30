@@ -68,25 +68,25 @@ export default function SubjectsList() {
           <h1 className="text-3xl font-bold text-gray-900">My Subjects</h1>
           <p className="text-gray-500 mt-1">Manage your assigned course allocations and attainment</p>
         </div>
-        <AcademicYearSelector selectedId={selectedAY} onChange={setSelectedAY} />
+        <AcademicYearSelector selectedId={selectedAY} onChange={setSelectedAY} align="right" />
       </div>
 
       <div className="flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
-          <div className="absolute left-5 top-1/2 -translate-y-1/2 w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500">
-            <Search size={20} />
+          <div className="absolute left-5 top-1/2 -translate-y-1/2 w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500">
+            <Search size={18} strokeWidth={1.75} />
           </div>
           <input 
             type="text" 
             placeholder="Search by course code or name..."
             style={{ paddingLeft: '6rem' }}
-            className="h-16 w-full rounded-[1.25rem] shadow-sm border border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 text-lg font-medium transition-all outline-none"
+            className="h-14 w-full rounded-xl border border-gray-200 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 text-sm font-medium transition-colors outline-none bg-white"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <div className="flex items-center gap-2 bg-white border border-slate-200 p-2 rounded-[1.25rem] shadow-sm px-4">
-          <Filter size={18} className="text-slate-400" />
+        <div className="flex items-center gap-2 bg-white border border-gray-200 p-2 px-4 rounded-xl">
+          <Filter size={16} className="text-slate-400" strokeWidth={1.75} />
           <select 
             value={selectedSemester}
             onChange={(e) => setSelectedSemester(e.target.value)}
@@ -104,7 +104,7 @@ export default function SubjectsList() {
         {subjects.length > 0 ? subjects.map((alloc) => (
           <Card 
             key={alloc.id} 
-            className="group hover:shadow-2xl hover:border-blue-200 transition-all border-2 border-transparent relative overflow-hidden"
+            className="group border border-gray-200 hover:border-slate-300 transition-colors cursor-pointer relative overflow-hidden"
             onClick={(e) => {
               if (e.target.closest('button')) return;
               navigate(`/faculty/subjects/${alloc.id}`);
@@ -112,8 +112,8 @@ export default function SubjectsList() {
           >
             <div className="flex flex-col h-full">
               <div className="flex items-start justify-between mb-4">
-                <div className={`p-3 rounded-2xl ${alloc.marks_completion_pct === 100 ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600'}`}>
-                  <BookMarked size={24} />
+                <div className="p-3 rounded-xl bg-slate-100 text-slate-600">
+                  <BookMarked size={22} strokeWidth={1.75} />
                 </div>
                 {alloc.marks_completion_pct === 100 ? (
                   <span className="flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full uppercase tracking-wider">
@@ -160,7 +160,7 @@ export default function SubjectsList() {
                         calculateMutation.mutate(alloc.id);
                       }}
                       disabled={calculatingId === alloc.id}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl transition-all disabled:opacity-50 font-bold text-xs shadow-sm hover:shadow"
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors disabled:opacity-50 font-semibold text-xs"
                     >
                       {calculatingId === alloc.id ? (
                         <Loader2 size={12} className="animate-spin" />

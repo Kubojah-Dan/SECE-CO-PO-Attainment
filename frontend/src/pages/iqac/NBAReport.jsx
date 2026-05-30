@@ -69,7 +69,7 @@ export default function NBAReport() {
             document.body.appendChild(link);
             link.click();
           }}
-          className="flex items-center px-6 py-3 bg-slate-900 text-white rounded-2xl text-sm font-bold shadow-xl shadow-slate-200 hover:bg-black transition-all"
+          className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-sm font-semibold transition-colors"
         >
           <Download className="w-4 h-4 mr-2" />
           Generate SAR Draft
@@ -77,7 +77,7 @@ export default function NBAReport() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="border-none shadow-xl bg-white">
+        <Card className="border border-gray-200 bg-white">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Institutional Readiness</p>
@@ -90,7 +90,7 @@ export default function NBAReport() {
           </div>
         </Card>
 
-        <Card className="flex flex-col justify-center border-none shadow-xl bg-slate-50">
+        <Card className="flex flex-col justify-center border border-gray-200 bg-slate-50">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Mapping Completeness</span>

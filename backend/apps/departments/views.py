@@ -21,6 +21,9 @@ class DepartmentViewSet(viewsets.ModelViewSet):
     serializer_class = DepartmentSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_queryset(self):
+        return Department.objects.all().distinct().order_by('name')
+
 
 class ProgrammeViewSet(viewsets.ModelViewSet):
     queryset = Programme.objects.all()
