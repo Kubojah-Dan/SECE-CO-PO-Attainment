@@ -86,6 +86,7 @@ export function AuthProvider({ children }) {
     isHOD: user?.role === 'hod',
     isFaculty: user?.role === 'faculty',
     isIQAC: user?.role === 'iqac',
+    isStaff: user?.role === 'staff',
     role: user?.role,
     department: user?.department_name,
     departmentId: user?.department_id,

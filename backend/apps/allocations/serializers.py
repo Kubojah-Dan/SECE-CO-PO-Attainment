@@ -32,7 +32,7 @@ class SubjectAllocationSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'subject', 'faculty', 'section', 'academic_year', 
             'subject_code', 'subject_name', 'section_name', 'batch_label', 'semester', 'faculty_name',
-            'approval_status', 'hod_remarks', 'is_active', 'created_at', 'updated_at',
+            'approval_status', 'hod_remarks', 'is_active', 'staff_mark_entry_enabled', 'created_at', 'updated_at',
             'course_outcomes', 'student_count', 'marks_completion_pct', 'has_attainment', 'programme_id',
             'overall_attainment', 'marks_status', 'co_attainments'
         ]

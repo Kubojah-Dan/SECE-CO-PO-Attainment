@@ -88,3 +88,79 @@ class DepartmentScopedPermission(BasePermission):
             return user.faculty_profile.department_id == dept_id
 
         return False
+
+
+class IsStaffUser(BasePermission):
+    """Only HR Staff can access."""
+    message = 'You must be HR Staff to perform this action.'
+
+    def has_permission(self, request, view):
+        return bool(
+            request.user and request.user.is_authenticated
+            and request.user.role == 'staff'
+        )
+
+
+class IsAssignedStaff(BasePermission):
+    """
+    View-level: user must be role=='staff'.
+    Object-level (obj = SubjectAllocation):
+      1. Staff must be assigned to the allocation's department.
+      2. The allocation must have staff_mark_entry_enabled=True.
+    """
+    message = 'You are not authorised to access this subject.'
+
+    def has_permission(self, request, view):
+        return bool(
+            request.user and request.user.is_authenticated
+            and request.user.role == 'staff'
+        )
+
+    def has_object_permission(self, request, view, obj):
+        # obj is a SubjectAllocation instance
+        if not hasattr(request.user, 'staff_profile'):
+            return False
+        staff_dept_ids = list(
+            request.user.staff_profile.departments.values_list('id', flat=True)
+        )
+        return (
+            obj.subject.department_id in staff_dept_ids
+            and obj.staff_mark_entry_enabled
+        )
+
+
+class IsFacultyOrStaff(BasePermission):
+    """
+    View-level: role must be 'faculty' or 'staff'.
+    Object-level (obj = SubjectAllocation):
+      - Faculty: always permitted (they are the allocation owner; existing checks
+        on the ViewSet queryset already scope to faculty.user == request.user).
+      - Staff: must be assigned to the allocation's department AND
+        the allocation must have staff_mark_entry_enabled=True.
+    Used on mark upload and template download endpoints only.
+    """
+    message = 'You are not authorised to perform this action on this subject.'
+
+    def has_permission(self, request, view):
+        return bool(
+            request.user and request.user.is_authenticated
+            and request.user.role in ('faculty', 'staff')
+        )
+
+    def has_object_permission(self, request, view, obj):
+        # obj is a SubjectAllocation instance
+        if request.user.role == 'faculty':
+            # Faculty are permitted — the ViewSet queryset already scopes to
+            # allocations owned by the requesting faculty member.
+            return True
+        if request.user.role == 'staff':
+            if not hasattr(request.user, 'staff_profile'):
+                return False
+            staff_dept_ids = list(
+                request.user.staff_profile.departments.values_list('id', flat=True)
+            )
+            return (
+                obj.subject.department_id in staff_dept_ids
+                and obj.staff_mark_entry_enabled
+            )
+        return False

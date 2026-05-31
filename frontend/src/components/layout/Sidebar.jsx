@@ -48,6 +48,10 @@ const NAV_CONFIG = {
     { to: '/iqac/nba-report',     icon: Award,           label: 'NBA'           },
     { to: '/profile',             icon: CircleUser,      label: 'Profile'       },
   ],
+  staff: [
+    { to: '/staff/subjects',      icon: BookMarked,      label: 'Mark Entry'    },
+    { to: '/profile',             icon: CircleUser,      label: 'Profile'       },
+  ],
 };
 
 const ROLE_LABELS = {
@@ -55,6 +59,7 @@ const ROLE_LABELS = {
   hod: 'HOD',
   faculty: 'Faculty',
   iqac: 'IQAC',
+  staff: 'HR Staff',
 };
 
 const ROLE_COLORS = {
@@ -62,6 +67,7 @@ const ROLE_COLORS = {
   hod: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
   faculty: 'linear-gradient(135deg, #10b981, #059669)',
   iqac: 'linear-gradient(135deg, #f59e0b, #d97706)',
+  staff: 'linear-gradient(135deg, #0ea5e9, #0284c7)',
 };
 
 export default function Sidebar({ isCollapsed, onToggleCollapse, isMobileOpen, onCloseMobile }) {

@@ -35,6 +35,13 @@ class SubjectAllocation(models.Model):
     )
     hod_remarks = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
+    staff_mark_entry_enabled = models.BooleanField(
+        default=False,
+        help_text=(
+            'When enabled, HR staff assigned to this department '
+            'can upload marks for this subject.'
+        )
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

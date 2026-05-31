@@ -58,6 +58,9 @@ import IQACPOAttainment from './pages/iqac/IQACPOAttainment';
 import NBAReport from './pages/iqac/NBAReport';
 import Profile from './pages/Profile';
 
+// Staff pages
+import StaffSubjectsPage from './pages/staff/StaffSubjectsPage';
+
 // Role guard component
 import RoleGuard from './components/layout/RoleGuard';
 
@@ -132,11 +135,16 @@ export default function App() {
                 {/* ── Global Authenticated Routes ────────────────────── */}
                 <Route path="/profile" element={<Profile />} />
 
-                {/* ── IQAC Routes ─────────────────────────────────── */}
+                {/* ── IQAC Routes ────────────────────────────────────────────── */}
                 <Route element={<RoleGuard roles={['iqac', 'admin']} />}>
                   <Route path="/iqac/dashboard" element={<IQACDashboard />} />
                   <Route path="/iqac/po-attainment" element={<IQACPOAttainment />} />
                   <Route path="/iqac/nba-report" element={<NBAReport />} />
+                </Route>
+
+                {/* ── Staff Routes ───────────────────────────────────────────── */}
+                <Route element={<RoleGuard roles={['staff']} />}>
+                  <Route path="/staff/subjects" element={<StaffSubjectsPage />} />
                 </Route>
 
               </Route>

@@ -310,3 +310,18 @@ export const notificationService = {
   markRead: (id) => api.post(`/notifications/${id}/mark-read/`),
   markAllRead: () => api.post('/notifications/mark-all-read/'),
 };
+
+export const staffService = {
+  // Staff subject list (staff users only)
+  fetchSubjects: (params) => api.get('/faculty/staff/subjects/', { params }),
+  // Admin management of staff users
+  createUser: (data) => api.post('/auth/staff-users/', data),
+  listUsers: (params) => api.get('/auth/staff-users/', { params }),
+  updateDepartments: (id, department_ids) =>
+    api.patch(`/auth/staff-users/${id}/departments/`, { department_ids }),
+  // HOD: view staff in their department
+  getDeptStaff: (deptId) => api.get(`/auth/departments/${deptId}/staff/`),
+  // Toggle staff mark entry on a subject allocation
+  toggleStaffEntry: (allocId, enabled) =>
+    api.patch(`/allocations/allocations/${allocId}/toggle-staff-entry/`, { enabled }),
+};

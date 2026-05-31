@@ -1,17 +1,21 @@
 """SECE CO-PO Platform — Authentication Views"""
 import logging
 from django.utils import timezone
-from rest_framework import status, generics
+from rest_framework import status, generics, viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 from apps.audit.mixins import AuditMixin
-from .models import User, PasswordResetToken
+from .models import User, PasswordResetToken, StaffProfile
+from .permissions import IsAdminUser, IsHODUser
 from .serializers import (
     LoginSerializer, UserSerializer, ChangePasswordSerializer,
-    PasswordResetRequestSerializer, PasswordResetConfirmSerializer
+    PasswordResetRequestSerializer, PasswordResetConfirmSerializer,
+    StaffProfileSerializer, CreateStaffUserSerializer,
 )
 
 logger = logging.getLogger(__name__)
@@ -210,3 +214,83 @@ class TokenRefreshView(APIView):
     def post(self, request):
         from rest_framework_simplejwt.views import TokenRefreshView as SimpleJWTRefreshView
         return SimpleJWTRefreshView.as_view()(request._request)
+
+
+class StaffUserViewSet(viewsets.ModelViewSet):
+    """
+    Admin-only ViewSet for managing HR Staff users.
+    POST   /auth/staff-users/              — Create staff user + profile atomically
+    GET    /auth/staff-users/              — List all staff users
+    GET    /auth/staff-users/{id}/         — Retrieve a staff user
+    PATCH  /auth/staff-users/{id}/         — Update staff user info
+    DELETE /auth/staff-users/{id}/         — Delete staff user
+    PATCH  /auth/staff-users/{id}/departments/ — Replace department assignments
+    """
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def get_queryset(self):
+        return (
+            User.objects.filter(role='staff')
+            .select_related('staff_profile')
+            .prefetch_related('staff_profile__departments')
+            .order_by('first_name', 'last_name')
+        )
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return CreateStaffUserSerializer
+        return UserSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = CreateStaffUserSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response(
+            UserSerializer(user).data,
+            status=status.HTTP_201_CREATED
+        )
+
+    @action(detail=True, methods=['patch'], url_path='departments')
+    def update_departments(self, request, pk=None):
+        """
+        PATCH /auth/staff-users/{id}/departments/
+        Body: { "department_ids": [1, 2, 3] }
+        Replaces the staff member's department assignments. Admin only.
+        """
+        user = self.get_object()
+        if not hasattr(user, 'staff_profile'):
+            return Response(
+                {'detail': 'This user does not have a staff profile.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        ids = request.data.get('department_ids', [])
+        from apps.departments.models import Department
+        depts = Department.objects.filter(id__in=ids)
+        user.staff_profile.departments.set(depts)
+        return Response(StaffProfileSerializer(user.staff_profile).data)
+
+
+class DepartmentStaffListView(generics.ListAPIView):
+    """
+    GET /auth/departments/{dept_id}/staff/
+    HOD can view all staff assigned to their department. Read-only.
+    """
+    permission_classes = [IsAuthenticated, IsHODUser]
+    serializer_class = StaffProfileSerializer
+
+    def get_queryset(self):
+        dept_id = self.kwargs['dept_id']
+        # Verify the requesting HOD owns this department
+        try:
+            hod_dept = self.request.user.hod_profile.department
+        except Exception:
+            raise PermissionDenied('HOD profile not found.')
+        if hod_dept.id != int(dept_id):
+            raise PermissionDenied(
+                'You can only view staff for your own department.'
+            )
+        return (
+            StaffProfile.objects.filter(departments__id=dept_id)
+            .prefetch_related('departments')
+            .distinct()
+        )

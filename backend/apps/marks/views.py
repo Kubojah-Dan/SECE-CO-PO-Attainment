@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, generics
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -14,6 +14,8 @@ from apps.allocations.models import SubjectAllocation, SubjectAssessmentConfig, 
 from apps.students.models import Student
 from apps.students.serializers import StudentSerializer
 from apps.allocations.serializers import SubjectAllocationSerializer, SubjectAssessmentConfigSerializer
+from apps.authentication.permissions import IsAssignedStaff
+from rest_framework.permissions import IsAuthenticated
 
 class StudentMarkViewSet(viewsets.ModelViewSet):
     queryset = StudentMark.objects.all()
@@ -121,6 +123,29 @@ class ExcelUploadLogViewSet(viewsets.ModelViewSet):
                 return Response({'error': f'Assessment type {assessment_code} is disabled/excluded for this subject.'}, status=status.HTTP_400_BAD_REQUEST)
         except AssessmentType.DoesNotExist:
             return Response({'error': f'Invalid assessment type: {assessment_code}'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Gate: staff users may only upload to enabled allocations in their departments
+        if request.user.role == 'staff':
+            try:
+                alloc_obj = SubjectAllocation.objects.select_related('subject').get(id=allocation_id)
+            except SubjectAllocation.DoesNotExist:
+                return Response({'error': 'Subject allocation not found.'}, status=status.HTTP_404_NOT_FOUND)
+            if not alloc_obj.staff_mark_entry_enabled:
+                return Response(
+                    {'error': 'Staff mark entry is not enabled for this subject.'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            if hasattr(request.user, 'staff_profile'):
+                dept_ids = list(
+                    request.user.staff_profile.departments.values_list('id', flat=True)
+                )
+                if alloc_obj.subject.department_id not in dept_ids:
+                    return Response(
+                        {'error': 'You are not assigned to this subject\'s department.'},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+            else:
+                return Response({'error': 'Staff profile not found.'}, status=status.HTTP_403_FORBIDDEN)
 
         log = ExcelUploadLog.objects.create(
             uploaded_by=request.user,
@@ -360,3 +385,49 @@ class FacultySubjectViewSet(viewsets.ReadOnlyModelViewSet):
                     continue
 
         return Response({'message': 'Mappings saved successfully.'})
+
+
+class StaffSubjectListView(generics.ListAPIView):
+    """
+    GET /faculty/staff/subjects/
+    Returns all active SubjectAllocations across all departments the staff
+    member is assigned to, where staff_mark_entry_enabled=True.
+    Only accessible by users with role='staff'.
+    """
+    permission_classes = [IsAuthenticated, IsAssignedStaff]
+    serializer_class = SubjectAllocationSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        if not hasattr(user, 'staff_profile'):
+            return SubjectAllocation.objects.none()
+
+        dept_ids = list(
+            user.staff_profile.departments.values_list('id', flat=True)
+        )
+
+        qs = SubjectAllocation.objects.filter(
+            subject__department_id__in=dept_ids,
+            staff_mark_entry_enabled=True,
+            is_active=True,
+        ).select_related(
+            'subject', 'section', 'academic_year',
+            'faculty', 'faculty__user',
+        ).order_by('subject__department__name', 'subject__subject_name')
+
+        # Optional filters from query params
+        dept_filter = self.request.query_params.get('department')
+        ay_filter = self.request.query_params.get('academic_year')
+        search = self.request.query_params.get('search', '').strip()
+
+        if dept_filter:
+            qs = qs.filter(subject__department_id=dept_filter)
+        if ay_filter:
+            qs = qs.filter(academic_year_id=ay_filter)
+        if search:
+            qs = qs.filter(
+                subject__subject_name__icontains=search
+            ) | qs.filter(
+                subject__subject_code__icontains=search
+            )
+        return qs

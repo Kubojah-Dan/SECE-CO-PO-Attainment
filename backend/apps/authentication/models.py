@@ -38,6 +38,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         HOD = 'hod', 'HOD / Department Admin'
         FACULTY = 'faculty', 'Faculty'
         IQAC = 'iqac', 'IQAC'
+        STAFF = 'staff', 'HR Staff'
 
     email = models.EmailField(unique=True, db_index=True)
     role = models.CharField(max_length=20, choices=Role.choices, default=Role.FACULTY)
@@ -112,6 +113,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             self.Role.HOD: '/hod/dashboard',
             self.Role.FACULTY: '/faculty/dashboard',
             self.Role.IQAC: '/iqac/dashboard',
+            self.Role.STAFF: '/staff/subjects',
         }
         return dashboards.get(self.role, '/dashboard')
 
@@ -130,3 +132,33 @@ class PasswordResetToken(models.Model):
         from datetime import timedelta
         expiry = self.created_at + timedelta(hours=2)
         return not self.is_used and timezone.now() < expiry
+
+
+class StaffProfile(models.Model):
+    """
+    Profile for HR Staff users.
+    A single staff member may be assigned to multiple departments,
+    allowing them to upload marks for any subject in those departments
+    where staff_mark_entry_enabled is True on the SubjectAllocation.
+    """
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='staff_profile'
+    )
+    departments = models.ManyToManyField(
+        'departments.Department',
+        related_name='staff_members',
+        blank=True
+    )
+    employee_id = models.CharField(max_length=20, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'staff_profile'
+        verbose_name = 'Staff Profile'
+        verbose_name_plural = 'Staff Profiles'
+
+    def __str__(self):
+        return f"{self.user.get_full_name()} — Staff"

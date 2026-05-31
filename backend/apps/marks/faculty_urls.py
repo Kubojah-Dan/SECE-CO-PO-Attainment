@@ -13,4 +13,7 @@ urlpatterns = [
     path('subjects/<int:pk>/assessments/', views.FacultySubjectViewSet.as_view({'get': 'assessments'}), name='faculty-subject-assessments'),
     path('subjects/<int:pk>/save-cos/', views.FacultySubjectViewSet.as_view({'post': 'save_cos'}), name='faculty-subject-save-cos'),
     path('subjects/<int:pk>/save-mappings/', views.FacultySubjectViewSet.as_view({'post': 'save_mappings'}), name='faculty-subject-save-mappings'),
+
+    # Staff mark entry — returns allocations enabled for staff in their departments
+    path('staff/subjects/', views.StaffSubjectListView.as_view(), name='staff-subject-list'),
 ]

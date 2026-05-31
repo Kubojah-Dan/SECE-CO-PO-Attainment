@@ -73,6 +73,38 @@ class SubjectAllocationViewSet(viewsets.ModelViewSet):
             'status': status_val
         })
 
+    @action(detail=True, methods=['patch'], url_path='toggle-staff-entry')
+    def toggle_staff_entry(self, request, pk=None):
+        """
+        PATCH /allocations/allocations/{id}/toggle-staff-entry/
+        Body: { "enabled": true }
+        Faculty (owner) or HOD (of the allocation's department) can toggle
+        whether HR Staff may upload marks for this subject.
+        """
+        allocation = self.get_object()
+        user = request.user
+
+        is_owner = (
+            user.role == 'faculty'
+            and hasattr(user, 'faculty_profile')
+            and allocation.faculty == user.faculty_profile
+        )
+        is_hod = (
+            user.role == 'hod'
+            and hasattr(user, 'hod_profile')
+            and allocation.subject.department == user.hod_profile.department
+        )
+        if not (is_owner or is_hod):
+            return Response(
+                {'detail': 'Not authorized to toggle staff mark entry for this subject.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        enabled = bool(request.data.get('enabled', False))
+        allocation.staff_mark_entry_enabled = enabled
+        allocation.save(update_fields=['staff_mark_entry_enabled'])
+        return Response({'staff_mark_entry_enabled': enabled})
+
 
 class SubjectAssessmentConfigViewSet(viewsets.ModelViewSet):
     queryset = SubjectAssessmentConfig.objects.all().order_by('id')

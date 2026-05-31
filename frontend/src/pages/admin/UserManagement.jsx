@@ -6,7 +6,7 @@ import {
   Trash2, Edit2, Lock
 } from 'lucide-react';
 import Card from '../../components/ui/Card';
-import { userService, departmentService } from '../../services/api';
+import { userService, departmentService, staffService } from '../../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
 
@@ -37,8 +37,11 @@ export default function UserManagement() {
   const [editingUser, setEditingUser] = useState(null);
   const [isDeleting, setIsDeleting] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  // Staff-specific state
+  const [formRole, setFormRole] = useState('faculty');
+  const [selectedDeptIds, setSelectedDeptIds] = useState([]);
 
-  const tabs = ['All', 'HOD', 'Faculty', 'Admin', 'IQAC'];
+  const tabs = ['All', 'HOD', 'Faculty', 'Admin', 'IQAC', 'Staff'];
 
   useEffect(() => {
     fetchUsers();
@@ -337,45 +340,55 @@ export default function UserManagement() {
                 const formData = new FormData(e.target);
                 const rawData = Object.fromEntries(formData);
                 
-                // Construct data for nested structures if needed
-                // But for DRF with nested writable serializers and files, 
-                // we might need to handle it carefully or send as flat and handle in serializer.
-                // Actually, our serializer handles faculty_profile and hod_profile.
-                
-                // Construct payload
-                const payload = new FormData();
-                payload.append('email', rawData.email);
-                payload.append('first_name', rawData.first_name);
-                payload.append('last_name', rawData.last_name);
-                payload.append('role', rawData.role);
-                payload.append('phone', rawData.phone || '');
-                payload.append('is_active', editingUser ? editingUser.is_active : true);
-                
-                if (rawData.password) {
-                  payload.append('password', rawData.password);
-                }
-
-                if (rawData.profile_photo instanceof File && rawData.profile_photo.size > 0) {
-                  payload.append('profile_photo', rawData.profile_photo);
-                }
-
-                // Handle nested profiles in a flat way for simplicity or as JSON
-                // The backend UserCreateUpdateSerializer expects faculty_profile/hod_profile as dicts.
-                // FormData doesn't support nested objects directly. We'll use a trick or adjust backend.
-                // Let's send them as JSON strings if the backend can handle it, 
-                // or just send as multiple fields if we use a different approach.
-                // Actually, most DRF Multipart parsers handle nested fields like 'faculty_profile.department'
-                
-                if (rawData.role === 'faculty') {
-                  payload.append('faculty_profile.department', rawData.department);
-                  payload.append('faculty_profile.employee_id', rawData.employee_id);
-                } else if (rawData.role === 'hod') {
-                  payload.append('hod_profile.department', rawData.department);
-                  payload.append('hod_profile.employee_id', rawData.employee_id);
-                }
-                
                 try {
                   setIsSaving(true);
+
+                  // ── STAFF: use dedicated endpoint ──────────────────────────
+                  if (rawData.role === 'staff') {
+                    if (selectedDeptIds.length === 0) {
+                      toast.error('Please assign at least one department for this staff member.');
+                      setIsSaving(false);
+                      return;
+                    }
+                    await staffService.createUser({
+                      email: rawData.email,
+                      first_name: rawData.first_name,
+                      last_name: rawData.last_name,
+                      employee_id: rawData.employee_id,
+                      password: rawData.password,
+                      department_ids: selectedDeptIds.map(Number),
+                    });
+                    toast.success('Staff user created successfully');
+                    handleModalClose();
+                    fetchUsers();
+                    return;
+                  }
+
+                  // ── All other roles: existing FormData flow ────────────────
+                  const payload = new FormData();
+                  payload.append('email', rawData.email);
+                  payload.append('first_name', rawData.first_name);
+                  payload.append('last_name', rawData.last_name);
+                  payload.append('role', rawData.role);
+                  payload.append('phone', rawData.phone || '');
+                  payload.append('is_active', editingUser ? editingUser.is_active : true);
+                  
+                  if (rawData.password) {
+                    payload.append('password', rawData.password);
+                  }
+
+                  if (rawData.profile_photo instanceof File && rawData.profile_photo.size > 0) {
+                    payload.append('profile_photo', rawData.profile_photo);
+                  }
+
+                  if (rawData.role === 'faculty') {
+                    payload.append('faculty_profile.department', rawData.department);
+                    payload.append('faculty_profile.employee_id', rawData.employee_id);
+                  } else if (rawData.role === 'hod') {
+                    payload.append('hod_profile.department', rawData.department);
+                    payload.append('hod_profile.employee_id', rawData.employee_id);
+                  }
+                  
                   if (editingUser) {
                     await userService.update(editingUser.id, payload);
                     toast.success('User updated successfully');
@@ -386,7 +399,17 @@ export default function UserManagement() {
                   handleModalClose();
                   fetchUsers();
                 } catch (err) {
-                  toast.error(err.response?.data?.message || 'Failed to process user');
+                  const errDetail = err.response?.data;
+                  const msg =
+                    (typeof errDetail === 'string' ? errDetail : null) ||
+                    errDetail?.detail ||
+                    errDetail?.email?.[0] ||
+                    errDetail?.employee_id?.[0] ||
+                    errDetail?.department_ids?.[0] ||
+                    errDetail?.non_field_errors?.[0] ||
+                    errDetail?.message ||
+                    'Failed to process user';
+                  toast.error(msg);
                 } finally {
                   setIsSaving(false);
                 }
@@ -443,28 +466,72 @@ export default function UserManagement() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Assign Role</label>
-                    <select name="role" defaultValue={editingUser?.role || 'faculty'} required className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-bold text-sm">
+                    <select
+                      name="role"
+                      defaultValue={editingUser?.role || 'faculty'}
+                      required
+                      onChange={e => { setFormRole(e.target.value); setSelectedDeptIds([]); }}
+                      className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-bold text-sm"
+                    >
                       <option value="faculty">Faculty</option>
                       <option value="hod">HOD</option>
                       <option value="iqac">IQAC</option>
                       <option value="admin">Admin</option>
+                      <option value="staff">HR Staff</option>
                     </select>
                   </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Department</label>
-                    <select 
-                      name="department" 
-                      defaultValue={editingUser?.department?.id || editingUser?.department} 
-                      required 
-                      className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-bold text-sm"
-                    >
-                      <option value="">Select Dept</option>
-                      {departments.map(dept => (
-                        <option key={dept.id} value={dept.id}>{abbrevDept(dept.name)}</option>
-                      ))}
-                    </select>
-                  </div>
+                  {/* For non-staff: single department dropdown */}
+                  {formRole !== 'staff' && (
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Department</label>
+                      <select 
+                        name="department" 
+                        defaultValue={editingUser?.department?.id || editingUser?.department} 
+                        required={formRole === 'faculty' || formRole === 'hod'}
+                        className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-bold text-sm"
+                      >
+                        <option value="">Select Dept</option>
+                        {departments.map(dept => (
+                          <option key={dept.id} value={dept.id}>{abbrevDept(dept.name)}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                 </div>
+                {/* For staff: multi-select departments */}
+                {formRole === 'staff' && (
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">
+                      Assign Departments <span className="text-red-400">*</span>
+                    </label>
+                    <div className="grid grid-cols-2 gap-2 max-h-44 overflow-y-auto p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                      {departments.map(dept => (
+                        <label key={dept.id} className="flex items-center gap-2 cursor-pointer group">
+                          <input
+                            type="checkbox"
+                            checked={selectedDeptIds.includes(dept.id)}
+                            onChange={e => {
+                              if (e.target.checked) {
+                                setSelectedDeptIds(prev => [...prev, dept.id]);
+                              } else {
+                                setSelectedDeptIds(prev => prev.filter(id => id !== dept.id));
+                              }
+                            }}
+                            className="w-3.5 h-3.5 accent-slate-900 rounded"
+                          />
+                          <span className="text-xs font-semibold text-slate-700 group-hover:text-slate-900">
+                            {abbrevDept(dept.name)}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                    {selectedDeptIds.length > 0 && (
+                      <p className="mt-1.5 text-[10px] text-slate-500 font-medium">
+                        {selectedDeptIds.length} department{selectedDeptIds.length !== 1 ? 's' : ''} selected
+                      </p>
+                    )}
+                  </div>
+                )}
                 <button type="submit" disabled={isSaving} className="w-full py-3.5 text-white rounded-xl font-semibold mt-4 flex items-center justify-center gap-2 transition-all disabled:opacity-60 disabled:cursor-not-allowed" style={{ background: 'var(--primary-500)' }}
                   onMouseEnter={e => !isSaving && (e.currentTarget.style.background = 'var(--primary-600)')}
                   onMouseLeave={e => !isSaving && (e.currentTarget.style.background = 'var(--primary-500)')}
