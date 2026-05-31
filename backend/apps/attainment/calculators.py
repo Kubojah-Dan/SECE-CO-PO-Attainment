@@ -100,10 +100,18 @@ class COAttainmentCalculator:
         ).values('student_id', 'marks_obtained', 'max_marks')
         return {m['student_id']: m for m in marks}
 
+    # NOTE: This method is intentionally unused.
+    # The institution uses exactly two CIA assessments
+    # (CIA1 and CIA2) and both are counted equally with
+    # no best-of-N selection. This method is preserved
+    # in case the policy changes in the future.
+    # Last reviewed: 2026-05-31
     def _normalize_cia_marks(self, co_assessments) -> dict:
         """
         For CIA1/CIA2/CIA3, apply best-of-N normalization.
         Returns adjusted per-student scores for CIA component.
+
+        UNUSED — see note above.
         """
         cia_codes = ['CIA1', 'CIA2', 'CIA3']
         cia_assessments = [
@@ -132,9 +140,8 @@ class COAttainmentCalculator:
                     cia_scores.append(pct)
 
             if cia_scores:
-                cia_scores.sort(reverse=True)
-                best_n = int(self.config.cia_best_of)
-                student_cia_scores[student_id] = sum(cia_scores[:best_n]) / len(cia_scores[:best_n])
+                # Average of ALL present CIA scores (no best-of-N selection).
+                student_cia_scores[student_id] = sum(cia_scores) / len(cia_scores)
 
         return student_cia_scores
 
@@ -143,11 +150,9 @@ class COAttainmentCalculator:
         Calculate attainment for a single CO.
         Returns dict with attainment_percentage, level, student breakdown.
 
-        FIX 1 — CIA best-of-N:
-          CIA1/CIA2/CIA3 marks are first normalized through _normalize_cia_marks(),
-          which applies the best-of rule (take best cia_best_of scores out of 3).
-          The normalized CIA percentage replaces raw CIA marks in the scoring formula.
-          Non-CIA assessments (ESE, MODEL, QUIZ, etc.) use raw marks unchanged.
+        All enabled assessments (CIA1, CIA2, ESE, MODEL, etc.) contribute to
+        the per-student CO score via their COAssessmentMapping weightages.
+        CIA1 and CIA2 are both counted equally — no best-of-N selection.
 
         FIX 4 — Correct denominator:
           Only students who have at least one mark record for the assessments
@@ -182,24 +187,14 @@ class COAttainmentCalculator:
             logger.warning(f"No students found for allocation {self.allocation_id}")
             return None
 
-        # ── FIX 1: Separate CIA and non-CIA assessments ──────────────────────
-        # CIA codes that participate in the best-of-N normalization.
-        CIA_CODES = {'CIA1', 'CIA2', 'CIA3'}
-        cia_assessments = [ca for ca in co_assessments if ca.assessment_type.code.upper() in CIA_CODES]
-        non_cia_assessments = [ca for ca in co_assessments if ca.assessment_type.code.upper() not in CIA_CODES]
-
-        # Pre-compute CIA best-of-N normalized scores per student.
-        # _normalize_cia_marks returns {student_id: avg_pct_of_best_N_cias} (0–100 scale).
-        cia_normalized_scores: dict = {}
-        if cia_assessments:
-            cia_normalized_scores = self._normalize_cia_marks(co_assessments)
-
-        # ── Pre-fetch all marks for non-CIA assessments to avoid N+1 ────────
+        # ── Pre-fetch all marks for every assessment to avoid N+1 ────────────
+        # All assessment types (CIA1, CIA2, ESE, MODEL, etc.) are handled
+        # identically — raw marks_obtained via COAssessmentMapping weightages.
         all_marks = {}
         from apps.marks.models import QuestionCOMapping, StudentQuestionMark
 
-        for ca in non_cia_assessments:
-            # Check if this assessment has question-level mapping for this allocation
+        for ca in co_assessments:
+            # Check if this assessment has question-level mapping for this CO
             q_maps = list(QuestionCOMapping.objects.filter(
                 subject_allocation_id=self.allocation_id,
                 assessment_type_id=ca.assessment_type_id,
@@ -228,45 +223,22 @@ class COAttainmentCalculator:
         # ── Per-student CO scoring ───────────────────────────────────────────
         student_co_scores = {}
 
-        # Pre-compute the combined CIA weightage factor for the CIA block.
-        # The CIA block is treated as a single virtual assessment with:
-        #   marks_obtained = cia_normalized_pct  (0–100)
-        #   max_marks      = 100
-        #   co_weight      = sum of all CIA COAssessmentMapping.weightage values / 100
-        # This preserves the proportional contribution of CIA relative to non-CIA assessments.
-        cia_combined_weight = Decimal('0')
-        for ca in cia_assessments:
-            cia_combined_weight += Decimal(str(ca.weightage)) / Decimal('100')
-
         for student_id in student_ids:
             weighted_score = Decimal('0')
             weighted_max = Decimal('0')
 
-            # ── Non-CIA assessments: existing raw-marks logic ────────────────
-            for ca in non_cia_assessments:
+            for ca in co_assessments:
                 mark_data = all_marks[ca.assessment_type_id].get(student_id)
                 if mark_data:
                     if 'marks' in mark_data:
-                        # Question-wise data
+                        # Question-wise data: marks/max already accumulated per student
                         weighted_score += mark_data['marks']
                         weighted_max += mark_data['max']
                     else:
-                        # Total-marks fallback: apply CO-Assessment weightage
+                        # Total-marks: apply CO-Assessment weightage
                         co_weight = Decimal(str(ca.weightage)) / Decimal('100')
                         weighted_score += Decimal(str(mark_data['marks_obtained'])) * co_weight
                         weighted_max += Decimal(str(mark_data['max_marks'])) * co_weight
-
-            # ── CIA block: use normalized best-of-N score ────────────────────
-            # FIX 1: Instead of summing raw CIA marks, inject the single
-            # normalized score that already represents the best-N average pct.
-            if cia_assessments and cia_combined_weight > 0:
-                cia_pct = cia_normalized_scores.get(student_id)
-                if cia_pct is not None:
-                    # Treat the CIA block as: marks_obtained=pct, max_marks=100
-                    weighted_score += Decimal(str(cia_pct)) * cia_combined_weight
-                    weighted_max += Decimal('100') * cia_combined_weight
-                # Students missing CIA scores are not added to weighted_max,
-                # so they fall out of the participated set (FIX 4).
 
             if weighted_max > 0:
                 student_co_scores[student_id] = (weighted_score / weighted_max) * Decimal('100')

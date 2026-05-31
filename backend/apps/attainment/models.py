@@ -57,9 +57,6 @@ class AttainmentConfig(models.Model):
     target_co_level = models.IntegerField(default=2)
     target_po_attainment = models.DecimalField(max_digits=5, decimal_places=2, default=60.00)
 
-    # CIA best-of configuration
-    cia_best_of = models.IntegerField(default=2, help_text="Take best N out of 3 CIAs")
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
