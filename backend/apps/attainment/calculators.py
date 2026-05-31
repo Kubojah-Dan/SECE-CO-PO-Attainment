@@ -110,8 +110,6 @@ class COAttainmentCalculator:
         """
         For CIA1/CIA2/CIA3, apply best-of-N normalization.
         Returns adjusted per-student scores for CIA component.
-
-        UNUSED — see note above.
         """
         cia_codes = ['CIA1', 'CIA2', 'CIA3']
         cia_assessments = [
@@ -140,8 +138,11 @@ class COAttainmentCalculator:
                     cia_scores.append(pct)
 
             if cia_scores:
-                # Average of ALL present CIA scores (no best-of-N selection).
-                student_cia_scores[student_id] = sum(cia_scores) / len(cia_scores)
+                cia_scores.sort(reverse=True)
+                # best_n would be read from config.cia_best_of — field removed;
+                # method is dead code, kept for future reference only.
+                best_n = len(cia_scores)  # use all, effectively a no-op
+                student_cia_scores[student_id] = sum(cia_scores[:best_n]) / len(cia_scores[:best_n])
 
         return student_cia_scores
 
@@ -150,9 +151,10 @@ class COAttainmentCalculator:
         Calculate attainment for a single CO.
         Returns dict with attainment_percentage, level, student breakdown.
 
-        All enabled assessments (CIA1, CIA2, ESE, MODEL, etc.) contribute to
-        the per-student CO score via their COAssessmentMapping weightages.
-        CIA1 and CIA2 are both counted equally — no best-of-N selection.
+        All enabled assessments for this CO (CIA1, CIA2, ESE, MODEL, etc.) are
+        processed uniformly through the raw-marks scoring loop. Each assessment
+        contributes via its COAssessmentMapping weightage. No CIA selection or
+        best-of-N logic is applied — CIA1 and CIA2 both count equally.
 
         FIX 4 — Correct denominator:
           Only students who have at least one mark record for the assessments
@@ -188,8 +190,7 @@ class COAttainmentCalculator:
             return None
 
         # ── Pre-fetch all marks for every assessment to avoid N+1 ────────────
-        # All assessment types (CIA1, CIA2, ESE, MODEL, etc.) are handled
-        # identically — raw marks_obtained via COAssessmentMapping weightages.
+        # All assessments (CIA1, CIA2, ESE, MODEL, etc.) go through the same path.
         all_marks = {}
         from apps.marks.models import QuestionCOMapping, StudentQuestionMark
 
@@ -221,6 +222,10 @@ class COAttainmentCalculator:
                 )
 
         # ── Per-student CO scoring ───────────────────────────────────────────
+        # Every assessment (CIA or non-CIA) is handled identically:
+        #   - If question-wise marks exist → sum question marks / sum question max marks
+        #   - Otherwise → raw marks_obtained * (weightage / 100)
+        # CIA1 and CIA2 both enter this loop with their respective weightages.
         student_co_scores = {}
 
         for student_id in student_ids:
@@ -231,7 +236,7 @@ class COAttainmentCalculator:
                 mark_data = all_marks[ca.assessment_type_id].get(student_id)
                 if mark_data:
                     if 'marks' in mark_data:
-                        # Question-wise data: marks/max already accumulated per student
+                        # Question-wise data: use raw mark totals directly
                         weighted_score += mark_data['marks']
                         weighted_max += mark_data['max']
                     else:
@@ -239,6 +244,9 @@ class COAttainmentCalculator:
                         co_weight = Decimal(str(ca.weightage)) / Decimal('100')
                         weighted_score += Decimal(str(mark_data['marks_obtained'])) * co_weight
                         weighted_max += Decimal(str(mark_data['max_marks'])) * co_weight
+                # Students missing marks for this assessment are simply not added
+                # to weighted_max; they remain in the participated set only if
+                # at least one other assessment has marks for them (FIX 4).
 
             if weighted_max > 0:
                 student_co_scores[student_id] = (weighted_score / weighted_max) * Decimal('100')

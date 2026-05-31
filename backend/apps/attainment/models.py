@@ -57,6 +57,10 @@ class AttainmentConfig(models.Model):
     target_co_level = models.IntegerField(default=2)
     target_po_attainment = models.DecimalField(max_digits=5, decimal_places=2, default=60.00)
 
+    # cia_best_of field removed 2026-05-31.
+    # The institution uses exactly two CIA assessments (CIA1 and CIA2)
+    # and both are counted equally — no best-of-N selection is applied.
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

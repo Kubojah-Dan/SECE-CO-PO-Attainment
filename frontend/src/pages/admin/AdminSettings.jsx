@@ -50,7 +50,6 @@ export default function AdminSettings() {
         indirect_weightage: 20,
         target_co_level: 2,
         target_po_attainment: 60,
-        cia_best_of: 2
       };
       const response = await attainmentService.createConfig(defaultConfig);
       setConfig(response.data);

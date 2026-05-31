@@ -80,7 +80,7 @@ REGULATIONS = [
             "ese_weightage": 60,
             "passing_marks": 50,
             "attendance_threshold": 75,
-            "cia_best_of": 2,
+            "cia_best_of": 2,  # removed — field deleted from AttainmentConfig 2026-05-31
         }
     },
     {
@@ -91,7 +91,7 @@ REGULATIONS = [
             "ese_weightage": 50,
             "passing_marks": 50,
             "attendance_threshold": 75,
-            "cia_best_of": 2,
+            "cia_best_of": 2,  # removed — field deleted from AttainmentConfig 2026-05-31
         }
     }
 ]
@@ -223,7 +223,7 @@ class Command(BaseCommand):
                 'direct_weightage': 80,
                 'indirect_weightage': 20,
                 'target_co_level': 2,
-                'cia_best_of': 2,
+                # 'cia_best_of' removed 2026-05-31 — field deleted from AttainmentConfig
             }
         )
 
