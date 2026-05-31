@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { marksService, subjectService, allocationService } from '../../services/api';
 import Card from '../../components/ui/Card';
-import { Save, ArrowLeft, Loader2, Upload, FileSpreadsheet, Check, AlertTriangle, LayoutGrid } from 'lucide-react';
+import { Save, ArrowLeft, Loader2, Upload, FileSpreadsheet, Check, AlertTriangle, LayoutGrid, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import * as XLSX from 'xlsx';
@@ -16,6 +16,8 @@ export default function MarksEntryPage() {
   const [questionMarks, setQuestionMarks] = useState({}); // studentId -> { questionId -> mark }
   const [useQuestionWise, setUseQuestionWise] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  // FIX 6: State for template download spinner
+  const [downloadingTemplate, setDownloadingTemplate] = useState(false);
 
   const { data: subjectData, isLoading: isSubLoading } = useQuery({
     queryKey: ['subject-allocation', allocId],
@@ -158,6 +160,37 @@ export default function MarksEntryPage() {
     }
   };
 
+  // FIX 6: Download the pre-filled Excel template for the currently selected assessment type.
+  // Uses the per-allocation max marks (FIX 5 on backend) and includes data validation.
+  const handleDownloadTemplate = async () => {
+    if (!assessmentType || !allocId) return;
+    setDownloadingTemplate(true);
+    try {
+      const response = await marksService.downloadTemplate(allocId, assessmentType.toUpperCase());
+      // Build a filename: {subjectCode}_{assessmentType}_{academicYear}.xlsx
+      const subjectCode = subjectData?.data?.subject_code || `alloc${allocId}`;
+      const year = subjectData?.data?.academic_year_label || 'AY';
+      const filename = `${subjectCode}_${assessmentType.toUpperCase()}_${year}.xlsx`;
+
+      const blob = new Blob([response.data], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = filename;
+      anchor.click();
+      URL.revokeObjectURL(url);
+
+      toast.success(`Template downloaded: ${filename}`);
+    } catch (err) {
+      console.error('Template download failed', err);
+      toast.error('Failed to download template. Please try again.');
+    } finally {
+      setDownloadingTemplate(false);
+    }
+  };
+
   const handleMarkChange = (index, value) => {
     const newMarks = [...studentMarks];
     newMarks[index].marks_obtained = value;
@@ -174,17 +207,17 @@ export default function MarksEntryPage() {
 
   if (configs && configs.length === 0) {
     return (
-      <div className="p-8 text-center max-w-xl mx-auto space-y-6 mt-12 bg-white rounded-3xl border border-slate-100 shadow-xl">
-        <AlertTriangle size={48} className="mx-auto text-amber-500 mb-4 animate-bounce" />
+      <div className="p-8 text-center max-w-xl mx-auto space-y-6 mt-12 bg-white rounded-2xl border border-gray-200">
+        <AlertTriangle size={48} className="mx-auto text-amber-500 mb-4" />
         <h2 className="text-xl font-bold text-gray-900">No Enabled Assessments</h2>
         <p className="text-gray-500 text-sm leading-relaxed mt-2">
-          You need to enable at least one assessment type (like CIA1 or ESE) in the Assessment Configuration before entering student marks.
+          You need to enable at least one assessment type (like CIA1 or ESE) in the Assessment Setup before entering student marks.
         </p>
         <button 
           onClick={() => navigate(`/faculty/subjects/${allocId}/assessments`)} 
-          className="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20"
+          className="px-6 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-black transition-all"
         >
-          Go to Assessment Config
+          Go to Assessment Setup
         </button>
       </div>
     );
@@ -229,6 +262,10 @@ export default function MarksEntryPage() {
                 );
               })}
             </div>
+            {/* FIX 8e: Static reminder — attainment is not live; faculty must recalculate after marks or mapping changes */}
+            <p className="text-[10px] text-gray-400 font-medium mt-2 px-1">
+              ℹ️ Recalculate attainment after changing marks or CO-PO mappings.
+            </p>
           </div>
         )}
       </div>
@@ -260,39 +297,56 @@ export default function MarksEntryPage() {
           </div>
         </Card>
         
-        <Card className="flex-1 bg-gradient-to-br from-blue-600 to-indigo-700 text-white border-none p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        {/* Flat Import from Template card */}
+        <Card className="flex-1 bg-white border border-gray-200 p-6">
+          <div className="flex flex-col gap-4">
             <div>
-              <p className="text-blue-100 text-[10px] font-bold uppercase tracking-widest">Excel Upload</p>
-              <h3 className="text-lg font-bold mt-1">Import from Template</h3>
-              <p className="text-blue-100 text-xs mt-1">Use the standard Excel template for bulk entry</p>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Excel Upload</p>
+              <h3 className="text-base font-semibold text-slate-900 mt-1">Import from Template</h3>
+              <p className="text-xs text-gray-500 mt-1">Use the standard Excel template for bulk entry</p>
             </div>
-            <label className="cursor-pointer bg-white text-blue-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-blue-50 transition-all flex items-center justify-center gap-2 flex-shrink-0">
-              <Upload size={16} />
-              Choose File
-              <input type="file" className="hidden" accept=".xlsx, .xls" onChange={handleFileUpload} />
-            </label>
+            <div className="flex flex-wrap items-center gap-2">
+              {/* FIX 6: Download Template button — shows selected assessment type in label */}
+              {assessmentType && (
+                <button
+                  id={`download-template-${assessmentType}`}
+                  onClick={handleDownloadTemplate}
+                  disabled={downloadingTemplate}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-all disabled:opacity-50"
+                >
+                  {downloadingTemplate
+                    ? <Loader2 size={15} className="animate-spin" />
+                    : <Download size={15} />}
+                  Download {assessmentType.toUpperCase()} template
+                </button>
+              )}
+              <label className="cursor-pointer bg-slate-900 hover:bg-black text-white px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 flex-shrink-0">
+                {isUploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                {isUploading ? 'Uploading…' : 'Upload Filled File'}
+                <input type="file" className="hidden" accept=".xlsx, .xls" onChange={handleFileUpload} disabled={isUploading} />
+              </label>
+            </div>
           </div>
         </Card>
       </div>
 
-      <Card className="p-0 overflow-hidden border-none shadow-xl bg-white">
+      <Card className="p-0 overflow-hidden border border-gray-200 bg-white">
         <div className="overflow-x-auto w-full">
           <table className="w-full text-left table-auto">
-            <thead className="bg-slate-900 text-white">
+            <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="p-4 text-xs font-bold uppercase tracking-widest sticky left-0 bg-slate-900 z-20 min-w-[150px]">Student Details</th>
+                <th className="p-4 text-xs font-bold text-gray-700 uppercase tracking-widest sticky left-0 bg-gray-50 z-20 min-w-[150px]">Student Details</th>
                 {useQuestionWise ? (
                   qMappings.map(q => (
-                    <th key={q.id} className="p-4 text-[10px] font-bold uppercase tracking-tighter text-center min-w-[80px]">
+                    <th key={q.id} className="p-4 text-[10px] font-bold text-gray-700 uppercase tracking-tighter text-center min-w-[80px]">
                       {q.question_number}
-                      <div className="text-blue-400 font-black">{q.co_code}</div>
+                      <div className="text-slate-500 font-bold">{q.co_code}</div>
                     </th>
                   ))
                 ) : (
-                  <th className="p-4 text-xs font-bold uppercase tracking-widest text-center min-w-[120px]">Total Marks</th>
+                  <th className="p-4 text-xs font-bold text-gray-700 uppercase tracking-widest text-center min-w-[120px]">Total Marks</th>
                 )}
-                <th className="p-4 text-xs font-bold uppercase tracking-widest text-center min-w-[100px]">Status</th>
+                <th className="p-4 text-xs font-bold text-gray-700 uppercase tracking-widest text-center min-w-[100px]">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -361,25 +415,25 @@ export default function MarksEntryPage() {
         </div>
       </Card>
 
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center bg-white p-6 rounded-2xl border border-gray-100 shadow-sm gap-4">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center bg-white p-6 rounded-xl border border-gray-200 gap-4">
         <div className="flex items-center gap-6 justify-between sm:justify-start w-full sm:w-auto">
           <div>
             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Total Students</p>
-            <p className="text-xl font-black text-slate-900">{studentMarks.length}</p>
+            <p className="text-xl font-bold text-slate-900">{studentMarks.length}</p>
           </div>
           <div className="w-px h-10 bg-gray-100" />
           <div>
             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Entered</p>
-            <p className="text-xl font-black text-blue-600">{studentMarks.filter(m => m.marks_obtained !== '' || m.is_absent).length}</p>
+            <p className="text-xl font-bold text-slate-700">{studentMarks.filter(m => m.marks_obtained !== '' || m.is_absent).length}</p>
           </div>
         </div>
         
         <button 
           onClick={() => saveMutation.mutate(studentMarks)}
           disabled={saveMutation.isPending}
-          className="w-full sm:w-auto px-10 py-4 bg-slate-900 text-white rounded-2xl flex items-center justify-center font-bold hover:bg-black transition-all shadow-xl shadow-slate-200 disabled:opacity-50"
+          className="w-full sm:w-auto px-8 py-3 bg-slate-900 text-white rounded-xl flex items-center justify-center font-bold hover:bg-black transition-all disabled:opacity-50"
         >
-          {saveMutation.isPending ? <Loader2 className="animate-spin mr-2" /> : <Save size={20} className="mr-2" />}
+          {saveMutation.isPending ? <Loader2 className="animate-spin mr-2" /> : <Save size={18} className="mr-2" />}
           Save Marks
         </button>
       </div>

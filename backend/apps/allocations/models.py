@@ -124,8 +124,12 @@ class SubjectAssessmentConfig(models.Model):
         return self.assessment_type.weightage_percent
 
     def save(self, *args, **kwargs):
+        # FIX 7: Only apply the 50% default on first creation and only when
+        # passing_marks has not been explicitly provided by the caller.
+        # Subsequent saves preserve whatever passing_marks value is stored,
+        # allowing per-subject threshold configuration to be respected.
         from decimal import Decimal
-        if self.max_marks is not None:
+        if not self.pk and self.passing_marks is None and self.max_marks is not None:
             self.passing_marks = self.max_marks * Decimal('0.5')
         super().save(*args, **kwargs)
 

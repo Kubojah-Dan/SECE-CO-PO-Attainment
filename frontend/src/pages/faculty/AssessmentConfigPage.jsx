@@ -133,28 +133,29 @@ export default function AssessmentConfigPage() {
       </div>
 
       {/* Direct / Indirect Weight Config */}
-      <Card className="!p-0 overflow-hidden border-none shadow-xl">
-        <div className="bg-slate-900 p-6 text-white">
+      {/* Attainment Weight Configuration — flat light card */}
+      <Card className="!p-0 overflow-hidden border border-gray-200">
+        <div className="bg-slate-50 border-b border-gray-200 p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-white/10 rounded-xl">
-              <Sliders size={20} className="text-blue-300" />
+            <div className="p-2 bg-white border border-gray-200 rounded-xl">
+              <Sliders size={18} className="text-slate-700" />
             </div>
             <div>
-              <h3 className="text-base font-bold">Attainment Weight Configuration</h3>
-              <p className="text-slate-400 text-xs mt-0.5">
+              <h3 className="text-sm font-semibold text-slate-900">Attainment Weight Configuration</h3>
+              <p className="text-slate-500 text-xs mt-0.5">
                 Direct (marks-based) vs Indirect (survey-based) split — editable per department
               </p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">
+              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">
                 Direct Attainment %
               </label>
               <input
                 type="number"
                 min="0" max="100" step="5"
-                className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white font-bold text-center text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/50"
+                className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-slate-900 font-bold text-center text-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
                 defaultValue={directW}
                 onBlur={(e) => {
                   if (!globalConfig) return;
@@ -167,13 +168,13 @@ export default function AssessmentConfigPage() {
               />
             </div>
             <div>
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">
+              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">
                 Indirect Attainment %
               </label>
               <input
                 type="number"
                 min="0" max="100" step="5"
-                className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white font-bold text-center text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/50"
+                className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-slate-900 font-bold text-center text-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
                 defaultValue={indirectW}
                 onBlur={(e) => {
                   if (!globalConfig) return;
@@ -187,13 +188,13 @@ export default function AssessmentConfigPage() {
             </div>
           </div>
           {/* visual split bar */}
-          <div className="mt-4 h-2 rounded-full bg-white/10 overflow-hidden">
+          <div className="mt-4 h-1.5 rounded-full bg-gray-200 overflow-hidden">
             <div
-              className="h-full bg-blue-400 rounded-full transition-all"
+              className="h-full bg-slate-700 rounded-full transition-all"
               style={{ width: `${directW}%` }}
             />
           </div>
-          <p className="text-[10px] text-slate-500 mt-1 text-center">
+          <p className="text-[10px] text-gray-400 mt-1 text-center">
             {directW}% Direct · {indirectW}% Indirect
           </p>
         </div>
@@ -222,7 +223,7 @@ export default function AssessmentConfigPage() {
                       }
                       className="sr-only peer"
                     />
-                    <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                    <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-slate-900"></div>
                   </label>
                 </div>
 

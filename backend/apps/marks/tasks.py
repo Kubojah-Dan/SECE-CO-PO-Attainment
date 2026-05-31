@@ -170,45 +170,58 @@ def process_marks_excel(self, upload_log_id: int):
 
             student = students_map.get(roll_raw)
             if not student:
-                # Check if student exists globally
+                # Check if student exists globally (different section)
                 student = Student.objects.filter(roll_number=roll_raw).first()
-                
+
             resolved_name = student_name or f"Student {roll_raw}"
 
-            try:
-                if not student:
-                    student = Student.objects.create(
-                        department=log.subject_allocation.subject.department,
-                        roll_number=roll_raw,
-                        name=resolved_name,
-                        batch=log.subject_allocation.section.batch,
-                        section=log.subject_allocation.section,
-                        is_active=True
+            if not student:
+                # FIX 3: Do NOT auto-create phantom students.
+                # An unknown roll number means the student has not been formally
+                # registered in this section. Log the error and skip the row.
+                errors.append({
+                    'row': row_num,
+                    'roll_number': roll_raw,
+                    'issue': (
+                        f"Roll number '{roll_raw}' not found in the student roster "
+                        f"for this section. Row skipped. Please register the student "
+                        f"before uploading marks."
                     )
-                else:
-                    # Update existing student's section/batch/name if required
-                    needs_save = False
-                    if student.section != log.subject_allocation.section:
-                        student.section = log.subject_allocation.section
-                        needs_save = True
-                    if student.batch != log.subject_allocation.section.batch:
-                        student.batch = log.subject_allocation.section.batch
-                        needs_save = True
-                    
-                    current_is_placeholder = student.name.startswith('Student ') or not student.name or student.name.strip() == ''
-                    if student_name and (current_is_placeholder or student.name != student_name):
-                        student.name = student_name
-                        needs_save = True
-                    
-                    if needs_save:
-                        student.save()
-                
+                })
+                logger.warning(
+                    f"[ExcelUpload] Row {row_num}: Roll number '{roll_raw}' not in roster "
+                    f"for allocation {log.subject_allocation_id}. Skipping."
+                )
+                continue
+
+            try:
+                # Update existing student's section/batch/name if required
+                needs_save = False
+                if student.section != log.subject_allocation.section:
+                    student.section = log.subject_allocation.section
+                    needs_save = True
+                if student.batch != log.subject_allocation.section.batch:
+                    student.batch = log.subject_allocation.section.batch
+                    needs_save = True
+
+                current_is_placeholder = (
+                    not student.name
+                    or student.name.strip() == ''
+                    or student.name.startswith('Student ')
+                )
+                if student_name and (current_is_placeholder or student.name != student_name):
+                    student.name = student_name
+                    needs_save = True
+
+                if needs_save:
+                    student.save()
+
                 students_map[roll_raw] = student
             except Exception as ex:
                 errors.append({
                     'row': row_num,
                     'roll_number': roll_raw,
-                    'error': f"Failed to dynamically register/update student '{roll_raw}': {str(ex)}"
+                    'issue': f"Failed to update student '{roll_raw}': {str(ex)}"
                 })
                 continue
 

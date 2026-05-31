@@ -12,15 +12,41 @@ def generate_marks_template(allocation_id, assessment_type_code):
     """
     Generates a pre-filled SECE Excel template for marks entry.
     Contains: Subject info, Assessment info, Student List.
+
+    FIX 5 — Per-allocation max marks:
+      Max marks are read from SubjectAssessmentConfig (per-allocation config)
+      instead of AssessmentType.default_max_marks (global default).
+      Falls back to global default only if no per-allocation config exists.
+      Data validation and freeze panes are added for usability.
     """
+    import logging
+    from openpyxl.worksheet.datavalidation import DataValidation
+    _logger = logging.getLogger(__name__)
+
     try:
         allocation = SubjectAllocation.objects.select_related(
-            'subject', 'section', 'batch', 'academic_year'
+            'subject', 'section__batch', 'academic_year'
         ).get(id=allocation_id)
-        
+
         assessment = AssessmentType.objects.get(code=assessment_type_code)
     except (SubjectAllocation.DoesNotExist, AssessmentType.DoesNotExist):
         raise ValueError("Invalid allocation or assessment type")
+
+    # FIX 5: Fetch per-allocation max marks from SubjectAssessmentConfig.
+    # Fallback to AssessmentType.default_max_marks only if config not found.
+    from apps.allocations.models import SubjectAssessmentConfig
+    try:
+        alloc_config = SubjectAssessmentConfig.objects.get(
+            subject_allocation=allocation,
+            assessment_type=assessment,
+        )
+        max_marks = alloc_config.max_marks
+    except SubjectAssessmentConfig.DoesNotExist:
+        max_marks = assessment.default_max_marks or 100
+        _logger.warning(
+            f"No SubjectAssessmentConfig found for allocation {allocation_id} "
+            f"assessment {assessment_type_code}. Using global default {max_marks}."
+        )
 
     students = Student.objects.filter(
         section=allocation.section,
@@ -31,7 +57,7 @@ def generate_marks_template(allocation_id, assessment_type_code):
     ws = wb.active
     ws.title = "Marks Entry"
 
-    # ── Styles ──────────────────────────────────────────────────
+    # ── Styles ─────────────────────────────────────────────
     header_fill = PatternFill(start_color="1E4A8A", end_color="1E4A8A", fill_type="solid")
     header_font = Font(color="FFFFFF", bold=True, size=12)
     info_font = Font(bold=True)
@@ -40,7 +66,7 @@ def generate_marks_template(allocation_id, assessment_type_code):
         top=Side(style='thin'), bottom=Side(style='thin')
     )
 
-    # ── Institutional Header ─────────────────────────────────────
+    # ── Institutional Header ──────────────────────────────────
     ws.merge_cells('A1:D1')
     ws['A1'] = "SRI ESHWAR COLLEGE OF ENGINEERING (AUTONOMOUS)"
     ws['A1'].font = Font(size=14, bold=True, color="1E4A8A")
@@ -51,38 +77,40 @@ def generate_marks_template(allocation_id, assessment_type_code):
     ws['A2'].font = Font(size=11, italic=True)
     ws['A2'].alignment = Alignment(horizontal="center")
 
-    # ── Subject Info ─────────────────────────────────────────────
+    # ── Subject Info ───────────────────────────────────────
     ws['A4'] = "Subject:"
     ws['B4'] = f"{allocation.subject.subject_code} — {allocation.subject.subject_name}"
     ws['A5'] = "Assessment:"
-    ws['B5'] = f"{assessment.name} (Max: {assessment.default_max_marks})"
+    # FIX 5: Show per-allocation max marks, not global default.
+    ws['B5'] = f"{assessment.name} (Max: {max_marks})"
     ws['C4'] = "Batch:"
-    ws['D4'] = str(allocation.batch)
+    ws['D4'] = str(allocation.section.batch)
     ws['C5'] = "Section:"
-    ws['D5'] = f"Sem {allocation.semester} - {allocation.section.name}"
+    ws['D5'] = f"Sem {allocation.subject.semester} - {allocation.section.name}"
 
     for cell in ['A4', 'A5', 'C4', 'C5']:
         ws[cell].font = info_font
 
-    # ── Data Table Header ────────────────────────────────────────
-    # ── Detect Dynamic Columns ───────────────────────────────────
+    # ── Detect Dynamic Columns ─────────────────────────────────
     from apps.marks.models import QuestionCOMapping
     q_maps = list(QuestionCOMapping.objects.filter(
         subject_allocation=allocation,
         assessment_type=assessment
     ).order_by('question_number'))
-    
+
     headers = ["S.No", "Roll Number", "Student Name"]
     if q_maps:
         for qm in q_maps:
             headers.append(f"{qm.question_number} (Max: {qm.max_marks})")
     else:
-        headers.append(f"Marks (Max: {assessment.default_max_marks})")
-    
+        # FIX 5: Column header uses per-allocation max marks.
+        headers.append(f"{assessment.name} (/{max_marks})")
+
     headers.append("Absent (Y/N)")
-    
-    # ── Data Table Header ────────────────────────────────────────
-    ws.append([]) # Row 6 blank
+    num_mark_cols = len(headers) - 4  # exclude S.No, Roll, Name, Absent
+
+    # ── Data Table Header (row 7) ────────────────────────────
+    ws.append([])  # Row 6 blank
     header_row = 7
     for col, text in enumerate(headers, 1):
         cell = ws.cell(row=header_row, column=col, value=text)
@@ -91,25 +119,72 @@ def generate_marks_template(allocation_id, assessment_type_code):
         cell.alignment = Alignment(horizontal="center")
         cell.border = border
 
-    # ── Student Data ─────────────────────────────────────────────
+    # ── Student Data ───────────────────────────────────────
+    first_data_row = header_row + 1
+    last_data_row = header_row + len(students)
+
     for idx, student in enumerate(students, 1):
         curr_row = header_row + idx
         ws.cell(row=curr_row, column=1, value=idx).border = border
         ws.cell(row=curr_row, column=2, value=student.roll_number).border = border
         ws.cell(row=curr_row, column=3, value=student.name).border = border
-        
+
         # Add empty cells with borders for all mark columns
         for col_idx in range(4, len(headers) + 1):
             ws.cell(row=curr_row, column=col_idx).border = border
 
-    # ── Adjust Column Widths ─────────────────────────────────────
+    # ── FIX 5: Data Validation on mark entry cells ─────────────────
+    if last_data_row >= first_data_row:
+        for col_idx in range(4, 4 + num_mark_cols):
+            # Determine the max for this specific column
+            if q_maps and (col_idx - 4) < len(q_maps):
+                col_max = q_maps[col_idx - 4].max_marks
+            else:
+                col_max = max_marks
+
+            col_letter = ws.cell(row=header_row, column=col_idx).column_letter
+            dv = DataValidation(
+                type="decimal",
+                operator="between",
+                formula1="0",
+                formula2=str(col_max),
+                showErrorMessage=True,
+                errorTitle="Invalid mark",
+                error=f"Enter a value between 0 and {col_max}",
+            )
+            dv.sqref = f"{col_letter}{first_data_row}:{col_letter}{last_data_row}"
+            ws.add_data_validation(dv)
+
+        # Absent column: Y/N dropdown
+        absent_col_letter = ws.cell(row=header_row, column=len(headers)).column_letter
+        dv_absent = DataValidation(
+            type="list",
+            formula1='"Y,N"',
+            showErrorMessage=True,
+            errorTitle="Invalid value",
+            error="Enter Y (absent) or N (present)",
+        )
+        dv_absent.sqref = (
+            f"{absent_col_letter}{first_data_row}:{absent_col_letter}{last_data_row}"
+        )
+        ws.add_data_validation(dv_absent)
+
+    # ── FIX 5: Freeze panes — freeze rows 1–7 and columns A–C ────────
+    # Scrolling right shows mark columns while keeping Roll No & Name visible.
+    # Scrolling down keeps the header row anchored.
+    ws.freeze_panes = ws.cell(row=header_row + 1, column=4)
+
+    # ── Adjust Column Widths ──────────────────────────────────
     ws.column_dimensions['A'].width = 8
     ws.column_dimensions['B'].width = 20
     ws.column_dimensions['C'].width = 40
-    ws.column_dimensions['D'].width = 12
-    ws.column_dimensions['E'].width = 15
+    # Dynamically set width for mark columns
+    for col_idx in range(4, len(headers) + 1):
+        ws.column_dimensions[
+            ws.cell(row=header_row, column=col_idx).column_letter
+        ].width = 15
 
-    # ── Save to Buffer ───────────────────────────────────────────
+    # ── Save to Buffer ────────────────────────────────────────
     output = io.BytesIO()
     wb.save(output)
     output.seek(0)

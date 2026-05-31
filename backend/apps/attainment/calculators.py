@@ -142,6 +142,17 @@ class COAttainmentCalculator:
         """
         Calculate attainment for a single CO.
         Returns dict with attainment_percentage, level, student breakdown.
+
+        FIX 1 — CIA best-of-N:
+          CIA1/CIA2/CIA3 marks are first normalized through _normalize_cia_marks(),
+          which applies the best-of rule (take best cia_best_of scores out of 3).
+          The normalized CIA percentage replaces raw CIA marks in the scoring formula.
+          Non-CIA assessments (ESE, MODEL, QUIZ, etc.) use raw marks unchanged.
+
+        FIX 4 — Correct denominator:
+          Only students who have at least one mark record for the assessments
+          included in this CO's calculation are counted in the denominator.
+          Enrolled students with no marks are excluded (neither attained nor failed).
         """
         # Get all enabled assessments for this allocation
         from apps.allocations.models import SubjectAssessmentConfig
@@ -165,37 +176,42 @@ class COAttainmentCalculator:
 
         # Get students
         student_ids = self._get_students()
-        total_students = len(student_ids)
+        enrolled_count = len(student_ids)
 
-        if total_students == 0:
+        if enrolled_count == 0:
             logger.warning(f"No students found for allocation {self.allocation_id}")
             return None
 
-        # Calculate per-student CO performance (weighted across assessments)
-        student_co_scores = {}
+        # ── FIX 1: Separate CIA and non-CIA assessments ──────────────────────
+        # CIA codes that participate in the best-of-N normalization.
+        CIA_CODES = {'CIA1', 'CIA2', 'CIA3'}
+        cia_assessments = [ca for ca in co_assessments if ca.assessment_type.code.upper() in CIA_CODES]
+        non_cia_assessments = [ca for ca in co_assessments if ca.assessment_type.code.upper() not in CIA_CODES]
 
-        # Pre-fetch all marks for this allocation to avoid N+1
+        # Pre-compute CIA best-of-N normalized scores per student.
+        # _normalize_cia_marks returns {student_id: avg_pct_of_best_N_cias} (0–100 scale).
+        cia_normalized_scores: dict = {}
+        if cia_assessments:
+            cia_normalized_scores = self._normalize_cia_marks(co_assessments)
+
+        # ── Pre-fetch all marks for non-CIA assessments to avoid N+1 ────────
         all_marks = {}
-        question_mappings = {}
-        
         from apps.marks.models import QuestionCOMapping, StudentQuestionMark
-        
-        for ca in co_assessments:
+
+        for ca in non_cia_assessments:
             # Check if this assessment has question-level mapping for this allocation
             q_maps = list(QuestionCOMapping.objects.filter(
                 subject_allocation_id=self.allocation_id,
                 assessment_type_id=ca.assessment_type_id,
                 co_id=co_id
             ))
-            
+
             if q_maps:
-                question_mappings[ca.assessment_type_id] = q_maps
-                # Pre-fetch question-wise marks
+                # Pre-fetch question-wise marks, grouped by student
                 q_marks = StudentQuestionMark.objects.filter(
                     question_mapping__in=q_maps
                 ).values('student_id', 'marks_obtained', 'question_mapping__max_marks')
-                
-                # Group by student
+
                 grouped_q_marks = {}
                 for qm in q_marks:
                     sid = qm['student_id']
@@ -205,40 +221,92 @@ class COAttainmentCalculator:
                     grouped_q_marks[sid]['max'] += Decimal(str(qm['question_mapping__max_marks']))
                 all_marks[ca.assessment_type_id] = grouped_q_marks
             else:
-                # Fallback to total marks for the assessment
                 all_marks[ca.assessment_type_id] = self._get_student_marks_for_assessment(
                     ca.assessment_type_id
                 )
+
+        # ── Per-student CO scoring ───────────────────────────────────────────
+        student_co_scores = {}
+
+        # Pre-compute the combined CIA weightage factor for the CIA block.
+        # The CIA block is treated as a single virtual assessment with:
+        #   marks_obtained = cia_normalized_pct  (0–100)
+        #   max_marks      = 100
+        #   co_weight      = sum of all CIA COAssessmentMapping.weightage values / 100
+        # This preserves the proportional contribution of CIA relative to non-CIA assessments.
+        cia_combined_weight = Decimal('0')
+        for ca in cia_assessments:
+            cia_combined_weight += Decimal(str(ca.weightage)) / Decimal('100')
 
         for student_id in student_ids:
             weighted_score = Decimal('0')
             weighted_max = Decimal('0')
 
-            for ca in co_assessments:
+            # ── Non-CIA assessments: existing raw-marks logic ────────────────
+            for ca in non_cia_assessments:
                 mark_data = all_marks[ca.assessment_type_id].get(student_id)
                 if mark_data:
-                    # If it's question-wise data, mark_data has 'marks' and 'max' keys
                     if 'marks' in mark_data:
+                        # Question-wise data
                         weighted_score += mark_data['marks']
                         weighted_max += mark_data['max']
                     else:
-                        # Standard fallback: apply CO weightage to the total assessment mark
+                        # Total-marks fallback: apply CO-Assessment weightage
                         co_weight = Decimal(str(ca.weightage)) / Decimal('100')
                         weighted_score += Decimal(str(mark_data['marks_obtained'])) * co_weight
                         weighted_max += Decimal(str(mark_data['max_marks'])) * co_weight
 
+            # ── CIA block: use normalized best-of-N score ────────────────────
+            # FIX 1: Instead of summing raw CIA marks, inject the single
+            # normalized score that already represents the best-N average pct.
+            if cia_assessments and cia_combined_weight > 0:
+                cia_pct = cia_normalized_scores.get(student_id)
+                if cia_pct is not None:
+                    # Treat the CIA block as: marks_obtained=pct, max_marks=100
+                    weighted_score += Decimal(str(cia_pct)) * cia_combined_weight
+                    weighted_max += Decimal('100') * cia_combined_weight
+                # Students missing CIA scores are not added to weighted_max,
+                # so they fall out of the participated set (FIX 4).
+
             if weighted_max > 0:
                 student_co_scores[student_id] = (weighted_score / weighted_max) * Decimal('100')
 
-        # Count students who attained the threshold
+        # ── FIX 4: Use participated students as the denominator ──────────────
+        # Students with no marks for any relevant assessment are not in
+        # student_co_scores (weighted_max stayed 0). They are excluded from
+        # both numerator and denominator — neither attained nor failed.
+        participated_count = len(student_co_scores)
+        if participated_count == 0:
+            logger.warning(
+                f"CO {co_id}: No students have marks for allocation {self.allocation_id}. "
+                f"Skipping attainment calculation."
+            )
+            return None
+
         threshold = Decimal(str(self.config.threshold_marks_pct))
         attained_count = sum(
             1 for score in student_co_scores.values()
             if score >= threshold
         )
 
-        attainment_pct = Decimal(str(attained_count)) / Decimal(str(total_students)) * Decimal('100')
+        # Denominator = students who have at least one mark (participated),
+        # NOT all enrolled students. This prevents partial entry from
+        # artificially suppressing attainment percentages.
+        attainment_pct = (
+            Decimal(str(attained_count)) / Decimal(str(participated_count)) * Decimal('100')
+        )
         attainment_pct = attainment_pct.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+        participation_rate = (
+            Decimal(str(participated_count)) / Decimal(str(enrolled_count)) * Decimal('100')
+        ).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+        logger.info(
+            f"CO {co_id} | Allocation {self.allocation_id}: "
+            f"{participated_count}/{enrolled_count} students participated "
+            f"(participation rate {participation_rate}%). "
+            f"{attained_count} attained threshold → {attainment_pct}% direct attainment."
+        )
 
         level = _determine_level(attainment_pct, self.config)
 
@@ -247,7 +315,9 @@ class COAttainmentCalculator:
             'attainment_percentage': float(attainment_pct),
             'attainment_level': level,
             'students_attained': attained_count,
-            'total_students': total_students,
+            'total_students': participated_count,   # participants, not enrolled
+            'enrolled_students': enrolled_count,
+            'participation_rate': float(participation_rate),
             'student_scores': {k: float(v) for k, v in student_co_scores.items()},
             'threshold_used': float(threshold),
         }
@@ -487,7 +557,17 @@ class AttainmentOrchestrator:
 
     @transaction.atomic
     def run(self) -> dict:
-        """Full attainment calculation pipeline. Wrapped in a transaction."""
+        """Full attainment calculation pipeline. Wrapped in a transaction.
+
+        FIX 2 — Cross-subject PO/PSO aggregation:
+          After saving CO attainment for the current subject, PO and PSO
+          attainment are recomputed by collecting ALL COAttainment records
+          across ALL allocations in the same (section, academic_year).
+          This means every subject calculation produces a fully aggregated
+          PO attainment value, not just the current subject's contribution.
+          Design decision: running per-subject triggers cross-subject recompute
+          to keep PO values always current without a separate scheduled task.
+        """
         logger.info(
             f"[Attainment] Starting calculation for allocation {self.allocation_id}: "
             f"{self.allocation.subject.subject_code} / {self.allocation.section}"
@@ -499,21 +579,19 @@ class AttainmentOrchestrator:
 
         # ── Step 2: Persist CO Results ───────────────────────────────
         indirect_calculator = IndirectAttainmentCalculator(self.allocation_id)
-        
+
         for result in co_results:
             co_id = result['co_id']
             direct_attainment = Decimal(str(result['attainment_percentage']))
             indirect_attainment = indirect_calculator.calculate_indirect_attainment(co_id)
-            
-            # Combine Direct (80%) and Indirect (20%)
+
+            # Combine Direct (80%) and Indirect (20%) weightages from config
             d_weight = self.config.direct_weightage / Decimal('100')
             i_weight = self.config.indirect_weightage / Decimal('100')
-            
+
             final_attainment = (direct_attainment * d_weight) + (indirect_attainment * i_weight)
             final_attainment = final_attainment.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-            
-            # Re-determine level based on final attainment if needed, or stick to marks-based level?
-            # Standard NBA usually maps the Final Attainment % to a level.
+
             final_level = _determine_level(final_attainment, self.config)
 
             COAttainment.objects.update_or_create(
@@ -522,7 +600,7 @@ class AttainmentOrchestrator:
                 defaults={
                     'students_attained': result['students_attained'],
                     'total_students': result['total_students'],
-                    'attainment_percentage': float(direct_attainment), # Keep direct pct for historical reasons
+                    'attainment_percentage': float(direct_attainment),
                     'direct_attainment': direct_attainment,
                     'indirect_attainment': indirect_attainment,
                     'final_attainment': final_attainment,
@@ -531,11 +609,35 @@ class AttainmentOrchestrator:
                 }
             )
 
-        # ── Step 3: PO Attainment ────────────────────────────────────
-        po_calculator = POAttainmentCalculator()
-        po_results = po_calculator.calculate_all_pos(self.programme.id, co_results)
+        # ── Step 3: Cross-subject CO collection for PO/PSO aggregation ──────
+        # FIX 2: Collect ALL COAttainment records for this (section, academic_year),
+        # not just results from the current allocation. This ensures PO/PSO
+        # attainment reflects every subject that has been calculated so far.
+        all_co_attainments_qs = COAttainment.objects.filter(
+            subject_allocation__section=self.allocation.section,
+            subject_allocation__academic_year=self.allocation.academic_year,
+            attainment_level__isnull=False,
+        ).select_related('co')
 
-        # ── Step 4: Persist PO Results ───────────────────────────────
+        all_co_results = [
+            {
+                'co_id': att.co_id,
+                'attainment_level': att.attainment_level if att.attainment_level is not None else 0,
+                'attainment_percentage': float(att.attainment_percentage or 0),
+            }
+            for att in all_co_attainments_qs
+        ]
+
+        logger.info(
+            f"[Attainment] PO/PSO aggregation: using {len(all_co_results)} CO records "
+            f"from ALL subjects in section {self.allocation.section} / "
+            f"AY {self.allocation.academic_year}."
+        )
+
+        # ── Step 4: PO Attainment (cross-subject aggregate) ──────────
+        po_calculator = POAttainmentCalculator()
+        po_results = po_calculator.calculate_all_pos(self.programme.id, all_co_results)
+
         for result in po_results:
             if result:
                 POAttainment.objects.update_or_create(
@@ -550,9 +652,9 @@ class AttainmentOrchestrator:
                     }
                 )
 
-        # ── Step 5: PSO Attainment ───────────────────────────────────
+        # ── Step 5: PSO Attainment (cross-subject aggregate) ─────────
         pso_calculator = PSOAttainmentCalculator()
-        pso_results = pso_calculator.calculate_all_psos(self.programme.id, co_results)
+        pso_results = pso_calculator.calculate_all_psos(self.programme.id, all_co_results)
 
         for result in pso_results:
             if result:

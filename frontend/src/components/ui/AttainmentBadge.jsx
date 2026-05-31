@@ -4,7 +4,7 @@
  */
 
 const LEVEL_CONFIG = {
-  3: { label: 'Level 3', sublabel: 'High',         className: 'level-3', dot: 'var(--level-3)' },
+  3: { label: 'Level 3', sublabel: 'High',         className: 'level-3', dot: null },        /* no dot — text-only pill */
   2: { label: 'Level 2', sublabel: 'Medium',       className: 'level-2', dot: 'var(--level-2)' },
   1: { label: 'Level 1', sublabel: 'Low',          className: 'level-1', dot: 'var(--level-1)' },
   0: { label: 'Not Attained', sublabel: 'L0',      className: 'level-0', dot: 'var(--level-0)' },
@@ -27,16 +27,18 @@ export function AttainmentBadge({ level, percentage, showSublabel = false, size 
 
   return (
     <span className={`level-badge ${config.className} ${s.badge}`}>
-      <span
-        style={{
-          width: s.dot,
-          height: s.dot,
-          borderRadius: '50%',
-          background: config.dot,
-          display: 'inline-block',
-          flexShrink: 0,
-        }}
-      />
+      {config.dot !== null && (
+        <span
+          style={{
+            width: s.dot,
+            height: s.dot,
+            borderRadius: '50%',
+            background: config.dot,
+            display: 'inline-block',
+            flexShrink: 0,
+          }}
+        />
+      )}
       {showSublabel ? config.sublabel : config.label}
       {percentage !== undefined && (
         <span className="font-mono ml-1">{Number(percentage).toFixed(1)}%</span>

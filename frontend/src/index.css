@@ -176,11 +176,11 @@ h4, h5, h6 {
   background: var(--surface-primary);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow var(--transition);
+  box-shadow: none;                        /* flat — no shadow */
+  transition: border-color var(--transition);
 }
 
-.card:hover { box-shadow: var(--shadow-md); }
+.card:hover { border-color: var(--border-strong); } /* subtle hover: border darkens, no shadow */
 
 .card-glass {
   background: rgba(255, 255, 255, 0.8);
@@ -203,7 +203,7 @@ h4, h5, h6 {
   border: 1px solid transparent;
 }
 
-.level-3 { color: #065F46; background: var(--level-3-light); border-color: #A7F3D0; }
+.level-3 { color: #334155; background: #f8fafc; border-color: #e2e8f0; } /* slate-50 bg, slate-700 text, slate-200 border */
 .level-2 { color: #1E40AF; background: var(--level-2-light); border-color: #BFDBFE; }
 .level-1 { color: #92400E; background: var(--level-1-light); border-color: #FDE68A; }
 .level-0 { color: #991B1B; background: var(--level-0-light); border-color: #FECACA; }
@@ -283,12 +283,16 @@ h4, h5, h6 {
   border-radius: var(--radius);
   font-weight: 500;
   font-size: 0.875rem;
-  transition: all var(--transition-fast);
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
   cursor: pointer;
   border: none;
+  box-shadow: none;        /* force-kill any DaisyUI/plugin shadow injection */
   text-decoration: none;
   white-space: nowrap;
 }
+
+/* Ensure no pseudo-element creates a bottom border/shadow effect */
+.btn::before, .btn::after { display: none !important; }
 
 .btn:disabled {
   opacity: 0.5;
@@ -296,23 +300,21 @@ h4, h5, h6 {
 }
 
 .btn-primary {
-  background: var(--primary-500);
+  background: #0f172a; /* slate-900 */
   color: white;
 }
 .btn-primary:hover:not(:disabled) {
-  background: var(--primary-600);
-  box-shadow: 0 4px 12px rgb(30 74 138 / 0.35);
-  transform: translateY(-1px);
+  background: #1e293b; /* slate-800 */
 }
 
 .btn-secondary {
-  background: var(--surface-primary);
-  color: var(--gray-700);
-  border: 1px solid var(--border);
+  background: #ffffff;
+  color: #374151; /* gray-700 */
+  border: 1px solid #e5e7eb; /* gray-200 */
 }
 .btn-secondary:hover:not(:disabled) {
-  background: var(--gray-50);
-  border-color: var(--gray-300);
+  background: #f9fafb; /* gray-50 */
+  border-color: #d1d5db; /* gray-300 */
 }
 
 .btn-danger {
@@ -510,7 +512,7 @@ h4, h5, h6 {
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--primary-500), var(--primary-400));
+  background: #0f172a; /* slate-900 — flat, no gradient */
   border-radius: var(--radius-full);
   transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }

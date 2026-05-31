@@ -114,24 +114,24 @@ export default function COPOMappingPage() {
         </div>
       </div>
 
-      <div className="bg-amber-50 border border-amber-100 p-4 rounded-2xl flex items-start gap-4">
-        <div className="p-2 bg-amber-100 rounded-xl text-amber-600">
-          <HelpCircle size={20} />
+      <div className="bg-slate-50 border border-gray-200 p-4 rounded-xl flex items-start gap-4">
+        <div className="p-2 bg-white border border-gray-200 rounded-lg text-slate-600">
+          <HelpCircle size={18} />
         </div>
         <div className="text-sm">
-          <p className="font-bold text-amber-900">Correlation Levels</p>
-          <p className="text-amber-700 mt-1">1: Low Correlation | 2: Medium Correlation | 3: High Correlation. Leave blank/unselected for no correlation (value of 0).</p>
+          <p className="font-semibold text-slate-900">Correlation Levels</p>
+          <p className="text-gray-500 mt-0.5 text-xs">1: Low &nbsp;|&nbsp; 2: Medium &nbsp;|&nbsp; 3: High — Leave unselected for no correlation (0).</p>
         </div>
       </div>
 
-      <Card className="overflow-hidden p-0 border-none shadow-xl">
+      <Card className="overflow-hidden p-0 border border-gray-200">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="bg-slate-900 text-white">
-                <th className="p-4 text-left border-r border-slate-800 sticky left-0 z-10 bg-slate-900 min-w-[200px]">Course Outcomes</th>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="p-4 text-left text-xs font-bold text-gray-700 uppercase tracking-widest border-r border-gray-200 sticky left-0 z-10 bg-gray-50 min-w-[200px]">Course Outcomes</th>
                 {allTargets.map(t => (
-                  <th key={`${t.type}-${t.id}`} className="p-4 text-center border-r border-slate-800 min-w-[60px]" title={t.description}>
+                  <th key={`${t.type}-${t.id}`} className="p-4 text-center text-xs font-bold text-gray-700 uppercase tracking-widest border-r border-gray-200 min-w-[60px]" title={t.description}>
                     {t.code}
                   </th>
                 ))}
@@ -155,7 +155,7 @@ export default function COPOMappingPage() {
                               onClick={() => handleLevelChange(co.id, t.id, t.type, level)}
                               className={`w-8 h-6 rounded flex items-center justify-center text-[10px] font-black transition-all ${
                                 currentLevel === level 
-                                ? 'bg-blue-600 text-white shadow-md scale-110' 
+                                ? 'bg-slate-900 text-white' 
                                 : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
                               }`}
                             >
@@ -177,9 +177,9 @@ export default function COPOMappingPage() {
         <button 
           onClick={handleSave}
           disabled={saveMutation.isPending}
-          className="px-8 py-4 bg-blue-600 text-white rounded-2xl flex items-center justify-center font-bold hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 disabled:opacity-50"
+          className="px-8 py-3 bg-slate-900 text-white rounded-xl flex items-center justify-center font-bold hover:bg-black transition-all disabled:opacity-50"
         >
-          {saveMutation.isPending ? <Loader2 className="animate-spin mr-2" /> : <Save size={20} className="mr-2" />}
+          {saveMutation.isPending ? <Loader2 className="animate-spin mr-2" /> : <Save size={18} className="mr-2" />}
           Save Mapping Matrix
         </button>
       </div>

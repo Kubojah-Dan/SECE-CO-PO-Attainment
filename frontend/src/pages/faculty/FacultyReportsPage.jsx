@@ -77,38 +77,38 @@ export default function FacultyReportsPage() {
 
       <div className="grid grid-cols-1 gap-6">
         {reportTypes.map((report) => (
-          <Card key={report.id} className="group hover:shadow-xl transition-all border-none shadow-md">
-            <div className="flex items-center justify-between gap-6 p-2">
-              <div className="flex items-center gap-6">
-                <div className={`w-16 h-16 rounded-2xl bg-${report.color}-50 text-${report.color}-600 flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                  <report.icon size={32} />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-slate-900">{report.name}</h3>
-                  <p className="text-sm text-slate-500 mt-1">{report.desc}</p>
-                </div>
+          <div key={report.id} className="bg-white border border-gray-200 rounded-xl p-5 flex items-center justify-between gap-6">
+            <div className="flex items-center gap-5">
+              <div className="w-12 h-12 rounded-xl bg-slate-50 border border-gray-200 text-slate-700 flex items-center justify-center flex-shrink-0">
+                <report.icon size={22} />
               </div>
-              
-              <button 
-                onClick={() => handleDownload(report.id)}
-                className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-black transition-all shadow-lg shadow-slate-200"
-              >
-                <Download size={16} />
-                Download
-              </button>
+              <div>
+                <h3 className="text-base font-semibold text-slate-900">{report.name}</h3>
+                <p className="text-sm text-slate-500 mt-0.5">{report.desc}</p>
+              </div>
             </div>
-          </Card>
+            
+            <button 
+              onClick={() => handleDownload(report.id)}
+              className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-black transition-all flex-shrink-0"
+            >
+              <Download size={15} />
+              Download
+            </button>
+          </div>
         ))}
       </div>
 
-      <div className="p-10 text-center bg-emerald-50 rounded-[2.5rem] border border-emerald-100">
-        <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
-          <CheckCircle className="text-emerald-500" size={32} />
+      <div className="p-6 bg-green-50 border border-green-200 border-l-4 border-l-green-600 rounded-xl flex items-start gap-4">
+        <div className="w-10 h-10 bg-white border border-gray-200 rounded-xl flex items-center justify-center flex-shrink-0">
+          <CheckCircle className="text-green-600" size={20} />
         </div>
-        <h3 className="text-xl font-bold text-emerald-900">NBA Documentation Ready</h3>
-        <p className="text-sm text-emerald-700 mt-2 max-w-md mx-auto leading-relaxed">
-          All reports follow the standard NBA/NAAC formats. You can directly include these in your course file.
-        </p>
+        <div>
+          <h3 className="text-sm font-semibold text-slate-900">NBA Documentation Ready</h3>
+          <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
+            All reports follow the standard NBA/NAAC formats and can be directly included in your course file.
+          </p>
+        </div>
       </div>
     </div>
   );
