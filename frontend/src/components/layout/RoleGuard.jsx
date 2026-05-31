@@ -10,7 +10,6 @@ const ROLE_DASHBOARDS = {
   hod: '/hod/dashboard',
   faculty: '/faculty/dashboard',
   iqac: '/iqac/dashboard',
-  staff: '/staff/subjects',
 };
 
 export default function RoleGuard({ roles = [] }) {

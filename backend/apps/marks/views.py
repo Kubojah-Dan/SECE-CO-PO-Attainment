@@ -14,7 +14,7 @@ from apps.allocations.models import SubjectAllocation, SubjectAssessmentConfig, 
 from apps.students.models import Student
 from apps.students.serializers import StudentSerializer
 from apps.allocations.serializers import SubjectAllocationSerializer, SubjectAssessmentConfigSerializer
-from apps.authentication.permissions import IsAssignedStaff
+from apps.authentication.permissions import IsHRStaff
 from rest_framework.permissions import IsAuthenticated
 
 class StudentMarkViewSet(viewsets.ModelViewSet):
@@ -124,8 +124,9 @@ class ExcelUploadLogViewSet(viewsets.ModelViewSet):
         except AssessmentType.DoesNotExist:
             return Response({'error': f'Invalid assessment type: {assessment_code}'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Gate: staff users may only upload to enabled allocations in their departments
-        if request.user.role == 'staff':
+        # Gate: HR Staff faculty may only upload to enabled allocations in their assigned departments
+        fp = getattr(request.user, 'faculty_profile', None)
+        if fp and fp.is_hr_staff:
             try:
                 alloc_obj = SubjectAllocation.objects.select_related('subject').get(id=allocation_id)
             except SubjectAllocation.DoesNotExist:
@@ -135,17 +136,12 @@ class ExcelUploadLogViewSet(viewsets.ModelViewSet):
                     {'error': 'Staff mark entry is not enabled for this subject.'},
                     status=status.HTTP_403_FORBIDDEN
                 )
-            if hasattr(request.user, 'staff_profile'):
-                dept_ids = list(
-                    request.user.staff_profile.departments.values_list('id', flat=True)
+            hr_dept_ids = list(fp.departments.values_list('id', flat=True))
+            if alloc_obj.subject.department_id not in hr_dept_ids:
+                return Response(
+                    {'error': 'You are not assigned to this subject\'s department.'},
+                    status=status.HTTP_403_FORBIDDEN
                 )
-                if alloc_obj.subject.department_id not in dept_ids:
-                    return Response(
-                        {'error': 'You are not assigned to this subject\'s department.'},
-                        status=status.HTTP_403_FORBIDDEN
-                    )
-            else:
-                return Response({'error': 'Staff profile not found.'}, status=status.HTTP_403_FORBIDDEN)
 
         log = ExcelUploadLog.objects.create(
             uploaded_by=request.user,
@@ -387,24 +383,23 @@ class FacultySubjectViewSet(viewsets.ReadOnlyModelViewSet):
         return Response({'message': 'Mappings saved successfully.'})
 
 
-class StaffSubjectListView(generics.ListAPIView):
+class HRStaffSubjectListView(generics.ListAPIView):
     """
     GET /faculty/staff/subjects/
-    Returns all active SubjectAllocations across all departments the staff
-    member is assigned to, where staff_mark_entry_enabled=True.
-    Only accessible by users with role='staff'.
+    Returns all active SubjectAllocations across all departments the HR Staff
+    faculty member is assigned to, where staff_mark_entry_enabled=True.
+    Only accessible by faculty users with faculty_profile.is_hr_staff=True.
     """
-    permission_classes = [IsAuthenticated, IsAssignedStaff]
+    permission_classes = [IsAuthenticated, IsHRStaff]
     serializer_class = SubjectAllocationSerializer
 
     def get_queryset(self):
         user = self.request.user
-        if not hasattr(user, 'staff_profile'):
+        fp = getattr(user, 'faculty_profile', None)
+        if fp is None or not fp.is_hr_staff:
             return SubjectAllocation.objects.none()
 
-        dept_ids = list(
-            user.staff_profile.departments.values_list('id', flat=True)
-        )
+        dept_ids = list(fp.departments.values_list('id', flat=True))
 
         qs = SubjectAllocation.objects.filter(
             subject__department_id__in=dept_ids,
@@ -431,3 +426,6 @@ class StaffSubjectListView(generics.ListAPIView):
                 subject__subject_code__icontains=search
             )
         return qs
+
+# Keep backward-compatible alias
+StaffSubjectListView = HRStaffSubjectListView

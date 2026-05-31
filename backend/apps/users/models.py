@@ -32,6 +32,17 @@ class FacultyProfile(models.Model):
     specialization = models.CharField(max_length=200, blank=True)
     is_active = models.BooleanField(default=True)
     joined_date = models.DateField(null=True, blank=True)
+    # HR Staff sub-tier — faculty members who act as mark-entry operators
+    is_hr_staff = models.BooleanField(
+        default=False,
+        help_text='When True, this faculty member acts as an HR mark-entry operator.'
+    )
+    departments = models.ManyToManyField(
+        Department,
+        related_name='hr_staff_members',
+        blank=True,
+        help_text='Departments this HR staff member can upload marks for.'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

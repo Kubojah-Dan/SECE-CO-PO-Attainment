@@ -37,11 +37,12 @@ export default function UserManagement() {
   const [editingUser, setEditingUser] = useState(null);
   const [isDeleting, setIsDeleting] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
-  // Staff-specific state
+  // HR Staff faculty state
+  const [isHRStaffChecked, setIsHRStaffChecked] = useState(false);
+  const [hrDeptIds, setHrDeptIds] = useState([]);
   const [formRole, setFormRole] = useState('faculty');
-  const [selectedDeptIds, setSelectedDeptIds] = useState([]);
 
-  const tabs = ['All', 'HOD', 'Faculty', 'Admin', 'IQAC', 'Staff'];
+  const tabs = ['All', 'HOD', 'Faculty', 'Admin', 'IQAC'];
 
   useEffect(() => {
     fetchUsers();
@@ -343,10 +344,10 @@ export default function UserManagement() {
                 try {
                   setIsSaving(true);
 
-                  // ── STAFF: use dedicated endpoint ──────────────────────────
-                  if (rawData.role === 'staff') {
-                    if (selectedDeptIds.length === 0) {
-                      toast.error('Please assign at least one department for this staff member.');
+                  // ── HR STAFF via staffService (faculty + is_hr_staff=true) ─────────
+                  if (rawData.role === 'faculty' && isHRStaffChecked) {
+                    if (hrDeptIds.length === 0) {
+                      toast.error('Please assign at least one department for this HR staff member.');
                       setIsSaving(false);
                       return;
                     }
@@ -356,9 +357,10 @@ export default function UserManagement() {
                       last_name: rawData.last_name,
                       employee_id: rawData.employee_id,
                       password: rawData.password,
-                      department_ids: selectedDeptIds.map(Number),
+                      department: rawData.department || null,
+                      hr_department_ids: hrDeptIds.map(Number),
                     });
-                    toast.success('Staff user created successfully');
+                    toast.success('HR Staff member created successfully');
                     handleModalClose();
                     fetchUsers();
                     return;
@@ -470,65 +472,76 @@ export default function UserManagement() {
                       name="role"
                       defaultValue={editingUser?.role || 'faculty'}
                       required
-                      onChange={e => { setFormRole(e.target.value); setSelectedDeptIds([]); }}
+                      onChange={e => { setFormRole(e.target.value); setIsHRStaffChecked(false); setHrDeptIds([]); }}
                       className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-bold text-sm"
                     >
                       <option value="faculty">Faculty</option>
                       <option value="hod">HOD</option>
                       <option value="iqac">IQAC</option>
                       <option value="admin">Admin</option>
-                      <option value="staff">HR Staff</option>
                     </select>
                   </div>
-                  {/* For non-staff: single department dropdown */}
-                  {formRole !== 'staff' && (
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Department</label>
-                      <select 
-                        name="department" 
-                        defaultValue={editingUser?.department?.id || editingUser?.department} 
-                        required={formRole === 'faculty' || formRole === 'hod'}
-                        className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-bold text-sm"
-                      >
-                        <option value="">Select Dept</option>
-                        {departments.map(dept => (
-                          <option key={dept.id} value={dept.id}>{abbrevDept(dept.name)}</option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-                </div>
-                {/* For staff: multi-select departments */}
-                {formRole === 'staff' && (
                   <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">
-                      Assign Departments <span className="text-red-400">*</span>
-                    </label>
-                    <div className="grid grid-cols-2 gap-2 max-h-44 overflow-y-auto p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Primary Department</label>
+                    <select
+                      name="department"
+                      defaultValue={editingUser?.department?.id || editingUser?.department}
+                      required={formRole === 'faculty' || formRole === 'hod'}
+                      className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-bold text-sm"
+                    >
+                      <option value="">Select Dept</option>
                       {departments.map(dept => (
-                        <label key={dept.id} className="flex items-center gap-2 cursor-pointer group">
-                          <input
-                            type="checkbox"
-                            checked={selectedDeptIds.includes(dept.id)}
-                            onChange={e => {
-                              if (e.target.checked) {
-                                setSelectedDeptIds(prev => [...prev, dept.id]);
-                              } else {
-                                setSelectedDeptIds(prev => prev.filter(id => id !== dept.id));
-                              }
-                            }}
-                            className="w-3.5 h-3.5 accent-slate-900 rounded"
-                          />
-                          <span className="text-xs font-semibold text-slate-700 group-hover:text-slate-900">
-                            {abbrevDept(dept.name)}
-                          </span>
-                        </label>
+                        <option key={dept.id} value={dept.id}>{abbrevDept(dept.name)}</option>
                       ))}
-                    </div>
-                    {selectedDeptIds.length > 0 && (
-                      <p className="mt-1.5 text-[10px] text-slate-500 font-medium">
-                        {selectedDeptIds.length} department{selectedDeptIds.length !== 1 ? 's' : ''} selected
-                      </p>
+                    </select>
+                  </div>
+                </div>
+                {/* HR Staff toggle — only for Faculty role */}
+                {formRole === 'faculty' && (
+                  <div>
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        checked={isHRStaffChecked}
+                        onChange={e => { setIsHRStaffChecked(e.target.checked); if (!e.target.checked) setHrDeptIds([]); }}
+                        className="w-4 h-4 accent-slate-900 rounded"
+                      />
+                      <span className="text-sm font-semibold text-slate-700 group-hover:text-slate-900">
+                        This user is an HR Staff member (mark-entry operator)
+                      </span>
+                    </label>
+                    {isHRStaffChecked && (
+                      <div className="mt-3">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">
+                          Assign HR Departments <span className="text-red-400">*</span>
+                        </label>
+                        <div className="grid grid-cols-2 gap-2 max-h-44 overflow-y-auto p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                          {departments.map(dept => (
+                            <label key={dept.id} className="flex items-center gap-2 cursor-pointer group">
+                              <input
+                                type="checkbox"
+                                checked={hrDeptIds.includes(dept.id)}
+                                onChange={e => {
+                                  if (e.target.checked) {
+                                    setHrDeptIds(prev => [...prev, dept.id]);
+                                  } else {
+                                    setHrDeptIds(prev => prev.filter(id => id !== dept.id));
+                                  }
+                                }}
+                                className="w-3.5 h-3.5 accent-slate-900 rounded"
+                              />
+                              <span className="text-xs font-semibold text-slate-700 group-hover:text-slate-900">
+                                {abbrevDept(dept.name)}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                        {hrDeptIds.length > 0 && (
+                          <p className="mt-1.5 text-[10px] text-slate-500 font-medium">
+                            {hrDeptIds.length} department{hrDeptIds.length !== 1 ? 's' : ''} selected
+                          </p>
+                        )}
+                      </div>
                     )}
                   </div>
                 )}

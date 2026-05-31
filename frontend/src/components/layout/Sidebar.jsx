@@ -42,14 +42,15 @@ const NAV_CONFIG = {
     { to: '/faculty/subjects',    icon: BookOpenCheck,   label: 'My Subjects'   },
     { to: '/profile',             icon: CircleUser,      label: 'Profile'       },
   ],
+  // HR Staff nav — only the mark-entry page (sub-tier of faculty)
+  faculty_hr: [
+    { to: '/staff/subjects',      icon: BookMarked,      label: 'Mark Entry'    },
+    { to: '/profile',             icon: CircleUser,      label: 'Profile'       },
+  ],
   iqac: [
     { to: '/iqac/dashboard',      icon: LayoutDashboard, label: 'Dashboard'     },
     { to: '/iqac/po-attainment',  icon: TrendingUp,      label: 'Attainment'    },
     { to: '/iqac/nba-report',     icon: Award,           label: 'NBA'           },
-    { to: '/profile',             icon: CircleUser,      label: 'Profile'       },
-  ],
-  staff: [
-    { to: '/staff/subjects',      icon: BookMarked,      label: 'Mark Entry'    },
     { to: '/profile',             icon: CircleUser,      label: 'Profile'       },
   ],
 };
@@ -59,7 +60,6 @@ const ROLE_LABELS = {
   hod: 'HOD',
   faculty: 'Faculty',
   iqac: 'IQAC',
-  staff: 'HR Staff',
 };
 
 const ROLE_COLORS = {
@@ -67,13 +67,15 @@ const ROLE_COLORS = {
   hod: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
   faculty: 'linear-gradient(135deg, #10b981, #059669)',
   iqac: 'linear-gradient(135deg, #f59e0b, #d97706)',
-  staff: 'linear-gradient(135deg, #0ea5e9, #0284c7)',
 };
 
 export default function Sidebar({ isCollapsed, onToggleCollapse, isMobileOpen, onCloseMobile }) {
-  const { user, logout, role } = useAuth();
+  const { user, logout, role, isHRStaff } = useAuth();
   const navigate = useNavigate();
-  const links = NAV_CONFIG[role] || NAV_CONFIG.faculty;
+  // HR Staff see only the mark-entry nav; regular faculty see the full faculty nav
+  const navKey = role === 'faculty' && isHRStaff ? 'faculty_hr' : role;
+  const links = NAV_CONFIG[navKey] || NAV_CONFIG.faculty;
+  const displayLabel = isHRStaff ? 'HR Staff' : (ROLE_LABELS[role] || role);
 
   const handleLogout = async () => {
     await logout();
@@ -128,7 +130,7 @@ export default function Sidebar({ isCollapsed, onToggleCollapse, isMobileOpen, o
             <div className="min-w-0">
               <p className="text-sm font-semibold text-white truncate">{user?.first_name} {user?.last_name}</p>
               <span className="inline-block text-[10px] font-semibold uppercase tracking-widest mt-1 px-2 py-0.5 rounded-full bg-white/10 border border-white/20 text-white/60">
-                {ROLE_LABELS[role]}
+                {displayLabel}
               </span>
             </div>
           </div>

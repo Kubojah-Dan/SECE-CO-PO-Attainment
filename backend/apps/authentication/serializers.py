@@ -3,8 +3,7 @@ from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
-from django.db import transaction
-from .models import User, StaffProfile
+from .models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -14,6 +13,11 @@ class UserSerializer(serializers.ModelSerializer):
     department_id = serializers.SerializerMethodField()
     dashboard_url = serializers.SerializerMethodField()
     employee_id = serializers.SerializerMethodField()
+    # HR Staff flag: True when faculty_profile.is_hr_staff == True
+    is_hr_staff = serializers.SerializerMethodField()
+    # HR departments M2M (list of dept IDs — only populated for HR staff)
+    hr_department_ids = serializers.SerializerMethodField()
+    faculty_profile = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -21,9 +25,12 @@ class UserSerializer(serializers.ModelSerializer):
             'id', 'email', 'role', 'first_name', 'last_name', 'full_name',
             'phone', 'is_active', 'date_joined', 'last_login',
             'profile_photo', 'department_name', 'department_id', 'dashboard_url',
-            'employee_id'
+            'employee_id', 'is_hr_staff', 'hr_department_ids', 'faculty_profile',
         ]
-        read_only_fields = ['id', 'date_joined', 'last_login', 'dashboard_url', 'employee_id']
+        read_only_fields = [
+            'id', 'date_joined', 'last_login', 'dashboard_url',
+            'employee_id', 'is_hr_staff', 'hr_department_ids',
+        ]
 
     def get_full_name(self, obj):
         return obj.get_full_name()
@@ -48,8 +55,42 @@ class UserSerializer(serializers.ModelSerializer):
                 return obj.faculty_profile.employee_id
             if hasattr(obj, 'hod_profile') and obj.hod_profile:
                 return obj.hod_profile.employee_id
-            if hasattr(obj, 'staff_profile') and obj.staff_profile:
-                return obj.staff_profile.employee_id
+        except Exception:
+            pass
+        return None
+
+    def get_is_hr_staff(self, obj):
+        try:
+            return bool(
+                obj.role == 'faculty'
+                and hasattr(obj, 'faculty_profile')
+                and obj.faculty_profile.is_hr_staff
+            )
+        except Exception:
+            return False
+
+    def get_hr_department_ids(self, obj):
+        try:
+            if obj.role == 'faculty' and hasattr(obj, 'faculty_profile'):
+                fp = obj.faculty_profile
+                if fp.is_hr_staff:
+                    return list(fp.departments.values_list('id', flat=True))
+        except Exception:
+            pass
+        return []
+
+    def get_faculty_profile(self, obj):
+        try:
+            if obj.role == 'faculty' and hasattr(obj, 'faculty_profile'):
+                fp = obj.faculty_profile
+                return {
+                    'id': fp.id,
+                    'department': fp.department_id,
+                    'employee_id': fp.employee_id,
+                    'designation': fp.designation,
+                    'is_hr_staff': fp.is_hr_staff,
+                    'departments': list(fp.departments.values_list('id', flat=True)),
+                }
         except Exception:
             pass
         return None
@@ -166,83 +207,3 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
             raise serializers.ValidationError({'confirm_password': 'Passwords do not match.'})
         validate_password(attrs['new_password'])
         return attrs
-
-
-class StaffProfileSerializer(serializers.ModelSerializer):
-    """Serializes StaffProfile with department details."""
-    department_details = serializers.SerializerMethodField()
-
-    class Meta:
-        model = StaffProfile
-        fields = [
-            'id', 'employee_id',
-            'departments', 'department_details',
-            'created_at', 'updated_at',
-        ]
-
-    def get_department_details(self, obj):
-        return [
-            {'id': d.id, 'name': d.name, 'short_name': getattr(d, 'short_name', '')}
-            for d in obj.departments.all()
-        ]
-
-
-class CreateStaffUserSerializer(serializers.Serializer):
-    """
-    Admin-only: create a User with role='staff' and its StaffProfile atomically.
-    Validates uniqueness of email and employee_id before creating anything.
-    """
-    email = serializers.EmailField()
-    first_name = serializers.CharField(max_length=100)
-    last_name = serializers.CharField(max_length=100)
-    employee_id = serializers.CharField(max_length=20)
-    password = serializers.CharField(min_length=8, write_only=True)
-    department_ids = serializers.ListField(
-        child=serializers.IntegerField(),
-        min_length=1
-    )
-
-    def validate_email(self, value):
-        if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError(
-                'A user with this email already exists.'
-            )
-        return value.lower().strip()
-
-    def validate_employee_id(self, value):
-        if StaffProfile.objects.filter(employee_id=value).exists():
-            raise serializers.ValidationError(
-                'This employee ID is already in use.'
-            )
-        return value
-
-    def validate_department_ids(self, value):
-        from apps.departments.models import Department
-        existing_ids = list(
-            Department.objects.filter(id__in=value).values_list('id', flat=True)
-        )
-        missing = set(value) - set(existing_ids)
-        if missing:
-            raise serializers.ValidationError(
-                f'Departments not found: {sorted(missing)}'
-            )
-        return value
-
-    def create(self, validated_data):
-        from apps.departments.models import Department
-        department_ids = validated_data.pop('department_ids')
-        password = validated_data.pop('password')
-        with transaction.atomic():
-            user = User.objects.create_user(
-                email=validated_data['email'],
-                first_name=validated_data['first_name'],
-                last_name=validated_data['last_name'],
-                password=password,
-                role='staff',
-            )
-            profile = StaffProfile.objects.create(
-                user=user,
-                employee_id=validated_data['employee_id'],
-            )
-            profile.departments.set(department_ids)
-        return user

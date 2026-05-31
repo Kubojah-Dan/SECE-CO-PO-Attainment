@@ -125,25 +125,25 @@ export default function HODFacultyList() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {staff.map((s) => (
-                <Card key={s.id} className="border border-gray-200 transition-colors hover:border-slate-300">
+              {staff.map((fp) => (
+                <Card key={fp.id} className="border border-gray-200 transition-colors hover:border-slate-300">
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 rounded-xl bg-sky-100 flex items-center justify-center text-sky-700 font-bold text-lg">
-                      {s.user?.first_name?.[0] || 'S'}
+                      {fp.user?.first_name?.[0] || 'S'}
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-bold text-gray-900 truncate">
-                        {s.user?.first_name} {s.user?.last_name}
+                        {fp.user?.first_name} {fp.user?.last_name}
                       </h3>
-                      <p className="text-xs text-gray-500 font-medium">HR Staff</p>
+                      <p className="text-xs text-sky-600 font-semibold bg-sky-50 border border-sky-100 px-2 py-0.5 rounded-md inline-block mt-0.5">HR Staff</p>
                       <div className="mt-3 space-y-2">
                         <div className="flex items-center gap-2 text-xs text-slate-600 font-semibold bg-slate-100 px-2 py-1 rounded-lg w-fit">
                           <IdCard size={13} />
-                          <span>{s.employee_id}</span>
+                          <span>{fp.employee_id}</span>
                         </div>
-                        {s.department_details?.length > 0 && (
+                        {fp.hr_department_details?.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-2">
-                            {s.department_details.map(d => (
+                            {fp.hr_department_details.map(d => (
                               <span key={d.id} className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-100">
                                 <Building2 size={10} />
                                 {d.short_name || d.name}
