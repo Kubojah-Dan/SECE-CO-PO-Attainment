@@ -1,0 +1,48 @@
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-brand-950: #0F1235;
+  --color-brand-900: #1A1F4E;
+  --color-brand-700: #2E3580;
+  --color-brand-500: #4A52A3;
+  --color-brand-300: #9398B0;
+  --color-brand-100: #E8EAF2;
+  --color-brand-50:  #F5F6FD;
+  --color-teal-600:  #0D6E5A;
+  --color-teal-400:  #1D9E88;
+  --color-teal-50:   #E0F7F2;
+  --color-amber-700: #8A5200;
+  --color-amber-400: #B7760A;
+  --color-amber-50:  #FEF4E4;
+  --color-surface:   #F7F8FA;
+}
+
+@layer base {
+  html {
+    font-size: 14px;
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-surface text-brand-950;
+    font-weight: 400;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Remove default focus outline — our components handle focus styling */
+  *:focus {
+    outline: none;
+  }
+}
