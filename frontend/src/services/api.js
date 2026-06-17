@@ -133,6 +133,9 @@ export const departmentService = {
   createSection: (data) => api.post('/admin/sections/', data),
   updateSection: (id, data) => api.patch(`/admin/sections/${id}/`, data),
   deleteSection: (id) => api.delete(`/admin/sections/${id}/`),
+
+  // S&H first-year batch migration (Admin/HOD only)
+  batchMigrate: (data) => api.post('/students/batch-migrate/', data),
 };
 
 export const regulationService = {
@@ -311,17 +314,3 @@ export const notificationService = {
   markAllRead: () => api.post('/notifications/mark-all-read/'),
 };
 
-export const staffService = {
-  // Staff subject list (staff users only)
-  fetchSubjects: (params) => api.get('/faculty/staff/subjects/', { params }),
-  // Admin management of staff users
-  createUser: (data) => api.post('/auth/staff-users/', data),
-  listUsers: (params) => api.get('/auth/staff-users/', { params }),
-  updateDepartments: (id, department_ids) =>
-    api.patch(`/auth/staff-users/${id}/departments/`, { department_ids }),
-  // HOD: view staff in their department
-  getDeptStaff: (deptId) => api.get(`/auth/departments/${deptId}/staff/`),
-  // Toggle staff mark entry on a subject allocation
-  toggleStaffEntry: (allocId, enabled) =>
-    api.patch(`/allocations/allocations/${allocId}/toggle-staff-entry/`, { enabled }),
-};

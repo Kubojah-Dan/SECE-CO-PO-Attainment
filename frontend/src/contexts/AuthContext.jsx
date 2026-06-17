@@ -86,13 +86,9 @@ export function AuthProvider({ children }) {
     isHOD: user?.role === 'hod',
     isFaculty: user?.role === 'faculty',
     isIQAC: user?.role === 'iqac',
-    // HR Staff sub-tier: faculty users with faculty_profile.is_hr_staff = true
-    isHRStaff: user?.role === 'faculty' && user?.faculty_profile?.is_hr_staff === true,
     role: user?.role,
     department: user?.department_name,
     departmentId: user?.department_id,
-    // Populated only for HR Staff
-    hrDepartmentIds: user?.hr_department_ids ?? [],
     facultyProfile: user?.faculty_profile ?? null,
   };
 

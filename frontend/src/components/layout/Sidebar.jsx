@@ -9,8 +9,7 @@ import {
   LayoutDashboard, LogOut, ChevronRight, PanelLeftClose, X,
   Network, CalendarDays, Scale, Layers, Users2, BookOpenCheck,
   DatabaseZap, TrendingUp, CircleUser, Settings2,
-  Calculator, ClipboardList, FileText, Award, BarChart3,
-  BookMarked
+  Calculator, ClipboardList, FileText, Award, BarChart3
 } from 'lucide-react';
 
 // ── Navigation config per role ─────────────────────────────────
@@ -42,11 +41,6 @@ const NAV_CONFIG = {
     { to: '/faculty/subjects',    icon: BookOpenCheck,   label: 'My Subjects'   },
     { to: '/profile',             icon: CircleUser,      label: 'Profile'       },
   ],
-  // HR Staff nav — only the mark-entry page (sub-tier of faculty)
-  faculty_hr: [
-    { to: '/staff/subjects',      icon: BookMarked,      label: 'Mark Entry'    },
-    { to: '/profile',             icon: CircleUser,      label: 'Profile'       },
-  ],
   iqac: [
     { to: '/iqac/dashboard',      icon: LayoutDashboard, label: 'Dashboard'     },
     { to: '/iqac/po-attainment',  icon: TrendingUp,      label: 'Attainment'    },
@@ -70,12 +64,10 @@ const ROLE_COLORS = {
 };
 
 export default function Sidebar({ isCollapsed, onToggleCollapse, isMobileOpen, onCloseMobile }) {
-  const { user, logout, role, isHRStaff } = useAuth();
+  const { user, logout, role } = useAuth();
   const navigate = useNavigate();
-  // HR Staff see only the mark-entry nav; regular faculty see the full faculty nav
-  const navKey = role === 'faculty' && isHRStaff ? 'faculty_hr' : role;
-  const links = NAV_CONFIG[navKey] || NAV_CONFIG.faculty;
-  const displayLabel = isHRStaff ? 'HR Staff' : (ROLE_LABELS[role] || role);
+  const links = NAV_CONFIG[role] || NAV_CONFIG.faculty;
+  const displayLabel = ROLE_LABELS[role] || role;
 
   const handleLogout = async () => {
     await logout();

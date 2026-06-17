@@ -35,6 +35,9 @@ DEPARTMENTS = [
      "code": "ECE", "short_name": "ECE"},
     {"name": "Information Technology",
      "code": "IT", "short_name": "IT"},
+    # Science & Humanities — teaches first year students across all branches
+    {"name": "Science and Humanities",
+     "code": "S&H", "short_name": "S&H", "is_first_year": True},
 ]
 
 # NBA Standard POs — same for all B.E. programmes (Section 4.3 of Research1.md)
@@ -164,6 +167,7 @@ class Command(BaseCommand):
                 defaults={
                     'name': dept_data['name'],
                     'short_name': dept_data['short_name'],
+                    'is_first_year': dept_data.get('is_first_year', False),
                 }
             )
             action = '  + Created' if created else '  ~ Found'
@@ -350,9 +354,9 @@ class Command(BaseCommand):
         # ── Done ──────────────────────────────────────────────────────
         self.stdout.write(self.style.SUCCESS(
             '\n✅ Seeding complete!\n'
-            f'   • {len(DEPARTMENTS)} departments\n'
+            f'   • {len(DEPARTMENTS)} departments (incl. S&H)\n'
             f'   • {len(DEPARTMENTS)} programmes\n'
-            f'   • {len(DEPARTMENTS) * 12} program outcomes (POs)\n'
+            f'   • {(len(DEPARTMENTS) - 1) * 12} program outcomes (POs — engineering depts only)\n'
             f'   • {len(ASSESSMENT_TYPES)} assessment types\n'
             '   • 1 global attainment config\n'
             '   • 1 admin user (admin@sece.ac.in)\n'

@@ -19,7 +19,7 @@ class IsHODUser(BasePermission):
 
 
 class IsFacultyUser(BasePermission):
-    """Only Faculty can access (includes HR Staff who are faculty sub-tier)."""
+    """Only Faculty can access."""
     message = 'You must be Faculty to perform this action.'
 
     def has_permission(self, request, view):
@@ -89,73 +89,3 @@ class DepartmentScopedPermission(BasePermission):
 
         return False
 
-
-class IsHRStaff(BasePermission):
-    """
-    View-level: user must be role=='faculty' AND faculty_profile.is_hr_staff==True.
-    Object-level (obj = SubjectAllocation):
-      1. HR Staff must be assigned to the allocation's department
-         (via FacultyProfile.departments M2M).
-      2. The allocation must have staff_mark_entry_enabled=True.
-    """
-    message = 'You are not authorised to access this subject.'
-
-    def _is_hr_staff(self, user):
-        return (
-            user.role == 'faculty'
-            and hasattr(user, 'faculty_profile')
-            and getattr(user.faculty_profile, 'is_hr_staff', False)
-        )
-
-    def has_permission(self, request, view):
-        return bool(
-            request.user and request.user.is_authenticated
-            and self._is_hr_staff(request.user)
-        )
-
-    def has_object_permission(self, request, view, obj):
-        # obj is a SubjectAllocation instance
-        if not self._is_hr_staff(request.user):
-            return False
-        hr_dept_ids = list(
-            request.user.faculty_profile.departments.values_list('id', flat=True)
-        )
-        return (
-            obj.subject.department_id in hr_dept_ids
-            and obj.staff_mark_entry_enabled
-        )
-
-
-class IsFacultyOrHRStaff(BasePermission):
-    """
-    View-level: role must be 'faculty'.
-    Object-level (obj = SubjectAllocation):
-      - Regular faculty: always permitted (queryset already scopes to their allocations).
-      - HR Staff faculty: must be assigned to the allocation's department AND
-        the allocation must have staff_mark_entry_enabled=True.
-    Used on mark upload and template download endpoints only.
-    """
-    message = 'You are not authorised to perform this action on this subject.'
-
-    def has_permission(self, request, view):
-        return bool(
-            request.user and request.user.is_authenticated
-            and request.user.role == 'faculty'
-        )
-
-    def has_object_permission(self, request, view, obj):
-        # obj is a SubjectAllocation instance
-        if request.user.role != 'faculty':
-            return False
-        fp = getattr(request.user, 'faculty_profile', None)
-        if fp is None:
-            return False
-        # Regular faculty: own allocation
-        if not fp.is_hr_staff:
-            return True
-        # HR Staff: dept assignment + toggle check
-        hr_dept_ids = list(fp.departments.values_list('id', flat=True))
-        return (
-            obj.subject.department_id in hr_dept_ids
-            and obj.staff_mark_entry_enabled
-        )

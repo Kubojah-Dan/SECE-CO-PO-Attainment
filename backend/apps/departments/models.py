@@ -54,6 +54,8 @@ class Department(models.Model):
     """
     Academic departments at SECE.
     Pre-seeded with all 11 departments from Research1.md.
+    S&H (Science and Humanities) departments should have is_first_year=True;
+    they teach first year students across all engineering branches.
     """
     college = models.ForeignKey(
         College, on_delete=models.CASCADE, related_name='departments'
@@ -63,6 +65,13 @@ class Department(models.Model):
     short_name = models.CharField(max_length=50)      # "CSE(AI&ML)"
     hod_name = models.CharField(max_length=200, blank=True)
     is_active = models.BooleanField(default=True)
+    is_first_year = models.BooleanField(
+        default=False,
+        help_text=(
+            'Mark True for Science & Humanities (S&H) departments that teach '
+            'first-year students across all engineering branches.'
+        )
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

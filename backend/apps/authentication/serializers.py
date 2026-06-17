@@ -13,10 +13,6 @@ class UserSerializer(serializers.ModelSerializer):
     department_id = serializers.SerializerMethodField()
     dashboard_url = serializers.SerializerMethodField()
     employee_id = serializers.SerializerMethodField()
-    # HR Staff flag: True when faculty_profile.is_hr_staff == True
-    is_hr_staff = serializers.SerializerMethodField()
-    # HR departments M2M (list of dept IDs — only populated for HR staff)
-    hr_department_ids = serializers.SerializerMethodField()
     faculty_profile = serializers.SerializerMethodField()
 
     class Meta:
@@ -25,11 +21,10 @@ class UserSerializer(serializers.ModelSerializer):
             'id', 'email', 'role', 'first_name', 'last_name', 'full_name',
             'phone', 'is_active', 'date_joined', 'last_login',
             'profile_photo', 'department_name', 'department_id', 'dashboard_url',
-            'employee_id', 'is_hr_staff', 'hr_department_ids', 'faculty_profile',
+            'employee_id', 'faculty_profile',
         ]
         read_only_fields = [
-            'id', 'date_joined', 'last_login', 'dashboard_url',
-            'employee_id', 'is_hr_staff', 'hr_department_ids',
+            'id', 'date_joined', 'last_login', 'dashboard_url', 'employee_id',
         ]
 
     def get_full_name(self, obj):
@@ -59,26 +54,6 @@ class UserSerializer(serializers.ModelSerializer):
             pass
         return None
 
-    def get_is_hr_staff(self, obj):
-        try:
-            return bool(
-                obj.role == 'faculty'
-                and hasattr(obj, 'faculty_profile')
-                and obj.faculty_profile.is_hr_staff
-            )
-        except Exception:
-            return False
-
-    def get_hr_department_ids(self, obj):
-        try:
-            if obj.role == 'faculty' and hasattr(obj, 'faculty_profile'):
-                fp = obj.faculty_profile
-                if fp.is_hr_staff:
-                    return list(fp.departments.values_list('id', flat=True))
-        except Exception:
-            pass
-        return []
-
     def get_faculty_profile(self, obj):
         try:
             if obj.role == 'faculty' and hasattr(obj, 'faculty_profile'):
@@ -88,8 +63,6 @@ class UserSerializer(serializers.ModelSerializer):
                     'department': fp.department_id,
                     'employee_id': fp.employee_id,
                     'designation': fp.designation,
-                    'is_hr_staff': fp.is_hr_staff,
-                    'departments': list(fp.departments.values_list('id', flat=True)),
                 }
         except Exception:
             pass

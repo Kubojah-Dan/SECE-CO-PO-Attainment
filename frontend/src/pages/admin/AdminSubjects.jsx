@@ -9,7 +9,7 @@ import { subjectService, departmentService } from '../../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
 
-const abbrevDept = (name) => {
+const deptLabel = (dept) => {
   const abbreviations = {
     "Computer Science & Engineering (Artificial Intelligence & Machine Learning)": "CSE (AI&ML)",
     "Artificial Intelligence & Data Science": "AI&DS",
@@ -21,9 +21,11 @@ const abbrevDept = (name) => {
     "Electronics & Communication Engineering (VLSI Design)": "ECE (VLSI)",
     "Mechanical Engineering": "MECH",
     "Electronics & Communication Engineering": "ECE",
-    "Information Technology": "IT"
+    "Information Technology": "IT",
+    "Science and Humanities": "S&H",
   };
-  return abbreviations[name] || name;
+  const short = abbreviations[dept.name] || dept.short_name || dept.name;
+  return dept.is_first_year ? `${short} (First Year)` : short;
 };
 
 export default function AdminSubjects() {
@@ -264,7 +266,7 @@ export default function AdminSubjects() {
                       <label className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest block mb-2">Department</label>
                       <select name="department" defaultValue={editingSubject?.department?.id || editingSubject?.department} required className="w-full p-3 bg-[var(--surface-secondary)] border border-[var(--border)] rounded-xl outline-none focus:ring-2 focus:ring-[var(--primary-100)] transition-all font-medium text-sm">
                         <option value="">Select Dept</option>
-                        {departments.map(dept => (<option key={dept.id} value={dept.id}>{abbrevDept(dept.name)}</option>))}
+                        {departments.map(dept => (<option key={dept.id} value={dept.id}>{deptLabel(dept)}</option>))}
                       </select>
                     </div>
                     <div>

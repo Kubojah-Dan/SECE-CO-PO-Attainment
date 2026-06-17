@@ -1,7 +1,6 @@
 """
 SECE CO-PO Platform — Custom User Model
 Role-based authentication: admin, hod, faculty, iqac
-HR Staff are a sub-tier of faculty (is_hr_staff flag on FacultyProfile).
 """
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
@@ -32,7 +31,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     Central user model for the SECE CO-PO platform.
     All four roles (admin, hod, faculty, iqac) share this model.
     Role-specific data is stored in separate profile models.
-    HR Staff are faculty members with FacultyProfile.is_hr_staff = True.
     """
 
     class Role(models.TextChoices):
@@ -91,16 +89,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     @property
     def is_iqac(self):
         return self.role == self.Role.IQAC
-
-    @property
-    def is_hr_staff(self):
-        """True when this faculty user is flagged as an HR mark-entry operator."""
-        if self.role != self.Role.FACULTY:
-            return False
-        try:
-            return bool(self.faculty_profile.is_hr_staff)
-        except Exception:
-            return False
 
     @property
     def department(self):

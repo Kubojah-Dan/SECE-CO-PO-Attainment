@@ -6,11 +6,12 @@ import {
   Trash2, Edit2, Lock
 } from 'lucide-react';
 import Card from '../../components/ui/Card';
-import { userService, departmentService, staffService } from '../../services/api';
+import { userService, departmentService } from '../../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
 
-const abbrevDept = (name) => {
+// Returns abbreviated department name. S&H and other first-year depts get a "(First Year)" suffix.
+const deptLabel = (dept) => {
   const abbreviations = {
     "Computer Science & Engineering (Artificial Intelligence & Machine Learning)": "CSE (AI&ML)",
     "Artificial Intelligence & Data Science": "AI&DS",
@@ -22,9 +23,11 @@ const abbrevDept = (name) => {
     "Electronics & Communication Engineering (VLSI Design)": "ECE (VLSI)",
     "Mechanical Engineering": "MECH",
     "Electronics & Communication Engineering": "ECE",
-    "Information Technology": "IT"
+    "Information Technology": "IT",
+    "Science and Humanities": "S&H",
   };
-  return abbreviations[name] || name;
+  const short = abbreviations[dept.name] || dept.short_name || dept.name;
+  return dept.is_first_year ? `${short} (First Year)` : short;
 };
 
 export default function UserManagement() {
@@ -37,11 +40,7 @@ export default function UserManagement() {
   const [editingUser, setEditingUser] = useState(null);
   const [isDeleting, setIsDeleting] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
-  // HR Staff faculty state
-  const [isHRStaffChecked, setIsHRStaffChecked] = useState(false);
-  const [hrDeptIds, setHrDeptIds] = useState([]);
-  const [formRole, setFormRole] = useState('faculty');
-
+  const [formRole, setFormRole] = useState('faculty');   // tracks selected role in the Add/Edit modal
   const tabs = ['All', 'HOD', 'Faculty', 'Admin', 'IQAC'];
 
   useEffect(() => {
@@ -89,14 +88,16 @@ export default function UserManagement() {
     }
   };
 
-  const handleEdit = (user) => {
-    setEditingUser(user);
-    setIsModalOpen(true);
-  };
-
   const handleModalClose = () => {
     setIsModalOpen(false);
     setEditingUser(null);
+    setFormRole('faculty');
+  };
+
+  const handleEdit = (user) => {
+    setEditingUser(user);
+    setFormRole(user.role || 'faculty');
+    setIsModalOpen(true);
   };
 
   const filteredUsers = users.filter(user => {
@@ -344,29 +345,7 @@ export default function UserManagement() {
                 try {
                   setIsSaving(true);
 
-                  // ── HR STAFF via staffService (faculty + is_hr_staff=true) ─────────
-                  if (rawData.role === 'faculty' && isHRStaffChecked) {
-                    if (hrDeptIds.length === 0) {
-                      toast.error('Please assign at least one department for this HR staff member.');
-                      setIsSaving(false);
-                      return;
-                    }
-                    await staffService.createUser({
-                      email: rawData.email,
-                      first_name: rawData.first_name,
-                      last_name: rawData.last_name,
-                      employee_id: rawData.employee_id,
-                      password: rawData.password,
-                      department: rawData.department || null,
-                      hr_department_ids: hrDeptIds.map(Number),
-                    });
-                    toast.success('HR Staff member created successfully');
-                    handleModalClose();
-                    fetchUsers();
-                    return;
-                  }
-
-                  // ── All other roles: existing FormData flow ────────────────
+                  // ── All roles: FormData flow ────────────────────────────
                   const payload = new FormData();
                   payload.append('email', rawData.email);
                   payload.append('first_name', rawData.first_name);
@@ -407,7 +386,6 @@ export default function UserManagement() {
                     errDetail?.detail ||
                     errDetail?.email?.[0] ||
                     errDetail?.employee_id?.[0] ||
-                    errDetail?.department_ids?.[0] ||
                     errDetail?.non_field_errors?.[0] ||
                     errDetail?.message ||
                     'Failed to process user';
@@ -472,7 +450,7 @@ export default function UserManagement() {
                       name="role"
                       defaultValue={editingUser?.role || 'faculty'}
                       required
-                      onChange={e => { setFormRole(e.target.value); setIsHRStaffChecked(false); setHrDeptIds([]); }}
+                      onChange={e => setFormRole(e.target.value)}
                       className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-bold text-sm"
                     >
                       <option value="faculty">Faculty</option>
@@ -491,60 +469,11 @@ export default function UserManagement() {
                     >
                       <option value="">Select Dept</option>
                       {departments.map(dept => (
-                        <option key={dept.id} value={dept.id}>{abbrevDept(dept.name)}</option>
+                        <option key={dept.id} value={dept.id}>{deptLabel(dept)}</option>
                       ))}
                     </select>
                   </div>
                 </div>
-                {/* HR Staff toggle — only for Faculty role */}
-                {formRole === 'faculty' && (
-                  <div>
-                    <label className="flex items-center gap-3 cursor-pointer group">
-                      <input
-                        type="checkbox"
-                        checked={isHRStaffChecked}
-                        onChange={e => { setIsHRStaffChecked(e.target.checked); if (!e.target.checked) setHrDeptIds([]); }}
-                        className="w-4 h-4 accent-slate-900 rounded"
-                      />
-                      <span className="text-sm font-semibold text-slate-700 group-hover:text-slate-900">
-                        This user is an HR Staff member (mark-entry operator)
-                      </span>
-                    </label>
-                    {isHRStaffChecked && (
-                      <div className="mt-3">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">
-                          Assign HR Departments <span className="text-red-400">*</span>
-                        </label>
-                        <div className="grid grid-cols-2 gap-2 max-h-44 overflow-y-auto p-3 bg-slate-50 border border-slate-100 rounded-xl">
-                          {departments.map(dept => (
-                            <label key={dept.id} className="flex items-center gap-2 cursor-pointer group">
-                              <input
-                                type="checkbox"
-                                checked={hrDeptIds.includes(dept.id)}
-                                onChange={e => {
-                                  if (e.target.checked) {
-                                    setHrDeptIds(prev => [...prev, dept.id]);
-                                  } else {
-                                    setHrDeptIds(prev => prev.filter(id => id !== dept.id));
-                                  }
-                                }}
-                                className="w-3.5 h-3.5 accent-slate-900 rounded"
-                              />
-                              <span className="text-xs font-semibold text-slate-700 group-hover:text-slate-900">
-                                {abbrevDept(dept.name)}
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                        {hrDeptIds.length > 0 && (
-                          <p className="mt-1.5 text-[10px] text-slate-500 font-medium">
-                            {hrDeptIds.length} department{hrDeptIds.length !== 1 ? 's' : ''} selected
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
                 <button type="submit" disabled={isSaving} className="w-full py-3.5 text-white rounded-xl font-semibold mt-4 flex items-center justify-center gap-2 transition-all disabled:opacity-60 disabled:cursor-not-allowed" style={{ background: 'var(--primary-500)' }}
                   onMouseEnter={e => !isSaving && (e.currentTarget.style.background = 'var(--primary-600)')}
                   onMouseLeave={e => !isSaving && (e.currentTarget.style.background = 'var(--primary-500)')}

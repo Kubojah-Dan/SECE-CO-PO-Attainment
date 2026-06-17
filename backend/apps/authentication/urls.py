@@ -1,10 +1,6 @@
 """SECE CO-PO Platform — Authentication URLs"""
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
+from django.urls import path
 from . import views
-
-router = DefaultRouter()
-router.register('staff-users', views.HRStaffViewSet, basename='staff-users')
 
 urlpatterns = [
     path('login/', views.LoginView.as_view(), name='auth-login'),
@@ -14,8 +10,4 @@ urlpatterns = [
     path('change-password/', views.ChangePasswordView.as_view(), name='auth-change-password'),
     path('password-reset/', views.PasswordResetRequestView.as_view(), name='auth-password-reset'),
     path('password-reset/confirm/', views.PasswordResetConfirmView.as_view(), name='auth-password-reset-confirm'),
-    # HOD read-only HR staff list for a department
-    path('departments/<int:dept_id>/staff/', views.DepartmentHRStaffListView.as_view(), name='department-hr-staff-list'),
-    # HR staff user management (admin only) — registered via router
-    path('', include(router.urls)),
 ]

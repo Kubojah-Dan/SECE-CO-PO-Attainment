@@ -158,7 +158,7 @@ export default function DepartmentManagement() {
                     <h3 className="text-sm font-semibold text-[var(--text-primary)] leading-snug group-hover:text-[var(--primary-600)] transition-colors line-clamp-2">
                       {getDisplayName(dept.name)}
                     </h3>
-                    <div className="mt-1.5">
+                    <div className="mt-1.5 flex flex-wrap gap-1">
                       <span
                         className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold tracking-widest uppercase"
                         style={{
@@ -168,6 +168,11 @@ export default function DepartmentManagement() {
                       >
                         {dept.short_name || dept.code}
                       </span>
+                      {dept.is_first_year && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold tracking-widest uppercase bg-amber-50 text-amber-700 border border-amber-200">
+                          S&amp;H
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -260,6 +265,8 @@ export default function DepartmentManagement() {
                 
                 // Set default college (usually ID 1 for SECE)
                 data.college = 1;
+                // Checkbox: FormData gives 'on' when checked, absent when unchecked
+                data.is_first_year = formData.has('is_first_year');
 
                 try {
                   if (editingDept) {
@@ -295,6 +302,19 @@ export default function DepartmentManagement() {
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">HOD Name</label>
                   <input name="hod_name" defaultValue={editingDept?.hod_name} type="text" className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-bold text-sm" placeholder="e.g. Dr. John Smith" />
                 </div>
+                {/* S&H First Year Department toggle */}
+                <label className="flex items-center gap-3 cursor-pointer group p-3 bg-amber-50 border border-amber-100 rounded-xl hover:bg-amber-100 transition-all">
+                  <input
+                    type="checkbox"
+                    name="is_first_year"
+                    defaultChecked={editingDept?.is_first_year || false}
+                    className="w-4 h-4 accent-amber-600 rounded"
+                  />
+                  <div>
+                    <span className="text-sm font-semibold text-amber-900 block">Science &amp; Humanities (S&amp;H) Department</span>
+                    <span className="text-[11px] text-amber-700">Teaches first-year students across all engineering branches</span>
+                  </div>
+                </label>
                 <button 
                   type="submit" 
                   disabled={isSaving}

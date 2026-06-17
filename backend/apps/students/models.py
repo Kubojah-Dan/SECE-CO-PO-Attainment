@@ -21,6 +21,19 @@ class Student(models.Model):
     section = models.ForeignKey(
         Section, on_delete=models.CASCADE, related_name='students'
     )
+    # For S&H students: the engineering dept they will migrate to in Year 2.
+    # Null for regular students who stay in their home department.
+    target_department = models.ForeignKey(
+        Department,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='incoming_students',
+        help_text=(
+            'For S&H students: the engineering department they will be '
+            'transferred to at the start of their second year.'
+        )
+    )
     email = models.EmailField(blank=True)
     phone = models.CharField(max_length=20, blank=True)
     is_active = models.BooleanField(default=True)

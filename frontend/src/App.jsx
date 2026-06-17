@@ -58,9 +58,6 @@ import IQACPOAttainment from './pages/iqac/IQACPOAttainment';
 import NBAReport from './pages/iqac/NBAReport';
 import Profile from './pages/Profile';
 
-// HR Staff page (sub-tier of faculty role)
-import StaffSubjectsPage from './pages/staff/StaffSubjectsPage';
-
 // Role guard component
 import RoleGuard from './components/layout/RoleGuard';
 
@@ -92,7 +89,6 @@ export default function App() {
               <Route element={<AppLayout />}>
 
                 {/* ── Faculty Routes ─────────────────────────────── */}
-                {/* NOTE: HR Staff users also have role='faculty' and use these routes */}
                 <Route element={<RoleGuard roles={['faculty', 'admin']} />}>
                   <Route path="/faculty/dashboard" element={<FacultyDashboard />} />
                   <Route path="/faculty/subjects" element={<SubjectsList />} />
@@ -106,8 +102,6 @@ export default function App() {
                   <Route path="/faculty/subjects/:allocId/reports" element={<FacultyReportsPage />} />
                   <Route path="/faculty/subjects/:allocId/atr" element={<ActionTakenReport />} />
                   <Route path="/faculty/subjects/:allocId/question-mapping/:assessmentType" element={<QuestionMappingPage />} />
-                  {/* HR Staff mark entry page */}
-                  <Route path="/staff/subjects" element={<StaffSubjectsPage />} />
                 </Route>
 
                 {/* ── HOD Routes ─────────────────────────────────── */}

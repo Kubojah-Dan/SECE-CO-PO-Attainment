@@ -279,7 +279,7 @@ export default function SectionManagement() {
           className="w-full p-3 bg-[var(--surface-secondary)] border border-[var(--border)] rounded-xl outline-none focus:ring-2 focus:ring-[var(--primary-100)] focus:border-[var(--primary-500)] font-medium text-sm shadow-sm transition-all"
         >
           <option value="">Select Department</option>
-          {departments.map(d => <option key={d.id} value={d.id}>{d.name} ({d.short_name})</option>)}
+          {departments.map(d => <option key={d.id} value={d.id}>{d.name} ({d.short_name}){d.is_first_year ? ' — First Year' : ''}</option>)}
         </select>
       </div>
 

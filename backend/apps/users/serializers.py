@@ -7,7 +7,6 @@ from .models import FacultyProfile, HODProfile, IQACProfile
 class FacultyProfileSerializer(serializers.ModelSerializer):
     allocations_count = serializers.SerializerMethodField()
     department_details = serializers.SerializerMethodField()
-    hr_department_details = serializers.SerializerMethodField()
 
     class Meta:
         model = FacultyProfile
@@ -15,7 +14,6 @@ class FacultyProfileSerializer(serializers.ModelSerializer):
             'id', 'department', 'department_details',
             'employee_id', 'designation', 'qualification',
             'experience_years', 'specialization', 'joined_date',
-            'is_hr_staff', 'departments', 'hr_department_details',
             'allocations_count',
         ]
 
@@ -36,12 +34,6 @@ class FacultyProfileSerializer(serializers.ModelSerializer):
             }
         return None
 
-    def get_hr_department_details(self, obj):
-        return [
-            {'id': d.id, 'name': d.name, 'short_name': getattr(d, 'short_name', '')}
-            for d in obj.departments.all()
-        ]
-
 
 class HODProfileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -61,14 +53,6 @@ class UserCreateUpdateSerializer(serializers.ModelSerializer):
     iqac_profile = IQACProfileSerializer(required=False)
     password = serializers.CharField(write_only=True, required=False)
     is_online = serializers.SerializerMethodField()
-    # HR Staff fields (only used when role=faculty and is_hr_staff=true)
-    is_hr_staff = serializers.BooleanField(write_only=True, required=False, default=False)
-    hr_department_ids = serializers.ListField(
-        child=serializers.IntegerField(),
-        write_only=True,
-        required=False,
-        default=list,
-    )
 
     class Meta:
         model = User
@@ -76,7 +60,6 @@ class UserCreateUpdateSerializer(serializers.ModelSerializer):
             'id', 'email', 'role', 'first_name', 'last_name', 'phone',
             'is_active', 'is_online', 'profile_photo', 'password',
             'faculty_profile', 'hod_profile', 'iqac_profile',
-            'is_hr_staff', 'hr_department_ids',
         ]
         read_only_fields = ['id']
 
@@ -90,8 +73,6 @@ class UserCreateUpdateSerializer(serializers.ModelSerializer):
         hod_data = validated_data.pop('hod_profile', None)
         iqac_data = validated_data.pop('iqac_profile', None)
         password = validated_data.pop('password', None)
-        is_hr_staff = validated_data.pop('is_hr_staff', False)
-        hr_department_ids = validated_data.pop('hr_department_ids', [])
 
         user = User.objects.create_user(**validated_data)
 
@@ -102,12 +83,7 @@ class UserCreateUpdateSerializer(serializers.ModelSerializer):
         user.save()
 
         if user.role == User.Role.FACULTY and faculty_data:
-            profile = FacultyProfile.objects.create(user=user, **faculty_data)
-            if is_hr_staff:
-                profile.is_hr_staff = True
-                profile.save(update_fields=['is_hr_staff'])
-                if hr_department_ids:
-                    profile.departments.set(hr_department_ids)
+            FacultyProfile.objects.create(user=user, **faculty_data)
         elif user.role == User.Role.HOD and hod_data:
             HODProfile.objects.create(user=user, **hod_data)
         elif user.role == User.Role.IQAC and iqac_data:
@@ -121,8 +97,6 @@ class UserCreateUpdateSerializer(serializers.ModelSerializer):
         hod_data = validated_data.pop('hod_profile', None)
         iqac_data = validated_data.pop('iqac_profile', None)
         password = validated_data.pop('password', None)
-        is_hr_staff = validated_data.pop('is_hr_staff', None)
-        hr_department_ids = validated_data.pop('hr_department_ids', None)
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
@@ -136,11 +110,7 @@ class UserCreateUpdateSerializer(serializers.ModelSerializer):
             profile, _ = FacultyProfile.objects.get_or_create(user=instance)
             for attr, value in faculty_data.items():
                 setattr(profile, attr, value)
-            if is_hr_staff is not None:
-                profile.is_hr_staff = is_hr_staff
             profile.save()
-            if hr_department_ids is not None and profile.is_hr_staff:
-                profile.departments.set(hr_department_ids)
         elif instance.role == User.Role.HOD and hod_data:
             profile, _ = HODProfile.objects.get_or_create(user=instance)
             for attr, value in hod_data.items():
